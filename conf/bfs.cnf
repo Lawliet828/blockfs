@@ -1,4 +1,4 @@
-# UCloud BlockFS Configuration
+# BlockFS Configuration
 version                   = 0.1
 
 [common]
@@ -13,7 +13,8 @@ agent_enable              = true
 agent_server              = /data/mysql/bfs.sock
 
 [bfs]
-device_uuid               = 1a3231ed-5595-4e54-adbf-9c9d1cd19fd3
+#device_uuid               = 1a3231ed-5595-4e54-adbf-9c9d1cd19fd3
+device_uuid               = a25ae7ea-c93b-489f-ac61-83924db4d2a3
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 time_update_meta          = 3600
