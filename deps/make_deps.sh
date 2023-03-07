@@ -14,18 +14,8 @@ gmake install
 ln -s /usr/local/bin/cmake /usr/bin/
 
 echo "***** install python3 *****"
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    if [ -f /etc/redhat-release ]; then
-        echo "Redhat/Centos detected."
-        yum -y install python3
-        pip3 install meson ninja
-    elif [ -f /etc/debian_version ]; then
-        echo "Ubuntu/Debian Linux detected."
-        sudo apt install ninja-build meson
-    else
-        echo "Unknown Linux distribution."
-    fi
-fi
+yum -y install python3
+pip3 install meson ninja
 
 # libuuid项目地址 https://sourceforge.net/projects/libuuid/
 # 去掉系统库,因为是动态库,尽量使用静态库
@@ -70,7 +60,7 @@ if [ ! -d "libfuse" ]; then
     cd libfuse
     meson --prefix=/usr build
     cd build
-    meson configure -Ddisable-mtab=true
+    meson configure -D disable-mtab=true
     sudo ninja
     sudo ninja install
     cd ../..
