@@ -1,0 +1,344 @@
+#include "super_block.h"
+
+#include <uuid/uuid.h>
+
+#include "crc.h"
+#include "file_store_udisk.h"
+#include "logging.h"
+
+SuperBlock::SuperBlock() {}
+SuperBlock::~SuperBlock() { buffer_.reset(); }
+
+/**
+ * get the total super metadata on the shared udisk
+ * only used to prefetch super meta when blockfs startup
+ *
+ * \param void
+ *
+ * \return success or failed
+ */
+bool SuperBlock::InitializeMeta() {
+  SuperBlockMeta *meta = reinterpret_cast<SuperBlockMeta *>(base_addr());
+  uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
+                       kSuperBlockSize - sizeof(meta->crc_));
+  if (unlikely(meta->crc_ != crc)) {
+    LOG(ERROR) << "super block crc error, read:" << meta->crc_
+               << " cal: " << crc;
+    return false;
+  }
+  if (unlikely(meta->magic_ != kBlockFsMagic)) {
+    LOG(ERROR) << "super block magic error, read:" << meta->magic_
+               << " wanted: " << kBlockFsMagic;
+    return false;
+  }
+  LOG(DEBUG) << "read super block success";
+  return true;
+}
+
+/**
+ * format blockfs super metadata
+ */
+bool SuperBlock::FormatAllMeta() {
+  if (!block_fs_is_master()) {
+    LOG(ERROR) << "cannot format super block, not master role";
+    return false;
+  }
+  buffer_ = std::make_shared<AlignBuffer>(
+      kSuperBlockSize, FileStore::Instance()->dev()->block_size());
+
+  // init base addr beacause other handles needed later
+  set_base_addr(buffer_->data());
+
+  SuperBlockMeta *meta = reinterpret_cast<SuperBlockMeta *>(buffer_->data());
+
+  /* BlockFS的常量定义 */
+  uuid_t uuid;
+  ::uuid_generate(uuid);
+  ::uuid_unparse(uuid, meta->uuid_);
+  meta->version_ = kBlockFsVersion;
+  meta->magic_ = kBlockFsMagic;
+  meta->max_support_file_num_ = kBlockFsMaxFileNum;
+  meta->max_support_udisk_size_ = kBlockFsMaxUDiskSize;
+  meta->udisk_extend_size_ = kBlockFsExtendSize;
+  meta->block_size_ = kBlockFsBlockSize;
+  meta->max_dir_name_len_ = kBlockFsMaxDirNameLen;
+  meta->max_file_name_len_ = kBlockFsMaxFileNameLen;
+  meta->dir_meta_size_ = kBlockFsDirMetaSize;
+  meta->file_meta_size_ = kBlockFsFileMetaSize;
+  meta->file_block_meta_size_ = kBlockFsFileBlockMetaSize;
+  meta->block_fs_journal_size_ = kBlockFsJournalSize;
+  meta->block_fs_journal_num_ = kBlockFsJournalNum;
+
+  /* 1. 协商区域 :  起始位置 0 - 4096 */
+  meta->negotiation_offset_ = kNegotiationOffset;
+  meta->negotiation_size_ = kNegotiationSize;
+  /* 2. 超级块区域: 起始位置 4096 - 8192 */
+  meta->super_block_offset_ = kSuperBlockOffset;
+  meta->super_block_size_ = kSuperBlockSize;
+
+  /* 3. 文件夹区域: 起始位置 8192 - meta->file_meta_offset_ */
+  meta->dir_meta_offset_ = kDirMetaOffset;
+  meta->dir_meta_total_size_ =
+      meta->dir_meta_size_ * meta->max_support_file_num_;
+  meta->dir_meta_total_size_ =
+      ROUND_UP(meta->dir_meta_total_size_, kBlockFsPageSize);
+
+  /* 4. 文件区域: 起始位置 dir_meta结尾 - meta->file_block_meta_offset_ */
+  meta->file_meta_offset_ = meta->dir_meta_offset_ + meta->dir_meta_total_size_;
+  meta->file_meta_total_size_ =
+      meta->file_meta_size_ * meta->max_support_file_num_;
+  meta->file_meta_total_size_ =
+      ROUND_UP(meta->file_meta_total_size_, kBlockFsPageSize);
+
+  /* 5. 文件块区域: 起始位置 file_meta结尾 - xxx */
+  meta->file_block_meta_offset_ =
+      meta->file_meta_offset_ + meta->file_meta_total_size_;
+
+  // 一个超大文件(无限接近128T),其他都是小文件
+  uint64_t tmpNum1 = meta->max_support_file_num_ - 1;
+  uint64_t tmpSize1 = tmpNum1 * meta->file_block_meta_size_;
+  uint64_t tmpNum2 = ALIGN_UP(meta->max_support_udisk_size_ - tmpSize1,
+                              (meta->block_size_ * kBlockFsFileBlockCapacity));
+
+  uint64_t tmpSize2 = tmpNum2 * meta->file_block_meta_size_;
+  meta->file_block_meta_total_size_ = tmpSize1 + tmpSize2;
+  meta->file_block_meta_total_size_ =
+      ROUND_UP((tmpSize1 + tmpSize2), kBlockFsPageSize);
+  meta->max_support_file_block_num_ = tmpNum1 + tmpNum2;
+
+  /* 6. Journal区域: 起始位置 xxx - xxx */
+  meta->block_fs_journal_offset_ =
+      meta->file_block_meta_offset_ + meta->file_block_meta_total_size_;
+  meta->journal_total_size_ =
+      meta->block_fs_journal_size_ * meta->block_fs_journal_num_;
+
+  meta->block_data_start_offset_ =
+      meta->block_fs_journal_offset_ + meta->journal_total_size_;
+
+  // 元数据区域大小保证16M对齐,也就是数据区域的起始位置是16M对齐的
+  meta->block_data_start_offset_ =
+      ROUND_UP(meta->block_data_start_offset_, kBlockFsBlockSize);
+
+  meta->curr_udisk_size_ = FileStore::Instance()->dev()->dev_size();
+  uint64_t free_udisk_size =
+      meta->curr_udisk_size_ - meta->block_data_start_offset_;
+  meta->curr_block_num_ = free_udisk_size / kBlockFsBlockSize;
+  meta->available_udisk_size_ = meta->curr_udisk_size_;
+
+  // 最大支持12T的block个数
+  meta->max_support_block_num_ =
+      (meta->max_support_udisk_size_ - meta->block_data_start_offset_) /
+      kBlockFsBlockSize;
+
+  meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
+                     kSuperBlockSize - sizeof(meta->crc_));
+  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+      meta, kSuperBlockSize, kSuperBlockOffset);
+  if (ret != static_cast<int64_t>(kSuperBlockSize)) {
+    LOG(ERROR) << "write super block error size:" << ret;
+    return false;
+  }
+  LOG(INFO) << "write all super block success";
+  return true;
+}
+
+bool SuperBlock::set_available_udisk_size(uint64_t available_udisk_size) {
+  meta()->available_udisk_size_ = available_udisk_size;
+  if (!WriteMeta()) {
+    return false;
+  }
+  LOG(INFO) << "set available_udisk_size success";
+  return true;
+}
+
+/**
+ * set uxdb mount point
+ *
+ * \param mount point
+ *
+ * \return success or failed
+ */
+bool SuperBlock::set_uxdb_mount_point(const std::string &path) {
+  LOG(INFO) << "UXDB root path: " << path;
+
+  std::string root_path = path;
+  std::string mount_point = uxdb_mount_point();
+  if (root_path[root_path.size() - 1] != '/') {
+    root_path += "/";
+  }
+  if (root_path.size() >= kUXDBMountPrefixMaxLen) {
+    LOG(ERROR) << "mount point path too long, size: " << root_path.size();
+    return false;
+  }
+  // 检查已经配置过MountPoint检查设置的是否一致
+  // 当前系统要求挂载点不能更改
+  if (mount_point.size() > 0) {
+    // 读取的即将设置的挂载点一致
+    if (root_path == mount_point) {
+      LOG(INFO) << "mount point has been configured";
+      return true;
+    } else {
+      LOG(ERROR) << "mount point  not matched, rootpath: " << root_path
+                 << " uxdb_mount_point: " << mount_point;
+      return false;
+    }
+  }
+  ::memset(meta()->uxdb_mount_point_, 0, sizeof(meta()->uxdb_mount_point_));
+  ::memcpy(meta()->uxdb_mount_point_, root_path.c_str(), root_path.size());
+  LOG(INFO) << "UXDB mount point: " << meta()->uxdb_mount_point_;
+
+  if (!WriteMeta()) {
+    return false;
+  }
+  LOG(INFO) << "write mount point: " << meta()->uxdb_mount_point_ << " success";
+  return true;
+}
+
+/**
+ * check path whether is uxdb mount point
+ *
+ * \param path
+ *
+ * \return yes or no
+ */
+bool SuperBlock::is_mount_point(const std::string &path) noexcept {
+  std::string mount_point = uxdb_mount_point();
+  if (path == mount_point) {
+    return true;
+  }
+  std::string tmp_path = path;
+  if (tmp_path[tmp_path.size() - 1] != '/') {
+    tmp_path += '/';
+  }
+  if (tmp_path == mount_point) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Check the legality of the file/directory mounting path
+ *
+ * \param path UXDB-UDISK: absolute directory
+ *
+ * \return strip success or failed
+ */
+bool SuperBlock::CheckMountPoint(const std::string &path, bool isFile) {
+  // step1: 检查参数是否为空, eg: ""
+  if (unlikely(path.empty())) {
+    LOG(ERROR) << "path cannot be empty";
+    errno = EINVAL;
+    return false;
+  }
+  std::string sub = meta()->uxdb_mount_point_;
+  LOG(INFO) << "check target path: " << path << " mount point: " << sub;
+  // step2: 目标路径比前缀还短, eg: "/mnt/mysql/d5"
+  if (path.size() < sub.size()) {
+    LOG(ERROR) << "path less than mount moint: " << path;
+    errno = EXDEV;
+    return false;
+  }
+  // step3: 检查是否包含Mount的前缀, eg: "/mnt/mysql/d5/d6/d7"
+  // step4: 检查是否以Mount前缀开头, eg: "/home/mnt/mysql/data/f1"
+  size_t pos = path.find(sub);
+  if (pos == std::string::npos || pos != 0) {
+    LOG(ERROR) << "path not startwith mount prefix: " << path;
+    errno = EXDEV;
+    return false;
+  }
+
+  // 上面一个判断应该满足了
+  // step5: 检查是否包含Mount的前缀完整路径
+  // eg: "/mnt/mysql/datad2";
+  // eg: "/mnt/mysql/datad2/f1"
+  // if ((path.size() > sub.size()) && path[sub.size()] != '/') {
+  //   LOG(ERROR) << "Path not endwith dir separator: " << path;
+  //   errno = EXDEV;
+  //   return false;
+  // }
+  if (isFile) {
+    if (unlikely(path[path.size() - 1] == '/')) {
+      LOG(ERROR) << "file cannot endwith dir separator: " << path;
+      errno = ENOTDIR;
+      return false;
+    }
+  }
+  errno = 0;
+  return true;
+}
+
+/**
+ * dump super metadata info
+ *
+ * \param void
+ *
+ * \return void
+ */
+void SuperBlock::Dump() noexcept {
+  LOG(INFO) << "super block info:"
+            << "\n"
+            << "crc: " << meta()->crc_ << "\n"
+            << "uuid: " << meta()->uuid_ << "\n"
+            << "version: " << meta()->version_ << "\n"
+            << "magic: " << meta()->magic_ << "\n"
+            << "seq_no: " << meta()->seq_no_ << "\n"
+            << "max_file_num: " << meta()->max_support_file_num_ << "\n"
+            << "max_udisk_size: " << meta()->max_support_udisk_size_ << "\n"
+            << "extend_size: " << meta()->udisk_extend_size_ << "\n"
+            << "block_size: " << meta()->block_size_ << "\n"
+            << "max_support_block_num_: " << meta()->max_support_block_num_
+            << "\n"
+            << "max_dir_name_len: " << meta()->max_dir_name_len_ << "\n"
+            << "max_file_name_len: " << meta()->max_file_name_len_ << "\n"
+            << "dir_meta_size: " << meta()->dir_meta_size_ << "\n"
+            << "file_meta_size: " << meta()->file_meta_size_ << "\n"
+            << "file_block_meta_size: " << meta()->file_block_meta_size_ << "\n"
+            << "block_fs_journal_size: " << meta()->block_fs_journal_size_
+            << "\n"
+            << "block_fs_journal_num: " << meta()->block_fs_journal_num_ << "\n"
+            << "negotiation_size: " << meta()->negotiation_size_ << "\n"
+            << "super_block_size: " << meta()->super_block_size_ << "\n"
+            << "dir_meta_total_size: " << meta()->dir_meta_total_size_ << "\n"
+            << "file_meta_total_size: " << meta()->file_meta_total_size_ << "\n"
+            << "file_block_meta_num: " << meta()->max_support_file_block_num_
+            << "\n"
+            << "file_block_meta_total_size: "
+            << meta()->file_block_meta_total_size_ << "\n"
+            << "journal_total_size: " << meta()->journal_total_size_ << "\n"
+            << "negotiation_offset: " << meta()->negotiation_offset_ << "\n"
+            << "super_block_offset: " << meta()->super_block_offset_ << "\n"
+            << "dir_meta_offset: " << meta()->dir_meta_offset_ << "\n"
+            << "file_meta_offset: " << meta()->file_meta_offset_ << "\n"
+            << "file_block_meta_offset: " << meta()->file_block_meta_offset_
+            << "\n"
+            << "block_fs_journal_offset: " << meta()->block_fs_journal_offset_
+            << "\n"
+            << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
+            << "curr_udisk_size: " << meta()->curr_udisk_size_ << "\n"
+            << "curr_block_num_: " << meta()->curr_block_num_ << "\n"
+            << "available_udisk_size: " << meta()->available_udisk_size_ << "\n"
+            << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
+}
+
+/**
+ * dump super metadata info to outer file
+ *
+ * \param void
+ *
+ * \return void
+ */
+void SuperBlock::Dump(const std::string &file_name) noexcept {}
+
+bool SuperBlock::WriteMeta() {
+  meta()->crc_ =
+      Crc32(reinterpret_cast<uint8_t *>(base_addr()) + sizeof(meta()->crc_),
+            kSuperBlockSize - sizeof(meta()->crc_));
+  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+      base_addr(), kSuperBlockSize, kSuperBlockOffset);
+  if (ret != static_cast<int64_t>(kSuperBlockSize)) {
+    LOG(ERROR) << "write super block error size:" << ret;
+    return false;
+  }
+  LOG(INFO) << "write super block success";
+  return true;
+}

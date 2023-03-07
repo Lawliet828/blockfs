@@ -1,0 +1,472 @@
+## BlockFS支持FUSE标准本地文件系统挂载
+
+### 1. 背景
+
+BlockFS 是一款基于块存储的通用分布式文件系统，可以作为MySQL、PostgresSQL、Oracle等数据库和云平台的后端存储。
+
+BlockFS 可以通过专有API访问，为互联网应用量身定制，作为通用的分布式文件系统，可以mount到本机通过标准文件接口访问。
+
+如果是通过专有的工具去运维和管理文件和目录会相对麻烦，支持FUSE后就可以对工具的修改无感知，向后无缝的兼容.
+
+
+### 2. FUSE介绍
+
+FUSE 是Linux Kernel的特性之一：
+
+一个用户态文件系统框架，a userspace filesystem framework
+
+形象的说就是可以在用户态运行一个程序，程序暴露出一个FUSE文件系统，
+
+对这个文件系统进行的读写操作都会被转给用户态的程序处理。
+
+FUSE由内核模块 fuse.ko 和用户空间的动态链接库 libfuse.* 组成，
+
+### https://man7.org/linux/man-pages/man8/mount.fuse3.8.html
+
+如果要开发使用fuse的用户态程序，需要安装 fuse-devel
+
+```sh
+ubuntu: 
+
+apt-get install fuse
+
+centos:
+
+yum install fuse-devel
+```
+
+
+#### Fuse control filesystem
+
+
+加载fuse.ko后，可以用下面的命令加载fusectl fs：
+
+```sh
+mount -t fusectl none /sys/fs/fuse/connections
+
+```
+
+每个使用fuse的进程有一个对应的目录：
+
+```sh
+$ ls  /sys/fs/fuse/connections
+38  42
+```
+
+fuse提供了 fuse 和 fuseblk 两种文件系统类型，
+
+可以作为mount命令的 -t 参数的参数值, 文档给出的挂载选项：
+
+```sh
+'fd=N'
+
+  The file descriptor to use for communication between the userspace
+  filesystem and the kernel.  The file descriptor must have been
+  obtained by opening the FUSE device ('/dev/fuse').
+
+'rootmode=M'
+
+  The file mode of the filesystem's root in octal representation.
+
+'user_id=N'
+
+  The numeric user id of the mount owner.
+
+'group_id=N'
+
+  The numeric group id of the mount owner.
+
+'default_permissions'
+
+  By default FUSE doesn't check file access permissions, the
+  filesystem is free to implement its access policy or leave it to
+  the underlying file access mechanism (e.g. in case of network
+  filesystems).  This option enables permission checking, restricting
+  access based on file mode.  It is usually useful together with the
+  'allow_other' mount option.
+
+'allow_other'
+
+  This option overrides the security measure restricting file access
+  to the user mounting the filesystem.  This option is by default only
+  allowed to root, but this restriction can be removed with a
+  (userspace) configuration option.
+
+'max_read=N'
+
+  With this option the maximum size of read operations can be set.
+  The default is infinite.  Note that the size of read requests is
+  limited anyway to 32 pages (which is 128kbyte on i386).
+
+'blksize=N'
+
+  Set the block size for the filesystem.  The default is 512.  This
+  option is only valid for 'fuseblk' type mounts.
+
+```
+
+
+### 3. FUSE用户态程序
+
+把客户端源码克隆到本地:
+
+```sh
+$ git clone https://github.com/libfuse/libfuse
+```
+
+##### 编译libfuse到ubuntu
+
+```sh
+You can download libfuse from
+https://github.com/libfuse/libfuse/releases. To build and install, you
+must use [Meson](http://mesonbuild.com/) and
+[Ninja](https://ninja-build.org).  After extracting the libfuse
+tarball, create a (temporary) build directory and run Meson:
+
+    $ mkdir build; cd build
+    $ meson ..
+
+Other way to define install dir:
+    $ meson --prefix=/usr build
+
+Normally, the default build options will work fine. If you
+nevertheless want to adjust them, you can do so with the
+*meson configure* command:
+
+    $ meson configure # list options
+    $ meson configure -D disable-mtab=true # set an option
+
+To build, test, and install libfuse, you then use Ninja:
+
+    $ ninja
+    $ sudo python3 -m pytest test/
+    $ sudo ninja install
+    
+Running the tests requires the [py.test](http://www.pytest.org/)
+Python module. Instead of running the tests as root, the majority of
+tests can also be run as a regular user if *util/fusermount3* is made
+setuid root first:
+
+    $ sudo chown root:root util/fusermount3
+    $ sudo chmod 4755 util/fusermount3
+    $ python3 -m pytest test/
+
+```
+
+BFS中fuse_main的输入参数: argc、argv，命令行参数
+
+挂载参数，有参数值，BFS中设置的参数是:
+
+```sh
+allow_other,direct_io,entry_timeout=0.5,attr_timeout=0.5,auto_umount
+```
+
+
+BFS中fuse_main的输入参数：op，文件操作函数
+
+fuse_operations 在文件 /usr/include/fuse3/fuse.h 中定义
+
+```c++
+
+#ifndef HAVE_FUSE3
+#define HAVE_FUSE3
+#endif
+
+#ifdef HAVE_FUSE3
+#ifndef FUSE_USE_VERSION
+#define FUSE_USE_VERSION 35
+#endif
+#else
+#ifndef FUSE_USE_VERSION
+#define FUSE_USE_VERSION 26
+#endif
+#endif
+
+
+static const struct fuse_operations kUDiskBFSOps = {
+    .getattr = bfs_getattr,
+    .readlink = bfs_readlink,
+    .mknod = bfs_mknod,
+    .mkdir = bfs_mkdir,
+    .unlink = bfs_unlink,
+    .rmdir = bfs_rmdir,
+    .symlink = bfs_symlink,
+    .rename = bfs_rename,
+    .link = bfs_link,
+    .chmod = bfs_chmod,
+    .chown = bfs_chown,
+    .truncate = bfs_truncate,
+    .open = bfs_open,
+    .read = bfs_read,
+    .write = bfs_write,
+    .statfs = bfs_statfs,
+    .flush = bfs_flush,
+    .release = bfs_release,
+    .fsync = bfs_fsync,
+    .setxattr = bfs_setxattr,
+    .getxattr = bfs_getxattr,
+    .listxattr = bfs_listxattr,
+    .removexattr = bfs_removexattr,
+    .opendir = bfs_opendir,
+    .readdir = bfs_readdir,
+    .releasedir = bfs_releasedir,
+    .fsyncdir = bfs_fsyncdir,
+    .init = bfs_init,
+    .destroy = bfs_destroy,
+    .access = bfs_access,
+    .create = bfs_create,
+    .lock = bfs_lock,
+    .utimens = bfs_utimens,
+    .bmap = bfs_bmap,
+    .ioctl = bfs_ioctl,
+    .poll = bfs_poll,
+#ifdef BFS_USE_READ_WRITE_BUFFER
+    .write_buf = bfs_write_buf,
+    .read_buf = bfs_read_buf,
+#else
+    .write_buf = nullptr,
+    .read_buf = nullptr,
+#endif
+    .flock = bfs_flock,
+    .fallocate = bfs_fallocate,
+    .copy_file_range = bfs_copy_file_range,
+    .lseek = bfs_lseek,
+};
+
+
+  LOG(INFO) << "fuse mount_arg: " << mount_arg;
+  new_argv[argv_cnt++] = const_cast<char *>(mount_arg.c_str());
+  new_argv[argv_cnt++] = const_cast<char *>(info->fuse_mount_point_.c_str());
+  new_argv[argv_cnt++] = (char *)nullptr;
+
+  LOG(INFO) << "argv_cnt: " << argv_cnt;
+
+  if (!fuse_main(argv_cnt - 1, new_argv, &kUDiskBFSOps, info)) {
+    LOG(WARNING) << "fuse mount loop exit";
+  }
+  
+```
+
+FUSE版本和支持的命令行参数
+
+```sh
+luotang@10-23-227-66:~/blockfs/build$ sudo ./app/bfs_mount -V
+[876191 20210120 11:06:15.627125Z][INFO][app/bfs_mount.cc:329] FUSE version: 3.10.1
+FUSE library version 3.10.1
+using FUSE kernel interface version 7.31
+fusermount3 version: 3.10.1
+[876191 20210120 11:06:15.627930Z][ERROR][app/bfs_mount.cc:362] fuse mount exit
+luotang@10-23-227-66:~/blockfs/build$ 
+
+
+luotang@10-23-227-66:~/blockfs/build$ sudo ./app/bfs_mount -h
+[sudo] password for luotang: 
+[875750 20210120 11:04:46.009927Z][INFO][app/bfs_mount.cc:329] FUSE version: 3.10.1
+usage: ./app/bfs_mount [options] <mountpoint>
+
+FUSE options:
+    -h   --help            print help
+    -V   --version         print version
+    -d   -o debug          enable debug output (implies -f)
+    -f                     foreground operation
+    -s                     disable multi-threaded operation
+    -o clone_fd            use separate fuse device fd for each thread
+                           (may improve performance)
+    -o max_idle_threads    the maximum number of idle worker threads
+                           allowed (default: 10)
+    -o kernel_cache        cache files in kernel
+    -o [no]auto_cache      enable caching based on modification times (off)
+    -o umask=M             set file permissions (octal)
+    -o uid=N               set file owner
+    -o gid=N               set file group
+    -o entry_timeout=T     cache timeout for names (1.0s)
+    -o negative_timeout=T  cache timeout for deleted names (0.0s)
+    -o attr_timeout=T      cache timeout for attributes (1.0s)
+    -o ac_attr_timeout=T   auto cache timeout for attributes (attr_timeout)
+    -o noforget            never forget cached inodes
+    -o remember=T          remember cached inodes for T seconds (0s)
+    -o modules=M1[:M2...]  names of modules to push onto filesystem stack
+    -o allow_other         allow access by all users
+    -o allow_root          allow access by root
+    -o auto_unmount        auto unmount on process termination
+
+Options for subdir module:
+    -o subdir=DIR           prepend this directory to all paths (mandatory)
+    -o [no]rellinks         transform absolute symlinks to relative
+
+Options for iconv module:
+    -o from_code=CHARSET   original encoding of file names (default: UTF-8)
+    -o to_code=CHARSET     new encoding of the file names (default: UTF-8)
+[875750 20210120 11:04:46.010178Z][ERROR][app/bfs_mount.cc:362] fuse mount exit
+luotang@10-23-227-66:~/blockfs/build$
+```
+
+
+##### 实际运行效果
+```sh
+luotang@10-23-227-66:~/blockfs/build$ sudo ./app/bfs_mount /home/luotang/bfs/
+[877654 20210120 11:11:18.315592Z][INFO][app/bfs_mount.cc:329] FUSE version: 3.10.1
+Protocol version: 7.27
+Capabilities:
+        FUSE_CAP_WRITEBACK_CACHE
+        FUSE_CAP_ASYNC_READ
+        FUSE_CAP_POSIX_LOCKS
+        FUSE_CAP_ATOMIC_O_TRUNC
+        FUSE_CAP_EXPORT_SUPPORT
+        
+........
+
+[877656 20210120 11:11:20.468840Z][INFO][lib/file_handle.cc:80] read file meta success, free num:99979
+[877656 20210120 11:11:20.468858Z][INFO][lib/file_block_handle.cc:14] total file block num: 108388
+[877656 20210120 11:11:20.544594Z][INFO][lib/file_block_handle.cc:102] read file block meta success, free num:108367
+[877656 20210120 11:11:20.547188Z][WARN][lib/journal_handle.cc:61] load journal success, journal head_: -1 journal tail_: -1 min_seq_no_: 0 max_seq_no_: 0 available_seq_no_: 1
+[877656 20210120 11:11:20.547206Z][ERROR][lib/journal_handle.cc:104] I am not master, cannot replay journal
+[877656 20210120 11:11:20.547215Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
+[877656 20210120 11:11:20.547219Z][INFO][lib/super_block.cc:173] mount point has been configured
+[877656 20210120 11:11:20.547221Z][INFO][lib/file_store_udisk.cc:1026] create fs mount point: /mnt/mysql/data/
+
+........
+
+[877657 20210120 11:12:59.788906Z][INFO][lib/file_store_udisk.cc:228] open directory: /mnt/mysql/data/
+[877657 20210120 11:12:59.788975Z][INFO][lib/dir_handle.cc:615] open directory /mnt/mysql/data/
+[877657 20210120 11:12:59.789004Z][INFO][lib/fd_handle.cc:34] current fd pool size: 400000
+[877657 20210120 11:12:59.789011Z][INFO][lib/fd_handle.cc:37] current fd: 0 pool size: 399999
+[877656 20210120 11:12:59.789075Z][INFO][app/bfs_mount.cc:149] readdir: /mnt/mysql/data/
+[877656 20210120 11:12:59.789100Z][INFO][lib/directory.cc:103] scan directory: /mnt/mysql/data/#innodb_temp/
+[877656 20210120 11:12:59.789108Z][INFO][lib/directory.cc:103] scan directory: /mnt/mysql/data/luotang/
+[877656 20210120 11:12:59.789122Z][INFO][lib/directory.cc:103] scan directory: /mnt/mysql/data/sys/
+[877656 20210120 11:12:59.789127Z][INFO][lib/directory.cc:121] scan file: undo_002
+[877656 20210120 11:12:59.789132Z][INFO][lib/directory.cc:121] scan file: ib_logfile0
+[877656 20210120 11:12:59.789137Z][INFO][lib/directory.cc:121] scan file: ibtmp1
+[877656 20210120 11:12:59.789148Z][INFO][lib/directory.cc:121] scan file: ibdata1
+[877656 20210120 11:12:59.789153Z][INFO][lib/directory.cc:121] scan file: ib_logfile1
+[877656 20210120 11:12:59.789157Z][INFO][lib/directory.cc:121] scan file: mysql.ibd
+[877656 20210120 11:12:59.789162Z][INFO][lib/directory.cc:121] scan file: #ib_16384_0.dblwr
+[877656 20210120 11:12:59.789166Z][INFO][lib/directory.cc:121] scan file: #ib_16384_1.dblwr
+[877656 20210120 11:12:59.789170Z][INFO][lib/directory.cc:121] scan file: undo_001
+[877656 20210120 11:12:59.789180Z][INFO][lib/directory.cc:49] 1611112379 2021-01-20 11:12:59
+[877656 20210120 11:12:59.789284Z][INFO][lib/file_store_udisk.cc:318] stat path: /mnt/mysql/data/#innodb_temp
+[877656 20210120 11:12:59.789294Z][INFO][lib/file_store_udisk.cc:327] stat path: /mnt/mysql/data/#innodb_temp
+[877656 20210120 11:12:59.789311Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/#innodb_temp
+[877656 20210120 11:12:59.789319Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/#innodb_tem
+
+........
+
+
+
+luotang@10-23-227-66:~$ ll /home/luotang/bfs/
+total 4
+dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
+drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
+----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
+----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
+----------  0 root    root    12582912 Jan 18 18:45  ibdata1
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
+----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
+d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
+d---------  0 root    root           0 Jan 18 18:47  luotang/
+----------  0 root    root    25165824 Jan 18 18:45  mysql.ibd
+d---------  0 root    root           0 Jan 18 18:47  sys/
+----------  0 root    root    10485760 Jan 18 18:45  undo_001
+----------  0 root    root    10485760 Jan 18 18:45  undo_002
+luotang@10-23-227-66:~$ 
+
+
+
+查看挂载信息:
+fusectl /sys/fs/fuse/connections fusectl rw,relatime 0 0
+binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc rw,relatime 0 0
+tracefs /sys/kernel/debug/tracing tracefs rw,relatime 0 0
+tmpfs /run/user/1002 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1002,gid=1002 0 0
+tmpfs /run/user/1001 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1001,gid=1001 0 0
+tmpfs /run/user/1000 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1000,gid=1000 0 0
+bfs_mount /home/luotang/bfs fuse.bfs_mount rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other 0 0
+luotang@10-23-227-66:~$ cat /proc/mounts 
+
+
+luotang@10-23-227-66:~$ sudo umount /home/luotang/bfs 
+[sudo] password for luotang: 
+luotang@10-23-227-66:~$ 
+
+
+[877657 20210120 11:12:59.789965Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
+[877657 20210120 11:12:59.789967Z][INFO][lib/file_handle.cc:136] transformPath filename: undo_001
+[877657 20210120 11:12:59.790015Z][INFO][lib/dir_handle.cc:657] close directory name: /mnt/mysql/data/ fd: 0
+
+[877654 20210120 11:15:03.637325Z][ERROR][app/bfs_mount.cc:362] fuse mount exit
+luotang@10-23-227-66:~/blockfs/build$ 
+luotang@10-23-227-66:~/blockfs/build$ 
+luotang@10-23-227-66:~/blockfs/build$ 
+
+
+
+luotang@10-23-227-66:~/bfs$ ll
+total 4
+dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
+drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
+----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
+----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
+----------  0 root    root    12582912 Jan 18 18:45  ibdata1
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
+----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
+d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
+d---------  0 root    root           0 Jan 18 18:47  luotang/
+----------  0 root    root    25165824 Jan 18 18:45  mysql.ibd
+d---------  0 root    root           0 Jan 18 18:47  sys/
+----------  0 root    root    10485760 Jan 18 18:45  undo_001
+----------  0 root    root    10485760 Jan 18 18:45  undo_002
+luotang@10-23-227-66:~/bfs$ rm -f mysql.ibd
+luotang@10-23-227-66:~/bfs$ ll
+total 4
+dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
+drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
+----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
+----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
+----------  0 root    root    12582912 Jan 18 18:45  ibdata1
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
+----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
+----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
+d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
+d---------  0 root    root           0 Jan 18 18:47  luotang/
+d---------  0 root    root           0 Jan 18 18:47  sys/
+----------  0 root    root    10485760 Jan 18 18:45  undo_001
+----------  0 root    root    10485760 Jan 18 18:45  undo_002
+luotang@10-23-227-66:~/bfs$ 
+
+
+[948171 20210120 14:30:23.888888Z][INFO][lib/file_store_udisk.cc:318] stat path: /mnt/mysql/data/mysql.ibd
+[948171 20210120 14:30:23.888926Z][INFO][lib/file_store_udisk.cc:327] stat path: /mnt/mysql/data/mysql.ibd
+[948171 20210120 14:30:23.888935Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/mysql.ibd
+[948171 20210120 14:30:23.888942Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd mount point: /mnt/mysql/data/
+[948171 20210120 14:30:23.888952Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
+[948171 20210120 14:30:23.888957Z][INFO][lib/file_handle.cc:136] transformPath filename: mysql.ibd
+[948170 20210120 14:30:23.889025Z][INFO][lib/file_handle.cc:597] unlink file: /mnt/mysql/data/mysql.ibd
+[948170 20210120 14:30:23.889056Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd/ mount point: /mnt/mysql/data/
+[948170 20210120 14:30:23.889065Z][WARN][lib/dir_handle.cc:406] directory not exist: /mnt/mysql/data/mysql.ibd/
+[948170 20210120 14:30:23.889073Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd mount point: /mnt/mysql/data/
+[948170 20210120 14:30:23.889076Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
+[948170 20210120 14:30:23.889080Z][INFO][lib/file_handle.cc:136] transformPath filename: mysql.ibd
+[948170 20210120 14:30:23.889085Z][INFO][lib/file.cc:214] mysql.ibd remove file block cut: 0
+[948170 20210120 14:30:23.889091Z][INFO][lib/block_handle.cc:117] current block pool size: 31938
+[948170 20210120 14:30:23.889097Z][INFO][lib/block_handle.cc:120] put block id: 8874 to free pool done
+[948170 20210120 14:30:23.889102Z][INFO][lib/block_handle.cc:120] put block id: 27466 to free pool done
+[948170 20210120 14:30:23.889107Z][INFO][lib/file_block.cc:8] clear file block index: 20 fh: 20
+[948170 20210120 14:30:23.889128Z][INFO][lib/file_block.cc:29] write file block meta index: 20 crc:3285807419
+[948170 20210120 14:30:23.889246Z][INFO][lib/file.cc:44] clear file name: mysql.ibd fh: 20
+[948170 20210120 14:30:23.889254Z][INFO][lib/file.cc:173] release file name: mysql.ibd fh: 20 seq_no: 0
+[948170 20210120 14:30:23.889261Z][INFO][lib/file.cc:29] write file meta, name: mysql.ibd fh: 20 align_index: 16 crc: 1024740913
+```
+
+
+
+### 4. 参考文档
+
+* [Linux FUSE(用户态文件系统)的使用](https://www.lijiaocn.com/%E6%8A%80%E5%B7%A7/2019/01/21/linux-fuse-filesystem-in-userspace-usage.html)
+* [Linux下使用fuse编写自己的文件系统](https://blog.csdn.net/stayneckwind2/article/details/82876330)
+* [fuse文件系统分析(一)](https://blog.csdn.net/wyt357359/article/details/85255366?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-7.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-7.control)
+* [用户态文件系统fuse学习](https://blog.csdn.net/ty_laurel/article/details/51685193?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2.control)
+* [FUSE协议解析](https://blog.csdn.net/weixin_34372728/article/details/91949774?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_title-3&spm=1001.2101.3001.4242)
+* [吴锦华/明鑫: 用户态文件系统(FUSE)框架分析和实战](https://blog.csdn.net/juS3Ve/article/details/78237236?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-11.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-11.control)
+* [Fuse文件系统优化方案](https://blog.csdn.net/lzpdz/article/details/50222335?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_title-6&spm=1001.2101.3001.4242)

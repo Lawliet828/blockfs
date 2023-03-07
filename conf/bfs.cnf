@@ -1,0 +1,114 @@
+# UCloud BlockFS Configuration
+version                   = 0.1
+
+[common]
+core_dump                 = true
+# UTC / SYSTEM
+log_timestamps            = SYSTEM
+log_level                 = INFO
+log_path                  = /data/mysql/log/
+# 不知道干啥用的，原先配置是false，文档中是true
+agent_enable              = true
+# agent_server            = 127.0.0.1:8888
+agent_server              = /data/mysql/bfs.sock
+
+[bfs]
+device_uuid               = 1a3231ed-5595-4e54-adbf-9c9d1cd19fd3
+# virtual mysql mount point
+uxdb_mount_point          = /mnt/mysql/
+time_update_meta          = 3600
+
+[fuse]
+fuse_enable               = true
+
+# the mount point (local path) for FUSE
+# the local path must exist
+fuse_mount_point          = /data/mysql/bfs/
+
+# enbale libfuse debug (don't touch)
+fuse_debug                = false
+
+# run forefroud in new thread (don't touch)
+fuse_foreground           = true
+
+# new thread when enbaled in mysql (don't touch)
+fuse_new_thread           = true
+
+# set the owner (user and group) of new created files and directories
+# the values are:
+## caller: current user and group from the calling process (default)
+## fixed: fixed user and group
+fuse_owner_type           = caller
+
+# set the user owner (username) of the new created files and directories
+# this parameter is valid only when owner_type set to fixed
+# empty for the user who runs the fs_fused program
+fuse_uid                  = 1001
+fuse_owner_user           = mysql
+
+# mount.fuse3 options:
+#        These options are interpreted by mount.fuse3 and are thus only
+#        available when mounting a file system via mount.fuse3 (such as
+#        when mounting via the generic mount(1) command or /etc/fstab).
+#        Supported options are:
+# setuid=USER
+#        Switch to USER and its primary group before launching the
+#        FUSE file system process. mount.fuse3 must be run as root
+#         or with CAP_SETUID and CAP_SETGID for this to work.
+fuse_setuid               = mysql
+
+# set the group owner (group name) of the new created files and directories
+# this parameter is valid only when owner_type set to fixed
+# empty for the group of the user who runs the fs_fused program
+fuse_gid                  = 1001
+fuse_owner_group          = mysql
+
+# if single thread mode
+# set true to disable multi-threaded operation
+# default value is false
+fuse_single_thread        = false
+
+# if use separate fuse device fd for each thread
+# set to true for more high performance
+# default value is false
+fuse_clone_fd             = true
+
+# the max idle worker threads for FUSE
+# default value is 10
+fuse_max_idle_threads     = 10
+
+fuse_kernel_cache         = false
+
+fuse_auto_cache           = false
+
+# fuse_umask                = 0755
+# fuse_umask                = 0444
+
+fuse_read_only            = false
+
+# access permissions for other users
+# the values are:
+##  all for all users
+##  root for root only
+##  empty or other values for none
+fuse_allow_permission     = allow_all
+
+# auto unmount on process termination
+# default value is true
+fuse_auto_unmount         = true
+
+# cache time for file attribute in seconds
+# default value is 1.0s
+fuse_attribute_timeout    = 5.0
+
+fuse_ac_attr_timeout      = 0.0
+
+fuse_noforget             = false
+
+fuse_remember             = 0.0
+
+# cache time for file entry in seconds
+# default value is 1.0s
+fuse_entry_timeout        = 5.0
+
+fuse_negative_timeout     = 0.0

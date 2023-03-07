@@ -1,0 +1,8 @@
+.vscode/
+build/
+.DS_Store
+libuuid-1.0.3.tar.gz
+googletest
+libfuse
+cmake-3.20.3
+cmake-3.20.3.tar.gz
