@@ -763,8 +763,7 @@ int File::posix_fallocate(uint64_t offset, uint64_t size) {
   LOG(ERROR) << file_name() << " fallocate not supported yet";
   return -1;
 }
-// https://blog.csdn.net/zhouxinlin2009/article/details/89633464
-// https://blog.csdn.net/lhb0709/article/details/86077584
+
 int File::fsync() { return FileStore::Instance()->dev()->Fsync(); }
 
 int File::fdatasync() { return FileStore::Instance()->dev()->Fdatasync(); }
@@ -1115,7 +1114,7 @@ void OpenFile::FileWriter::Transform2Block() {
 
 int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
   LOG(INFO) << open_file_->file()->file_name()
-            << " write udisk offset: " << block->udisk_offset_
+            << " write disk offset: " << block->udisk_offset_
             << " write size: " << block->write_size_ << " buffer addr: 0x"
             << (uint64_t)block->extern_buffer_;
   if (direct_) {
@@ -1140,9 +1139,6 @@ int64_t OpenFile::FileWriter::WriteData() {
       break;
     }
     ret += block_write;
-#ifdef STUB_ENABLE
-    block_fs_stub_match("writedata_1");
-#endif
   }
   if (!direct_) {
     open_file_->set_append_pos(open_file_->append_pos() + ret);

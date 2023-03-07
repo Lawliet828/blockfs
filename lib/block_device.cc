@@ -461,11 +461,9 @@ void BlockDevice::Close() {
   LOG(DEBUG) << "close block device " << dev_name_;
 }
 
-// https://blog.csdn.net/cywosp/article/details/8767327
 void BlockDevice::Sync() { ::sync(); }
 
 int BlockDevice::Fsync() {
-  // #define F_SYNC 64	  /**< Whether to fsync() after a write */
   int ret;
   if (dev_fd_direct_ > 0) {
     ret = ::fsync(dev_fd_direct_);

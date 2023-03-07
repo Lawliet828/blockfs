@@ -746,10 +746,6 @@ int32_t FileStore::Sync() {
 
 int32_t FileStore::FileSync(const int32_t fd) {
   LOG(INFO) << "fsync file fd: " << fd;
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, fd: " << fd;
-    return 0;
-  }
   if (!CheckPermission("fsync", fd)) {
     return -1;
   }
