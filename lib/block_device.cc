@@ -25,9 +25,9 @@ static const int32_t kIoNoMergedFlagOn = 2;
 static const int32_t kIoNoMergedFlagOff = 0;
 static constexpr uint32_t kIovMax = IOV_MAX;
 
-static const int32_t kBlkOpenWithDirect =
+static const int kBlkOpenWithDirect =
     O_RDWR | O_LARGEFILE | O_DIRECT | O_CLOEXEC;
-static const int32_t kBlkOpenWithoutDirect = O_RDWR | O_LARGEFILE | O_CLOEXEC;
+static const int kBlkOpenWithoutDirect = O_RDWR | O_LARGEFILE | O_CLOEXEC;
 
 inline void incr(int64_t /* n */) {}
 inline void incr(int64_t n, off_t &offset) { offset += off_t(n); }
@@ -417,7 +417,6 @@ bool BlockDevice::Open(const std::string &dev_name) {
   //   return false;
   // }
 
-  // 不需要额外的access检查,如果不存在的话会报错
   dev_fd_direct_ = ::open(dev_name.c_str(), kBlkOpenWithDirect);
   if (dev_fd_direct_ < 0) {
     LOG(ERROR) << "failed to open block device: " << dev_name
