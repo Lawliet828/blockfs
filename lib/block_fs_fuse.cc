@@ -409,12 +409,8 @@ int bfs_link(const char *from, const char *to) {
     return -EROFS;
   }
 
-  int res;
-
-  res = block_fs_link(from_path.c_str(), to_path.c_str());
-  if (res < 0) return -errno;
-
-  return 0;
+  // 尚未实现
+  return -1;
 }
 
 /** Change the permission bits of a file

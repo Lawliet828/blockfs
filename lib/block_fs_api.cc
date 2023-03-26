@@ -152,8 +152,6 @@ int block_fs_symlink(const char *from, const char *to) {
   return FileStore::Instance()->Symlink(from, to);
 }
 
-int block_fs_link(const char *from, const char *to) { return -1; }
-
 int block_fs_readlink(const char *path, char *buf, size_t size) {
   return FileStore::Instance()->ReadLink(path, buf, size);
 }
