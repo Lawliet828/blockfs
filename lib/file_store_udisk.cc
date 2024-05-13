@@ -65,8 +65,7 @@ const uint64_t FileStore::GetMaxFileNameLength() noexcept {
  *
  * \return 0 on success, -1 on error
  */
-int32_t FileStore::MountFileSystem(const std::string& config_path,
-                                   bool is_master) {
+int32_t FileStore::MountFileSystem(const std::string& config_path) {
   if (unlikely(config_path.empty())) {
     LOG(ERROR) << "config path is empty";
     return -1;
@@ -79,8 +78,7 @@ int32_t FileStore::MountFileSystem(const std::string& config_path,
     return -1;
   }
 
-  LOG(DEBUG) << "run as master node: " << is_master;
-  mount_stat_.set_is_master(is_master);
+  mount_stat_.set_is_master(true);
 
   if (!Initialize()) {
     return -1;

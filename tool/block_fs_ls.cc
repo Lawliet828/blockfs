@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  int64_t ret = FileStore::Instance()->MountFileSystem(config_path, master);
+  int64_t ret = FileStore::Instance()->MountFileSystem(config_path);
   if (ret < 0) {
     return -1;
   }

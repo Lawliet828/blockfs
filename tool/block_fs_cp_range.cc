@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
     HelpInfo();
     std::exit(0);
   }
-  int64_t ret = FileStore::Instance()->MountFileSystem(config_path, master);
+  int64_t ret = FileStore::Instance()->MountFileSystem(config_path);
   if (ret < 0) {
     return -1;
   }

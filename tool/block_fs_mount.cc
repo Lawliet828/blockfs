@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #include <getopt.h>
 #include <signal.h>
 #include <unistd.h>
@@ -16,7 +15,6 @@ static void HelpInfo() {
   LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
   LOG(INFO) << " -c, --config   /usr/local/mysql/blockfs/bfs.cnf";
-  LOG(INFO) << " -m, --master   Run as master node";
   LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
 }
@@ -155,19 +153,16 @@ void ToolLogPreInit(const std::string &name, const std::string &dirname) {
 }
 
 int main(int argc, char *argv[]) {
-  const char *config_path = "/usr/local/mysql/blockfs/bfs.cnf";
-  bool is_master = false;
-
+  const char *config_path = "/data/blockfs/conf/bfs.cnf";
   int c;
   while (true) {
     int optIndex = 0;
     static struct option longOpts[] = {
         {"config", required_argument, nullptr, 'c'},
-        {"master", no_argument, nullptr, 'm'},
         {"version", no_argument, nullptr, 'v'},
         {"help", no_argument, nullptr, 'h'},
         {0, 0, 0, 0}};
-    c = ::getopt_long(argc, argv, "c:mvh?", longOpts, &optIndex);
+    c = ::getopt_long(argc, argv, "c:vh?", longOpts, &optIndex);
     if (c == -1) {
       break;
     }
@@ -179,12 +174,8 @@ int main(int argc, char *argv[]) {
           std::exit(1);
         }
       } break;
-      case 'm': {
-        is_master = true;
-      } break;
       case 'v':
       case 'h':
-      case '?':
       default: {
         HelpInfo();
         std::exit(0);
@@ -195,7 +186,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  if (FileStore::Instance()->MountFileSystem(config_path, is_master) < 0) {
+  if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
 

@@ -100,8 +100,7 @@ class FileSystem : public NonCopyable {
 
   virtual void PrintVersion() noexcept;
   virtual const char* GetVersion() const noexcept;
-  virtual int32_t MountFileSystem(const std::string& config_path,
-                                  bool is_master) = 0;
+  virtual int32_t MountFileSystem(const std::string& config_path) = 0;
   virtual int32_t MountGrowfs(uint64_t size) = 0;
   virtual int32_t RemountFileSystem() = 0;
   virtual int32_t UnmountFileSystem() = 0;

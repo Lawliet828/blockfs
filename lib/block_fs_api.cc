@@ -11,7 +11,7 @@
 using namespace udisk::blockfs;
 
 int block_fs_mount(const char *config_path, bool is_master) {
-  if (FileStore::Instance()->MountFileSystem(config_path, is_master) < 0) {
+  if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
   if (FileStore::Instance()->MountFileLock() < 0) {

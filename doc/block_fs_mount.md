@@ -7,18 +7,14 @@ $ sudo ./build/tool/block_fs_mount -v
 [46652 20210202 14:13:25.986648Z][INFO][lib/file_system.cc:23] bfs version: 21.02.02-dc860f7
 [46652 20210202 14:13:25.986646Z][INFO][tool/block_fs_mount.cc:10] Build version : 21.02.02-dc860f7
 [46652 20210202 14:13:25.986653Z][INFO][tool/block_fs_mount.cc:11] Run options:
-[46652 20210202 14:13:25.986655Z][INFO][tool/block_fs_mount.cc:12]  -c, --config   /home/luotang/blockfs/conf/bfs.conf
-[46652 20210202 14:13:25.986657Z][INFO][tool/block_fs_mount.cc:13]  -m, --master   Run as master node
+[46652 20210202 14:13:25.986655Z][INFO][tool/block_fs_mount.cc:12]  -c, --config   /data/blockfs/conf/bfs.cnf
 [46652 20210202 14:13:25.986659Z][INFO][tool/block_fs_mount.cc:14]  -v, --version  Print the version.
 [46652 20210202 14:13:25.986661Z][INFO][tool/block_fs_mount.cc:15]  -h, --help     Print help info.
 ```
 
 ##### 参数解释：
 
--c 指定配置文件，否则默认是/home/luotang/blockfs/conf/bfs.conf，配置文件的模版看下面
-
--m 指定是否有以master的角色启动，master具有创建目录和文件的读写权限，否则只能有读取的权限。
-
+-c 指定配置文件，否则默认是/data/blockfs/conf/bfs.cnf，配置文件的模版看下面
 
 #### 2. bfs配置文件
 
@@ -61,7 +57,7 @@ fuse_entry_timeout 选配，默认是5.0s
 ###  3.  bfs运行
 
 ```
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -m
+luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58499 20210202 14:51:29.774293Z][INFO][lib/file_system.cc:23] bfs version: 21.02.02-dc860f7
 [58499 20210202 14:51:29.774357Z][INFO][lib/file_store_udisk.cc:70] run as master node: true
 [58499 20210202 14:51:29.774453Z][INFO][lib/config_load.cc:30] log level: INFO
@@ -114,7 +110,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -m
 [58499 20210202 14:51:31.966053Z][INFO][lib/block_fs_fuse.cc:1559] argv_cnt: 6
 [58514 20210202 14:51:31.991787Z][INFO][lib/block_fs_fuse.cc:945] call bfs_init
 [58514 20210202 14:51:31.991835Z][INFO][lib/block_fs_fuse.cc:887] Protocol version: 7.27
-[58514 20210202 14:51:31.991839Z][INFO][lib/block_fs_fuse.cc:889] Capabilities: 
+[58514 20210202 14:51:31.991839Z][INFO][lib/block_fs_fuse.cc:889] Capabilities:
 [58514 20210202 14:51:31.991841Z][INFO][lib/block_fs_fuse.cc:891] FUSE_CAP_WRITEBACK_CACHE
 [58514 20210202 14:51:31.991847Z][INFO][lib/block_fs_fuse.cc:892] FUSE_CAP_ASYNC_READ
 [58514 20210202 14:51:31.991850Z][INFO][lib/block_fs_fuse.cc:893] FUSE_CAP_POSIX_LOCKS
@@ -171,21 +167,20 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -m
 
 ### 4. 基本命令测试
 
-~~~sh
 首先开启FuseEnable的配置：
 
-luotang@10-23-227-66:~/blockfs/build$ pwd
+$ pwd
 /home/luotang/blockfs/build
-luotang@10-23-227-66:~/blockfs/build$ sudo ./tool/block_fs_mount
+$ sudo ./tool/block_fs_mount
 
-luotang@10-23-227-66:~/bfs$ ps aux | grep mount
+$ ps aux | grep mount
 root      488509  0.0  0.0  50132  3920 pts/5    S+   10:01   0:00 sudo ./tool/block_fs_mount
 root      488510  0.0  0.9 860940 618076 pts/5   Sl+  10:01   0:00 ./tool/block_fs_mount
 root      488523  0.0  0.0   4540   848 ?        Ss   10:01   0:00 fusermount3 -o rw,nosuid,nodev,allow_other,auto_unmount,subtype=block_fs_mount -- /home/luotang/bfs
 luotang   558187  0.0  0.0  13144  1092 pts/6    S+   11:45   0:00 grep --color=auto mount
-luotang@10-23-227-66:~/bfs$ 
+luotang@10-23-227-66:~/bfs$
 
-luotang@10-23-227-66:~/bfs$ cat /proc/mounts 
+luotang@10-23-227-66:~/bfs$ cat /proc/mounts
 hugetlbfs /dev/hugepages hugetlbfs rw,relatime,pagesize=2M 0 0
 mqueue /dev/mqueue mqueue rw,relatime 0 0
 debugfs /sys/kernel/debug debugfs rw,relatime 0 0
@@ -203,11 +198,11 @@ block_fs_mount /home/luotang/bfs fuse.block_fs_mount rw,nosuid,nodev,relatime,us
 1. cd命令(进入目录)
 luotang@10-23-227-66:~/blockfs$ cd /home/luotang/bfs/
 
-2. pwd命令(查看当前工作目录)
+1. pwd命令(查看当前工作目录)
 
 luotang@10-23-227-66:~/bfs$ pwd
 /home/luotang/bfs
-luotang@10-23-227-66:~/bfs$ 
+luotang@10-23-227-66:~/bfs$
 
 3. ls/ll命令(列出文件和目录)
 
@@ -226,7 +221,7 @@ dr-xr-xr-x  2 root    root    1024 Jan  1  1970 ./
 drwxr-xr-x 20 luotang luotang 4096 Jan 27 11:39 ../
 drwxr-xr-x  0 root    root       0 Jan 26 10:27 haaha/
 drwxr-xr-x  0 root    root       0 Jan 27 11:49 test/
-luotang@10-23-227-66:~/bfs$ 
+luotang@10-23-227-66:~/bfs$
 
 5. touch命令(创建文件)
 
@@ -237,7 +232,7 @@ luotang@10-23-227-66:~/bfs/test$ touch hello.log
 luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 6. rm命令(删除文件或者文件夹)
 
@@ -246,11 +241,11 @@ luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
 -rwxr-xr-x 0 root root 0 Jan 27 11:54 world.log*
-luotang@10-23-227-66:~/bfs/test$ rm -f world.log 
+luotang@10-23-227-66:~/bfs/test$ rm -f world.log
 luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 7. unlink命令
 
@@ -260,16 +255,16 @@ total 2
 -rwxr-xr-x 0 root root      200 Jan 27 14:00 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
 -rwxr-xr-x 0 root root        0 Jan 27 15:04 world.log*
-luotang@10-23-227-66:~/bfs/test$ unlink  world.log 
+luotang@10-23-227-66:~/bfs/test$ unlink  world.log
 luotang@10-23-227-66:~/bfs/test$ ll
 total 2
 -rwxr-xr-x 0 root root      200 Jan 27 14:00 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 7. stat命令
 
-luotang@10-23-227-66:~/bfs/test$ stat libblock_fs.a 
+luotang@10-23-227-66:~/bfs/test$ stat libblock_fs.a
   File: libblock_fs.a
   Size: 29232290        Blocks: 2          IO Block: 16777216 regular file
 Device: 37h/55d Inode: 3           Links: 0
@@ -278,7 +273,7 @@ Access: 2021-01-27 12:00:54.000000000 +0800
 Modify: 2021-01-27 12:02:40.000000000 +0800
 Change: 2021-01-27 12:02:40.000000000 +0800
  Birth: -
-luotang@10-23-227-66:~/bfs/test$ stat hello.log 
+luotang@10-23-227-66:~/bfs/test$ stat hello.log
   File: hello.log
   Size: 200             Blocks: 1          IO Block: 16777216 regular file
 Device: 37h/55d Inode: 4           Links: 0
@@ -287,14 +282,14 @@ Access: 1970-01-01 08:00:00.000000000 +0800
 Modify: 2021-01-27 14:00:32.000000000 +0800
 Change: 2021-01-27 14:00:32.000000000 +0800
  Birth: -
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 8. du命令
 
 luotang@10-23-227-66:~/bfs/test$ ls -lh *
 -rwxr-xr-x 0 root root 200 Jan 27 14:00 hello.log
 -rwxr-xr-x 0 root root 28M Jan 27 12:02 libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 luotang@10-23-227-66:~/bfs/test$ ll
 total 49152
@@ -306,7 +301,7 @@ luotang@10-23-227-66:~/bfs/test$ ls -lh *
 luotang@10-23-227-66:~/bfs/test$ du -sh *
 16M     hello.log
 32M     libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 9. df命令
 
@@ -336,18 +331,18 @@ luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root        0 Jan 27 11:52 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:00 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ md5sum libblock_fs.a 
+luotang@10-23-227-66:~/bfs/test$ md5sum libblock_fs.a
 ecb7adc1047003fa0a08c21a328a2850  libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a 
+luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a
 ecb7adc1047003fa0a08c21a328a2850  ../../libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 8. cp命令 - 从BFS拷贝到本地文件系统
 
 luotang@10-23-227-66:~/bfs/test$ cp libblock_fs.a ../../libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a.bak 
+luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a.bak
 ecb7adc1047003fa0a08c21a328a2850  ../../libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 
 9. mv命令 - 移动目录或者改名
@@ -356,9 +351,9 @@ luotang@10-23-227-66:~/bfs/hahaha$ cp ../../libblock_fs.a.bak .
 luotang@10-23-227-66:~/bfs/hahaha$ ll
 total 32768
 -----w--w- 0 root root 29232290 Feb  2 15:03 libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/hahaha$ md5sum libblock_fs.a.bak 
+luotang@10-23-227-66:~/bfs/hahaha$ md5sum libblock_fs.a.bak
 ecb7adc1047003fa0a08c21a328a2850  libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/hahaha$ 
+luotang@10-23-227-66:~/bfs/hahaha$
 luotang@10-23-227-66:~/bfs/hahaha$ mv libblock_fs.a.bak libblock_fs.a
 luotang@10-23-227-66:~/bfs/hahaha$ ll ..
 total 5
@@ -379,7 +374,7 @@ d----w--w-  0 root    root           0 Feb  2 15:04 hahaha/
 -----w--w-  0 root    root    29232290 Feb  2 15:04 libblock_fs.a
 luotang@10-23-227-66:~/bfs/hahaha$ ll
 total 0
-luotang@10-23-227-66:~/bfs/hahaha$ 
+luotang@10-23-227-66:~/bfs/hahaha$
 
 10. vim命令
 
@@ -389,11 +384,11 @@ luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root        0 Jan 27 11:52 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ vim hello.log 
-luotang@10-23-227-66:~/bfs/test$ cat hello.log 
+luotang@10-23-227-66:~/bfs/test$ vim hello.log
+luotang@10-23-227-66:~/bfs/test$ cat hello.log
 
 Test BFS vim!!!!!!
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 11. echo命令
 
@@ -401,68 +396,68 @@ luotang@10-23-227-66:~/bfs/test$ ll
 total 0
 -rwxr-xr-x 0 root root       20 Jan 27 12:05 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ 
-luotang@10-23-227-66:~/bfs/test$ echo "UCloud Block File System" > hello.log 
-luotang@10-23-227-66:~/bfs/test$ cat hello.log 
+luotang@10-23-227-66:~/bfs/test$
+luotang@10-23-227-66:~/bfs/test$ echo "UCloud Block File System" > hello.log
+luotang@10-23-227-66:~/bfs/test$ cat hello.log
 UCloud Block File System
-luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ cat hello.log 
+luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ cat hello.log
 UCloud Block File System
 UXDB publish success
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 
 12. cat命令
 
-luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success2" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ cat hello.log 
+luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success2" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ cat hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 
 13. head命令
 
-luotang@10-23-227-66:~/bfs/test$ head hello.log 
+luotang@10-23-227-66:~/bfs/test$ head hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ head -n 2 hello.log 
+luotang@10-23-227-66:~/bfs/test$ head -n 2 hello.log
 UCloud Block File System
 UXDB publish success
-luotang@10-23-227-66:~/bfs/test$ head -n 3 hello.log 
+luotang@10-23-227-66:~/bfs/test$ head -n 3 hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 14. more命令
 
-luotang@10-23-227-66:~/bfs/test$ more  -s hello.log 
+luotang@10-23-227-66:~/bfs/test$ more  -s hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ more +1 hello.log 
+luotang@10-23-227-66:~/bfs/test$ more +1 hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ more +2 hello.log 
+luotang@10-23-227-66:~/bfs/test$ more +2 hello.log
 UXDB publish success
 UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 15. tail命令
 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log 
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
+luotang@10-23-227-66:~/bfs/test$
 
-luotang@10-23-227-66:~/bfs/test$ tail -F hello.log 
+luotang@10-23-227-66:~/bfs/test$ tail -F hello.log
 UCloud Block File System
 UXDB publish success
 UXDB publish success2
@@ -477,27 +472,27 @@ Add new udisk in uxdb
 Add new udisk in uxdb
 
 ^C
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 
 16. grep命令
 
-luotang@10-23-227-66:~/bfs/test$ grep -rn "udisk" hello.log 
+luotang@10-23-227-66:~/bfs/test$ grep -rn "udisk" hello.log
 4:Add new udisk in uxdb
 5:Add new udisk in uxdb
 6:Add new udisk in uxdb
 7:Add new udisk in uxdb
 8:Add new udisk in uxdb
 9:Add new udisk in uxdb
-luotang@10-23-227-66:~/bfs/test$ grep -rn "UXDB" hello.log 
+luotang@10-23-227-66:~/bfs/test$ grep -rn "UXDB" hello.log
 2:UXDB publish success
 3:UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 
 17. hexdump命令
 
-luotang@10-23-227-66:~/bfs/test$ hexdump hello.log 
+luotang@10-23-227-66:~/bfs/test$ hexdump hello.log
 0000000 4355 6f6c 6475 4220 6f6c 6b63 4620 6c69
 0000010 2065 7953 7473 6d65 550a 4458 2042 7570
 0000020 6c62 7369 2068 7573 6363 7365 0a73 5855
@@ -510,13 +505,13 @@ luotang@10-23-227-66:~/bfs/test$ hexdump hello.log
 0000090 7369 206b 6e69 7520 6478 0a62 6441 2064
 00000a0 656e 2077 6475 7369 206b 6e69 7520 6478
 00000b0 0a62 6441 2064 656e 2077 6475 7369 206b
-00000c0 6e69 7520 6478 0a62                    
+00000c0 6e69 7520 6478 0a62
 00000c8
-luotang@10-23-227-66:~/bfs/test$ hexdump -n 10 -C hello.log 
+luotang@10-23-227-66:~/bfs/test$ hexdump -n 10 -C hello.log
 00000000  55 43 6c 6f 75 64 20 42  6c 6f                    |UCloud Blo|
 0000000a
-luotang@10-23-227-66:~/bfs/test$ 
-luotang@10-23-227-66:~/bfs/test$ hexdump -n 100 -C hello.log 
+luotang@10-23-227-66:~/bfs/test$
+luotang@10-23-227-66:~/bfs/test$ hexdump -n 100 -C hello.log
 00000000  55 43 6c 6f 75 64 20 42  6c 6f 63 6b 20 46 69 6c  |UCloud Block Fil|
 00000010  65 20 53 79 73 74 65 6d  0a 55 58 44 42 20 70 75  |e System.UXDB pu|
 00000020  62 6c 69 73 68 20 73 75  63 63 65 73 73 0a 55 58  |blish success.UX|
@@ -525,22 +520,22 @@ luotang@10-23-227-66:~/bfs/test$ hexdump -n 100 -C hello.log
 00000050  6b 20 69 6e 20 75 78 64  62 0a 41 64 64 20 6e 65  |k in uxdb.Add ne|
 00000060  77 20 75 64                                       |w ud|
 00000064
-luotang@10-23-227-66:~/bfs/test$ 
+luotang@10-23-227-66:~/bfs/test$
 
 18. wc命令
 
 # 文件的行数为9、单词数40、字节数200
-luotang@10-23-227-66:~/bfs/test$ wc hello.log 
+luotang@10-23-227-66:~/bfs/test$ wc hello.log
   9  40 200 hello.log
-luotang@10-23-227-66:~/bfs/test$ wc libblock_fs.a 
+luotang@10-23-227-66:~/bfs/test$ wc libblock_fs.a
   346161   506585 29232290 libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$  
+luotang@10-23-227-66:~/bfs/test$
 
 
 19. find命令
 
 luotang@10-23-227-66:~/bfs$ find . -name "hello"
-luotang@10-23-227-66:~/bfs$ 
+luotang@10-23-227-66:~/bfs$
 luotang@10-23-227-66:~/bfs$ find . -name "hello*"
 ./test/hello.log
 luotang@10-23-227-66:~/bfs$ ll haaha/
@@ -551,7 +546,7 @@ luotang@10-23-227-66:~/bfs$ ll test/
 total 0
 -rwxr-xr-x 0 root root      200 Jan 27 14:04 hello.log*
 -rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs$ 
+luotang@10-23-227-66:~/bfs$
 
 磁盘性能统计工具
 块设备性能统计工具:
@@ -605,7 +600,7 @@ https://github.com/containers/fuse-overlayfs/issues/35#issuecomment-451952680
 ### luotang@10-23-227-66:~/blockfs$ vim /usr/local/etc/fuse.conf
 ```ini
 # The file /etc/fuse.conf allows for the following parameters:
-# 
+#
 # user_allow_other - Using the allow_other mount option works fine as root, in
 # order to have it work as user you need user_allow_other in /etc/fuse.conf as
 # well. (This option allows users to use the allow_other option.) You need
@@ -621,7 +616,7 @@ user_allow_other
 # (with a single space before and after the equals sign).
 
 #mount_max = 1000
-        
+
 ```
 
 
@@ -639,7 +634,7 @@ user_allow_other
 [31813 20210205 18:19:26.928026Z][INFO][lib/block_fs_fuse.cc:1554] fuse mount_arg: allow_other,umask=0755,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
 [31813 20210205 18:19:26.928028Z][INFO][lib/block_fs_fuse.cc:1559] argv_cnt: 6
 fusermount3: mount failed: Operation not permitted
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -647,10 +642,10 @@ luotang@10-23-227-66:~/blockfs$
 $ ll $(which fusermount3)
 -rwsr-xr-x 1 root trusted 31504 27. Aug 2019  /usr/bin/fusermount3
 
-luotang@10-23-227-66:~/blockfs$ ll /usr/local/bin/fusermount3 
+luotang@10-23-227-66:~/blockfs$ ll /usr/local/bin/fusermount3
 -rwxrwxrwx 1 root root 135016 Jan 20 15:31 /usr/local/bin/fusermount3*
 luotang@10-23-227-66:~/blockfs$ sudo chown  luotang:luotang /usr/local/bin/fusermount3
-luotang@10-23-227-66:~/blockfs$ ll /usr/local/bin/fusermount3 
+luotang@10-23-227-66:~/blockfs$ ll /usr/local/bin/fusermount3
 -rwxrwxrwx 1 luotang luotang 135016 Jan 20 15:31 /usr/local/bin/fusermount3*
 luotang@10-23-227-66:~/blockfs$
 
@@ -658,7 +653,7 @@ luotang@10-23-227-66:~/blockfs$
 luotang@10-23-227-66:~/blockfs/build/tool$ ls -l /usr/bin/fusermount3 /dev/fuse
 crw-rw-rw- 1 luotang luotang 10, 229 Dec 19 11:42 /dev/fuse
 -rwxr-xr-x 1 luotang luotang  134832 Feb  1 15:11 /usr/bin/fusermount3
-luotang@10-23-227-66:~/blockfs/build/tool$ 
+luotang@10-23-227-66:~/blockfs/build/tool$
 
 ```
 

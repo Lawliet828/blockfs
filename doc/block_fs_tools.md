@@ -110,138 +110,6 @@ $ sudo ./block_fs_tool -d /dev/vdf -p uuid
 [90922 20210202 15:12:42.019830Z][ERROR][lib/journal_handle.cc:104] I am not master, cannot replay journal
 [90922 20210202 15:12:42.019836Z][INFO][tool/block_fs_tool.cc:835] dump uuid: 6a4d31e7-9fc7-427d-8054-c8fa7028f8d4
 [90922 20210202 15:12:42.019841Z][INFO][tool/block_fs_tool.cc:860] total cost time: 2.241 seconds
-````
-
-
-## 2. block_fs_cat工具
-
-```sh
-$ sudo ./build/tool/block_fs_cat -n /mnt/mysql/data/do_cmake.sh
-[872838 20210315 15:21:47.995488Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
-[872838 20210315 15:21:48.097284Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
-[872838 20210315 15:21:48.097326Z][INFO][lib/super_block.cc:173] mount point has been configured
-[872838 20210315 15:21:48.097329Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
-[872838 20210315 15:21:48.097454Z][INFO][lib/file_store_udisk.cc:447] open file: /mnt/mysql/data/do_cmake.sh
-[872838 20210315 15:21:48.097473Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/do_cmake.sh/ mount point: /mnt/mysql/data/
-[872838 20210315 15:21:48.097478Z][WARN][lib/dir_handle.cc:410] directory not exist: /mnt/mysql/data/do_cmake.sh/
-[872838 20210315 15:21:48.097483Z][INFO][lib/file_handle.cc:705] get created file name: /mnt/mysql/data/do_cmake.sh
-[872838 20210315 15:21:48.097498Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/do_cmake.sh mount point: /mnt/mysql/data/
-[872838 20210315 15:21:48.097514Z][INFO][lib/file_handle.cc:140] transformPath dirname: /mnt/mysql/data/
-[872838 20210315 15:21:48.097517Z][INFO][lib/file_handle.cc:141] transformPath filename: do_cmake.sh
-[872838 20210315 15:21:48.097522Z][WARN][lib/file_handle.cc:861] mock return success, slave just open file: /mnt/mysql/data/do_cmake.sh
-[872838 20210315 15:21:48.097527Z][INFO][lib/fd_handle.cc:34] current fd pool size: 400000
-[872838 20210315 15:21:48.097531Z][INFO][lib/fd_handle.cc:37] current fd: 0 pool size: 399999
-[872838 20210315 15:21:48.097533Z][INFO][lib/file_handle.cc:873] open file: /mnt/mysql/data/do_cmake.sh fd: 0 fh: 1
-[872842 20210315 15:21:48.097552Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1
-[872842 20210315 15:21:48.097625Z][INFO][lib/block_fs_fuse.cc:1534] fuse enable foreground
-[872838 20210315 15:21:48.097604Z][INFO][lib/file_store_udisk.cc:619] read file fd: 0 len: 286
-[872842 20210315 15:21:48.097657Z][INFO][lib/block_fs_fuse.cc:1574] fuse mount_arg: allow_other,uid=1001,gid=1001,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
-[872842 20210315 15:21:48.097662Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
-[872838 20210315 15:21:48.097684Z][INFO][lib/file.cc:791] file name: do_cmake.sh file size: 286 read size: 286 offset: 0
-[872838 20210315 15:21:48.097720Z][INFO][lib/file.cc:866] current offset: 0 file_block_index: 0 block_index_in_file_block: 0 block_offset_in_block: 0
-[872838 20210315 15:21:48.097731Z][INFO][lib/file.cc:279] do_cmake.sh get file block cut: 0 file block size: 1
-[872838 20210315 15:21:48.097735Z][INFO][lib/file.cc:919] do_cmake.sh data_start_offset: 603979776 need read offset: 0 read block index: 1467 read block offset: 0 block_read_size: 286 udisk_offset: 25216155648
-[872838 20210315 15:21:48.097746Z][INFO][lib/file.cc:946] do_cmake.sh read udisk offset: 25216155648 read size: 286 buffer addr: 0x140734019031728
-[872838 20210315 15:21:48.097971Z][INFO][lib/comm_utils.cc:95] -----------------begin-------------------
-
-[872838 20210315 15:21:48.097982Z][INFO][lib/comm_utils.cc:109] 23 21 2f 62 69 6e 2f 62 61 73 68 0a 69 66 20 5b 
-[872838 20210315 15:21:48.097986Z][INFO][lib/comm_utils.cc:109] 5b 20 24 23 20 3e 20 31 20 5d 5d 3b 20 74 68 65 
-[872838 20210315 15:21:48.097992Z][INFO][lib/comm_utils.cc:109] 6e 0a 20 20 20 20 65 63 68 6f 20 22 75 73 61 67 
-[872838 20210315 15:21:48.097996Z][INFO][lib/comm_utils.cc:109] 65 20 24 30 22 0a 20 20 20 20 65 78 69 74 20 31 
-[872838 20210315 15:21:48.098000Z][INFO][lib/comm_utils.cc:109] 0a 66 69 0a 0a 69 66 20 74 65 73 74 20 2d 65 20 
-[872838 20210315 15:21:48.098004Z][INFO][lib/comm_utils.cc:109] 62 75 69 6c 64 3b 74 68 65 6e 0a 20 20 20 20 65 
-[872838 20210315 15:21:48.098011Z][INFO][lib/comm_utils.cc:109] 63 68 6f 20 22 2d 2d 20 62 75 69 6c 64 20 64 69 
-[872838 20210315 15:21:48.098015Z][INFO][lib/comm_utils.cc:109] 72 20 61 6c 72 65 61 64 79 20 65 78 69 73 74 73 
-[872838 20210315 15:21:48.098020Z][INFO][lib/comm_utils.cc:109] 3b 20 72 6d 20 2d 72 66 20 62 75 69 6c 64 20 61 
-[872838 20210315 15:21:48.098023Z][INFO][lib/comm_utils.cc:109] 6e 64 20 72 65 2d 72 75 6e 22 0a 20 20 20 20 72 
-[872838 20210315 15:21:48.098033Z][INFO][lib/comm_utils.cc:109] 6d 20 2d 72 66 20 62 75 69 6c 64 0a 66 69 0a 0a 
-[872838 20210315 15:21:48.098038Z][INFO][lib/comm_utils.cc:109] 6d 6b 64 69 72 20 62 75 69 6c 64 0a 63 64 20 62 
-[872838 20210315 15:21:48.098047Z][INFO][lib/comm_utils.cc:109] 75 69 6c 64 0a 0a 23 63 6d 61 6b 65 20 2d 44 43 
-[872838 20210315 15:21:48.098051Z][INFO][lib/comm_utils.cc:109] 4d 41 4b 45 5f 42 55 49 4c 44 5f 54 59 50 45 3d 
-[872838 20210315 15:21:48.098057Z][INFO][lib/comm_utils.cc:109] 44 65 62 75 67 20 22 24 40 22 20 2e 2e 0a 63 6d 
-[872838 20210315 15:21:48.098061Z][INFO][lib/comm_utils.cc:109] 61 6b 65 20 2d 44 43 4d 41 4b 45 5f 42 55 49 4c 
-[872838 20210315 15:21:48.098068Z][INFO][lib/comm_utils.cc:109] 44 5f 54 59 50 45 3d 52 65 6c 57 69 74 68 44 65 
-[872838 20210315 15:21:48.098076Z][INFO][lib/comm_utils.cc:115] 62 49 6e 66 6f 20 22 24 40 22 20 2e 2e 0a 
-[872838 20210315 15:21:48.098079Z][INFO][lib/comm_utils.cc:117] -----------------end-------------------
-
-[872838 20210315 15:21:48.098083Z][INFO][tool/block_fs_cat.cc:107] cat file: /mnt/mysql/data/do_cmake.sh success
-luotang@10-23-227-66:~/blockfs$ 
-```
-
-
-## 3. block_fs_mv工具
-```
-luotang@10-23-227-66:~/blockfs$ sudo /home/luotang/blockfs/build/tool/block_fs_touch -m -n /mnt/mysql/data/test_file
-[881333 20210315 15:50:40.847115Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
-[881333 20210315 15:50:40.847236Z][WARN][lib/dir_handle.cc:39] directory handle: 1 name: /mnt/mysql/data/test_dir2/ seq_no: 0 crc: 2171320134
-[881333 20210315 15:50:40.938375Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
-[881333 20210315 15:50:40.938395Z][INFO][lib/super_block.cc:173] mount point has been configured
-[881333 20210315 15:50:40.938398Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
-[881333 20210315 15:50:40.938492Z][INFO][lib/file_handle.cc:440] create file: /mnt/mysql/data/test_file
-[881333 20210315 15:50:40.938508Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_file mount point: /mnt/mysql/data/
-[881333 20210315 15:50:40.938514Z][INFO][lib/file_handle.cc:140] transformPath dirname: /mnt/mysql/data/
-[881333 20210315 15:50:40.938518Z][INFO][lib/file_handle.cc:141] transformPath filename: test_file
-[881333 20210315 15:50:40.938527Z][INFO][lib/file_handle.cc:196] create new file handle: 2 name: test_file
-[881333 20210315 15:50:40.938539Z][INFO][lib/file.cc:29] write file meta, name: test_file fh: 2 align_index: 0 crc: 2289579665
-[881337 20210315 15:50:40.938567Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1
-[881337 20210315 15:50:40.938627Z][INFO][lib/block_fs_fuse.cc:1534] fuse enable foreground
-[881337 20210315 15:50:40.938639Z][INFO][lib/block_fs_fuse.cc:1574] fuse mount_arg: allow_other,uid=1001,gid=1001,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
-[881337 20210315 15:50:40.938645Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
-[881333 20210315 15:50:40.938690Z][INFO][lib/file_handle.cc:481] create file success: test_file
-[881333 20210315 15:50:40.938716Z][INFO][tool/block_fs_touch.cc:72] create file: /mnt/mysql/data/test_file success
-fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
-luotang@10-23-227-66:~/blockfs$ 
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mv -m -s /mnt/mysql/data/test_file -t /mnt/mysql/data/test_file2
-[881389 20210315 15:51:08.441104Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
-[881389 20210315 15:51:08.441231Z][WARN][lib/dir_handle.cc:39] directory handle: 1 name: /mnt/mysql/data/test_dir2/ seq_no: 0 crc: 2171320134
-[881389 20210315 15:51:08.532927Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
-[881389 20210315 15:51:08.532949Z][INFO][lib/super_block.cc:173] mount point has been configured
-[881389 20210315 15:51:08.532951Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
-[881389 20210315 15:51:08.533028Z][INFO][lib/file_store_udisk.cc:499] old path: /mnt/mysql/data/test_file newpath: /mnt/mysql/data/test_file2
-[881389 20210315 15:51:08.533038Z][INFO][lib/file_handle.cc:705] get created file name: /mnt/mysql/data/test_file
-[881389 20210315 15:51:08.533043Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_file mount point: /mnt/mysql/data/
-[881389 20210315 15:51:08.533050Z][INFO][lib/file_handle.cc:140] transformPath dirname: /mnt/mysql/data/
-[881389 20210315 15:51:08.533053Z][INFO][lib/file_handle.cc:141] transformPath filename: test_file
-[881389 20210315 15:51:08.533060Z][INFO][lib/file.cc:139] rename old name: test_file to: /mnt/mysql/data/test_file2
-[881389 20210315 15:51:08.533098Z][INFO][lib/file.cc:29] write file meta, name: test_file2 fh: 2 align_index: 0 crc: 3971219673
-[881395 20210315 15:51:08.533105Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1
-[881395 20210315 15:51:08.533177Z][INFO][lib/block_fs_fuse.cc:1534] fuse enable foreground
-[881395 20210315 15:51:08.533189Z][INFO][lib/block_fs_fuse.cc:1574] fuse mount_arg: allow_other,uid=1001,gid=1001,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
-[881395 20210315 15:51:08.533192Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
-fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
-[881389 20210315 15:51:08.533252Z][INFO][tool/block_fs_mv.cc:81] mv file: /mnt/mysql/data/test_file to /mnt/mysql/data/test_file2 success
-luotang@10-23-227-66:~/blockfs$ 
-```
-
-## 4. block_fs_rename工具
-```sh
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_rename -m -s /mnt/mysql/data/test_dir -t /mnt/mysql/data/test_dir2
-[880973 20210315 15:49:04.658555Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
-[880973 20210315 15:49:04.658683Z][WARN][lib/dir_handle.cc:39] directory handle: 1 name: /mnt/mysql/data/test_dir/ seq_no: 0 crc: 3346508364
-[880973 20210315 15:49:04.757515Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
-[880973 20210315 15:49:04.757552Z][INFO][lib/super_block.cc:173] mount point has been configured
-[880973 20210315 15:49:04.757555Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
-[880973 20210315 15:49:04.757656Z][INFO][lib/file_store_udisk.cc:499] old path: /mnt/mysql/data/test_dir newpath: /mnt/mysql/data/test_dir2
-[880973 20210315 15:49:04.757666Z][INFO][lib/file_handle.cc:705] get created file name: /mnt/mysql/data/test_dir
-[880973 20210315 15:49:04.757673Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_dir mount point: /mnt/mysql/data/
-[880973 20210315 15:49:04.757682Z][INFO][lib/file_handle.cc:140] transformPath dirname: /mnt/mysql/data/
-[880973 20210315 15:49:04.757685Z][INFO][lib/file_handle.cc:141] transformPath filename: test_dir
-[880973 20210315 15:49:04.757690Z][WARN][lib/file_handle.cc:725] file not exist: test_dir
-[880973 20210315 15:49:04.757698Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_dir/ mount point: /mnt/mysql/data/
-[880973 20210315 15:49:04.757702Z][INFO][lib/file_handle.cc:705] get created file name: /mnt/mysql/data/test_dir2
-[880973 20210315 15:49:04.757708Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_dir2 mount point: /mnt/mysql/data/
-[880973 20210315 15:49:04.757776Z][INFO][lib/file_handle.cc:140] transformPath dirname: /mnt/mysql/data/
-[880973 20210315 15:49:04.757780Z][INFO][lib/file_handle.cc:141] transformPath filename: test_dir2
-[880973 20210315 15:49:04.757792Z][WARN][lib/file_handle.cc:725] file not exist: test_dir2
-[880979 20210315 15:49:04.757696Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1
-[880979 20210315 15:49:04.757820Z][INFO][lib/block_fs_fuse.cc:1534] fuse enable foreground
-[880973 20210315 15:49:04.757797Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_dir/ mount point: /mnt/mysql/data/
-[880973 20210315 15:49:04.757828Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/test_dir2/ mount point: /mnt/mysql/data/
-[880979 20210315 15:49:04.757830Z][INFO][lib/block_fs_fuse.cc:1574] fuse mount_arg: allow_other,uid=1001,gid=1001,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
-[880979 20210315 15:49:04.757857Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
-[880973 20210315 15:49:04.757864Z][INFO][lib/directory.cc:236] rename old dir: /mnt/mysql/data/test_dir/ to: /mnt/mysql/data/test_dir2/
-[880973 20210315 15:49:04.757876Z][INFO][lib/directory.cc:147] directory handle: 1 align_index: 0
-fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
 ```
 
 ## 5. block_fs_cp工具
@@ -282,7 +150,7 @@ luotang@10-23-227-66:~$ sudo ./blockfs/build/tool/block_fs_cp -m -s /mnt/mysql/d
 [915549 20210315 18:09:07.543569Z][INFO][lib/file.cc:946] do_cmake.sh read udisk offset: 25216155648 read size: 286 buffer addr: 0x94287401242624
 [915549 20210315 18:09:07.554363Z][INFO][tool/block_fs_cp.cc:148] copy: /mnt/mysql/data/do_cmake.sh to /home/luotang/do_cmake.sh success
 [915549 20210315 18:09:07.554433Z][INFO][tool/block_fs_cp.cc:254] copy file: /mnt/mysql/data/do_cmake.sh to /home/luotang/do_cmake.sh success
-luotang@10-23-227-66:~$ 
+luotang@10-23-227-66:~$
 ```
 
 ```sh
@@ -345,7 +213,7 @@ luotang@10-23-227-66:~$ sudo ./blockfs/build/tool/block_fs_cp -m -s /home/luotan
 [916202 20210315 18:11:50.340143Z][INFO][lib/file_handle.cc:897] close file name: do_cmake.sh2 fd: 0
 [916202 20210315 18:11:50.350356Z][INFO][tool/block_fs_cp.cc:148] copy: /home/luotang/do_cmake.sh to /mnt/mysql/data/test_dir2/do_cmake.sh2 success
 [916202 20210315 18:11:50.350380Z][INFO][tool/block_fs_cp.cc:254] copy file: /home/luotang/do_cmake.sh to /mnt/mysql/data/test_dir2/do_cmake.sh2 success
-luotang@10-23-227-66:~$ 
+luotang@10-23-227-66:~$
 
 
 luotang@10-23-227-66:~$ cd bfs/
@@ -355,7 +223,7 @@ total 16384
 -rwxr-xr-x 0 luotang luotang 286 Mar 15 18:11 do_cmake.sh2*
 luotang@10-23-227-66:~/bfs/test_dir2$ pwd
 /home/luotang/bfs/test_dir2
-luotang@10-23-227-66:~/bfs/test_dir2$ cat do_cmake.sh2 
+luotang@10-23-227-66:~/bfs/test_dir2$ cat do_cmake.sh2
 #!/bin/bash
 if [[ $# > 1 ]]; then
     echo "usage $0"
@@ -372,7 +240,7 @@ cd build
 
 #cmake -DCMAKE_BUILD_TYPE=Debug "$@" ..
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo "$@" ..
-luotang@10-23-227-66:~/bfs/test_dir2$ 
+luotang@10-23-227-66:~/bfs/test_dir2$
 ```
 
 ```sh
@@ -402,7 +270,7 @@ luotang@10-23-227-66:~/bfs/test_dir2$ ll
 total 32768
 -rwxr-xr-x 0 luotang luotang 8444752 Mar 15 18:15 block_fs_tool*
 -rwxr-xr-x 0 luotang luotang     286 Mar 15 18:11 do_cmake.sh2*
-luotang@10-23-227-66:~/bfs/test_dir2$ ./block_fs_tool 
+luotang@10-23-227-66:~/bfs/test_dir2$ ./block_fs_tool
 [917150 20210315 18:16:34.481156Z][ERROR][tool/block_fs_tool.cc:209] no option exist, Please check
 [917150 20210315 18:16:34.481236Z][INFO][tool/block_fs_tool.cc:217] Build time    : Mar 12 2021 11:40:25
 [917150 20210315 18:16:34.481243Z][INFO][tool/block_fs_tool.cc:218] Build version : 0x1
@@ -436,7 +304,7 @@ luotang@10-23-227-66:~/bfs/test_dir2$ ./block_fs_tool
 [917150 20210315 18:16:34.481342Z][INFO][tool/block_fs_tool.cc:248]  simu    : [ls,pwd,cd,mkdir,stat,cat,echo,rename,rmdir,touch,rm,unlink]
 luotang@10-23-227-66:~/bfs/test_dir2$ pwd
 /home/luotang/bfs/test_dir2
-luotang@10-23-227-66:~/bfs/test_dir2$ 
+luotang@10-23-227-66:~/bfs/test_dir2$
 ```
 
 ### block_fs_cp_range
@@ -493,7 +361,7 @@ cd build
 
 #cmake -DCMAKE_BUILD_TYPE=Debug "$@" ..
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo "$@" ..
-luotang@10-23-227-66:~$ cat do_cmake.sh.bak 
+luotang@10-23-227-66:~$ cat do_cmake.sh.bak
 h
 if [[ $# > 1 ]]; then
     echo "usage $0"
@@ -501,7 +369,7 @@ if [[ $# > 1 ]]; then
 fi
 
 if test -e build;then
-    echo "-- build luotang@10-23-227-66:~$ 
+    echo "-- build luotang@10-23-227-66:~$
 
 ```
 
@@ -530,7 +398,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mkdir -m -n /mnt/mysq
 [858376 20210315 14:04:11.737529Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
 [858370 20210315 14:04:11.737529Z][INFO][lib/dir_handle.cc:465] make directory success: /mnt/mysql/data/sbtest
 [858370 20210315 14:04:11.737536Z][INFO][tool/block_fs_mkdir.cc:72] mkdir dir: /mnt/mysql/data/sbtest success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -556,7 +424,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_rmdir -m -n /mnt/mysq
 [862075 20210315 14:13:35.027975Z][INFO][lib/directory.cc:147] directory handle: 1 align_index: 0
 [862075 20210315 14:13:35.028141Z][INFO][lib/dir_handle.cc:540] remove directory success: /mnt/mysql/data/sbtest
 [862075 20210315 14:13:35.028150Z][INFO][tool/block_fs_rmdir.cc:72] rm dir: /mnt/mysql/data/sbtest success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -611,7 +479,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_unlink -n /mnt/mysql/
 fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
 [873268 20210315 15:23:38.009866Z][INFO][lib/file_handle.cc:663] remove file success: /mnt/mysql/data/sbtest_file
 [873268 20210315 15:23:38.009880Z][INFO][tool/block_fs_unlink.cc:72] rm file: /mnt/mysql/data/sbtest_file success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -645,7 +513,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_rm -n /mnt/mysql/data
 fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
 [874517 20210315 15:28:00.363342Z][INFO][lib/dir_handle.cc:540] remove directory success: /mnt/mysql/data/test_dir
 [874517 20210315 15:28:00.363352Z][INFO][tool/block_fs_rm.cc:72] rm file: /mnt/mysql/data/test_dir success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -672,7 +540,7 @@ drwxrwxr-x 0 root root        0 Mar 15 15:45 test_dir2/
 -rwxrwxr-x 0 root root  8444752 Mar 12 12:01 block_fs_tool
 -rwxrwxr-x 0 root root      286 Mar 12 13:16 do_cmake.sh
 [891591 20210315 16:40:25.753390Z][INFO][lib/dir_handle.cc:654] close directory name: /mnt/mysql/data/ fd: 0
-[891592 20210315 16:40:25.753360Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1luotang@10-23-227-66:~/blockfs$ 
+[891592 20210315 16:40:25.753360Z][INFO][lib/block_fs_fuse.cc:1522] FUSE version: 3.10.1luotang@10-23-227-66:~/blockfs$
 ```
 
 
@@ -682,7 +550,7 @@ drwxrwxr-x 0 root root        0 Mar 15 15:45 test_dir2/
 luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_extract_device -d /dev/vdf -o 10 -l 100000 -n /home/luotang/test.100
 [971662 20210315 22:45:14.423608Z][INFO][tool/block_fs_extract_device.cc:86] export: /home/luotang/test.100 success
 [971662 20210315 22:45:14.423684Z][INFO][tool/block_fs_extract_device.cc:152] export dev /dev/vdf success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 
 
 luotang@10-23-227-66:~$ ls -l
@@ -695,7 +563,7 @@ drwxrwxr-x  5 luotang luotang   4096 Feb  3 10:19 deps
 -rwxrwxrwx  1 root    root       286 Mar 15 18:09 do_cmake.sh
 -rwxrwxrwx  1 root    root       100 Mar 15 20:19 do_cmake.sh.bak
 -rwxr-xr-x  1 root    root    100010 Mar 15 22:45 test.100
-luotang@10-23-227-66:~$ 
+luotang@10-23-227-66:~$
 ```
 
 
@@ -705,15 +573,15 @@ luotang@10-23-227-66:~$
 
 ```sh
 
-luotang@10-23-227-66:~/blockfs$ sudo python3 tool/block_fs_stub.py 
-[sudo] password for luotang: 
+luotang@10-23-227-66:~/blockfs$ sudo python3 tool/block_fs_stub.py
+[sudo] password for luotang:
 send requuest to server '/data/mysql/bfs.sock': kill_now
-recv responce from server '/data/mysql/bfs.sock': 
-luotang@10-23-227-66:~/blockfs$ 
+recv responce from server '/data/mysql/bfs.sock':
+luotang@10-23-227-66:~/blockfs$
 
 
 luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf -m
-[sudo] password for luotang: 
+[sudo] password for luotang:
 [279676 20210525 15:59:04.857420Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/ seq_no: 0 crc: 3261875897
 [279676 20210525 15:59:04.957272Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/
 [279676 20210525 15:59:04.957309Z][INFO][lib/super_block.cc:173] mount point has been configured
@@ -728,7 +596,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf
 [279676 20210525 15:59:04.957682Z][INFO][lib/block_fs_fuse.cc:1696] argv_cnt: 6
 [279688 20210525 15:59:04.964043Z][INFO][lib/block_fs_fuse.cc:1013] call bfs_init
 [279688 20210525 15:59:04.964963Z][INFO][lib/block_fs_fuse.cc:955] Protocol version: 7.27
-[279688 20210525 15:59:04.964967Z][INFO][lib/block_fs_fuse.cc:957] Capabilities: 
+[279688 20210525 15:59:04.964967Z][INFO][lib/block_fs_fuse.cc:957] Capabilities:
 [279688 20210525 15:59:04.964969Z][INFO][lib/block_fs_fuse.cc:959] FUSE_CAP_WRITEBACK_CACHE
 [279688 20210525 15:59:04.964971Z][INFO][lib/block_fs_fuse.cc:960] FUSE_CAP_ASYNC_READ
 [279688 20210525 15:59:04.964973Z][INFO][lib/block_fs_fuse.cc:961] FUSE_CAP_POSIX_LOCKS
@@ -749,10 +617,10 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf
 [279688 20210525 15:59:04.965005Z][INFO][lib/block_fs_fuse.cc:984] FUSE_CAP_PARALLEL_DIROPS
 [279688 20210525 15:59:04.965007Z][INFO][lib/block_fs_fuse.cc:985] FUSE_CAP_POSIX_ACL
 [279686 20210525 15:59:23.312595Z][INFO][lib/injection.cc:193] new conn from unix path: /data/mysql/bfs.sock
-[279686 20210525 15:59:23.312657Z][INFO][lib/injection.cc:217] new conn from unix path: 
+[279686 20210525 15:59:23.312657Z][INFO][lib/injection.cc:217] new conn from unix path:
 [279686 20210525 15:59:23.312701Z][WARN][lib/injection.cc:50] stub kill right now
 Killed
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 ```
 
 ##### ```测试桩点kill进程```
@@ -762,18 +630,18 @@ if __name__ == "__main__":
     socket_client_obj = SocketClient()
     socket_client_obj.connect_to_server("file_open")
     # socket_client_obj.connect_to_server("kill_now")
-    
-luotang@10-23-227-66:~/blockfs$ sudo python3 tool/block_fs_stub.py 
+
+luotang@10-23-227-66:~/blockfs$ sudo python3 tool/block_fs_stub.py
 send requuest to server '/data/mysql/bfs.sock': file_open
 recv responce from server '/data/mysql/bfs.sock': success
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 
 
 可以看到在创建文件的时候, 触发了故障
 
 luotang@10-23-227-66:/data/mysql$ cd bfs/
-luotang@10-23-227-66:/data/mysql/bfs$ 
-luotang@10-23-227-66:/data/mysql/bfs$ 
+luotang@10-23-227-66:/data/mysql/bfs$
+luotang@10-23-227-66:/data/mysql/bfs$
 luotang@10-23-227-66:/data/mysql/bfs$ touch 2^C
 luotang@10-23-227-66:/data/mysql/bfs$ ll
 total 16389
@@ -782,7 +650,7 @@ drwxr-xr-x 3 root    root       4096 May 25 16:08 ../
 -rwxr-xr-x 0 luotang luotang 1600000 May 25 14:12 1.txt*
 luotang@10-23-227-66:/data/mysql/bfs$ touch 2.log
 touch: cannot touch '2.log': Software caused connection abort
-luotang@10-23-227-66:/data/mysql/bfs$ 
+luotang@10-23-227-66:/data/mysql/bfs$
 
 luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf -m
 [283296 20210525 16:08:34.962504Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/ seq_no: 0 crc: 3261875897
@@ -799,7 +667,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf
 [283296 20210525 16:08:35.058818Z][INFO][lib/block_fs_fuse.cc:1696] argv_cnt: 6
 [283313 20210525 16:08:35.064280Z][INFO][lib/block_fs_fuse.cc:1013] call bfs_init
 [283313 20210525 16:08:35.064360Z][INFO][lib/block_fs_fuse.cc:955] Protocol version: 7.27
-[283313 20210525 16:08:35.064365Z][INFO][lib/block_fs_fuse.cc:957] Capabilities: 
+[283313 20210525 16:08:35.064365Z][INFO][lib/block_fs_fuse.cc:957] Capabilities:
 [283313 20210525 16:08:35.064369Z][INFO][lib/block_fs_fuse.cc:959] FUSE_CAP_WRITEBACK_CACHE
 [283313 20210525 16:08:35.064373Z][INFO][lib/block_fs_fuse.cc:960] FUSE_CAP_ASYNC_READ
 [283313 20210525 16:08:35.064377Z][INFO][lib/block_fs_fuse.cc:961] FUSE_CAP_POSIX_LOCKS
@@ -820,7 +688,7 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf
 [283313 20210525 16:08:35.064427Z][INFO][lib/block_fs_fuse.cc:984] FUSE_CAP_PARALLEL_DIROPS
 [283313 20210525 16:08:35.064432Z][INFO][lib/block_fs_fuse.cc:985] FUSE_CAP_POSIX_ACL
 [283311 20210525 16:08:40.000853Z][INFO][lib/injection.cc:193] new conn from unix path: /data/mysql/bfs.sock
-[283311 20210525 16:08:40.000911Z][INFO][lib/injection.cc:217] new conn from unix path: 
+[283311 20210525 16:08:40.000911Z][INFO][lib/injection.cc:217] new conn from unix path:
 [283311 20210525 16:08:40.000930Z][WARN][lib/injection.cc:54] inser key: file_open count: 1
 [283311 20210525 16:08:40.000982Z][WARN][lib/injection.cc:256] delete connection: 9
 [283313 20210525 16:08:52.379446Z][INFO][lib/block_fs_fuse.cc:146] call bfs_getattr file: /
@@ -884,6 +752,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount -c conf/bfs.cnf
 [283313 20210525 16:09:07.949676Z][INFO][lib/file_handle.cc:875] open file: /mnt/mysql/2.log fd: 1 fh: 1
 [283313 20210525 16:09:07.949690Z][WARN][lib/injection.cc:63] stub kill at key: file_open
 Killed
-luotang@10-23-227-66:~/blockfs$ 
+luotang@10-23-227-66:~/blockfs$
 
 ```

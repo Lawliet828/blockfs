@@ -78,8 +78,7 @@ class FileStore : public FileSystem {
   const uint64_t GetMaxFileNameLength() noexcept override;
 
   // Mount FileSystem
-  int32_t MountFileSystem(const std::string &config_path,
-                          bool is_master) override;
+  int32_t MountFileSystem(const std::string &config_path) override;
   int32_t MountGrowfs(uint64_t size) override;
   int32_t RemountFileSystem() override;
   int32_t UnmountFileSystem() override;

@@ -62,32 +62,6 @@ target_link_libraries(block_fs_rm ${COMMLIBS})
 set_target_properties(block_fs_rm PROPERTIES VERSION ${BLOCK_FS_VERSION})
 
 
-# cat工具
-add_library(block_fs_cat_objs OBJECT
-            block_fs_cat.cc)
-redefine_file_macro(block_fs_cat_objs)
-add_executable(block_fs_cat $<TARGET_OBJECTS:block_fs_cat_objs>)
-target_link_libraries(block_fs_cat ${COMMLIBS})
-set_target_properties(block_fs_cat PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-
-# rename工具
-add_library(block_fs_rename_objs OBJECT
-            block_fs_rename.cc)
-redefine_file_macro(block_fs_rename_objs)
-add_executable(block_fs_rename $<TARGET_OBJECTS:block_fs_rename_objs>)
-target_link_libraries(block_fs_rename ${COMMLIBS})
-set_target_properties(block_fs_rename PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-
-# mv工具
-add_library(block_fs_mv_objs OBJECT
-            block_fs_mv.cc)
-redefine_file_macro(block_fs_mv_objs)
-add_executable(block_fs_mv $<TARGET_OBJECTS:block_fs_mv_objs>)
-target_link_libraries(block_fs_mv ${COMMLIBS})
-set_target_properties(block_fs_mv PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
 # ls工具
 add_library(block_fs_ls_objs OBJECT
             block_fs_ls.cc)
