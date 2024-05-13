@@ -60,11 +60,6 @@ bool JournalHandle::InitializeMeta() {
     }
   }
 
-  if (!PreHandleAllJournal()) {
-    LOG(ERROR) << "prehandle all journal fail";
-    return false;
-  }
-
   uint64_t min_seq_no = 0, max_seq_no = 0;
   if (!journal_maps_.empty()) {
     min_seq_no = journal_maps_.begin()->first;
@@ -116,85 +111,8 @@ bool JournalHandle::FormatAllMeta() {
   return true;
 }
 
-bool JournalHandle::PreHandleAllJournal() {
-  if (!block_fs_is_master()) {
-    LOG(DEBUG) << "I am not master, cannot prehandle journal";
-    return true;
-  }
-  if (journal_maps_.empty()) {
-    LOG(DEBUG) << "no need to prehandle journal";
-    return true;
-  }
-
-  // 从Map中seqno最小的开始遍历
-  for (auto it = journal_maps_.begin(); it != journal_maps_.end(); ++it) {
-    const JournalPtr &journal = it->second;
-    uint64_t jh = journal->index();
-    if (!journal->PreHandle()) {
-      LOG(ERROR) << "prehandle journal fail, jh: " << jh 
-                 << " seq: " << it->first;
-      return false;
-    }
-    LOG(DEBUG) << "prehandle journal success, jh: " << jh;
-  }
-  return true;
-}
-
-bool JournalHandle::ReplayAllJournal() {
-  if (!block_fs_is_master()) {
-    LOG(DEBUG) << "I am not master, cannot replay journal";
-    return true;
-  }
-  if (journal_maps_.empty()) {
-    LOG(DEBUG) << "no need to replay journal";
-    return true;
-  }
-
-  // 从Map中seqno最小的开始遍历
-  for (auto it = journal_maps_.begin(); it != journal_maps_.end();) {
-    const JournalPtr &journal = it->second;
-    // Replay允许失败, 系统启动有journal分为以下几种情况
-    // 1. WriteJournal和文件操作成功, 在RecycleJournal之前系统中断
-    // 2. WriteJournal成功, 文件操作中途故障, 元数据可能已经被破坏
-    // 3. WriteJournal后系统立即中断, 重启后Replay自己的问题导致失败
-    if (!journal->Replay()) {
-      LOG(WARNING) << "replay journal fail, seq: " << it->first;
-    }
-    uint64_t jh = journal->index();
-    if (!journal->Recycle()) {
-      LOG(ERROR) << "Recycle journal fail, jh: " << jh;
-      return false;
-    }
-    AddJournal2FreeNolock(jh);
-    it = journal_maps_.erase(it);
-    UpdateJournalTail();
-    LOG(DEBUG) << "Recycle journal success, jh: " << jh;
-  }
-  // 清空replay_create_dirs_
-  replay_create_dirs_.clear();
-  return true;
-}
-
 // 申请0 - 4095的Journal索引
 JournalPtr JournalHandle::NewJournal() {
-#if 0
-  // 进程起来初始化状态或者没有需要回放的时候为kJournalUnusedIndex
-  int32_t next_head =
-      (journal_head_ + 1) %
-      FileStore::Instance()->super_meta()->block_fs_journal_num_;
-  if (next_head == journal_tail_) {
-    LOG(ERROR) << "journal not enuough";
-    return nullptr;
-  }
-  uint64_t offset =
-      FileStore::Instance()->super_meta()->block_fs_journal_size_ * next_head;
-  BlockFsJournal *meta =
-      reinterpret_cast<BlockFsJournal *>(base_addr() + offset);
-  ::memset(meta, 0,
-           FileStore::Instance()->super_meta()->block_fs_journal_size_);
-  JournalPtr journal = std::make_shared<Journal>(next_head, meta);
-  return journal;
-#endif
   if (unlikely(free_metas_.empty())) {
     LOG(ERROR) << "journal not enuough";
     block_fs_set_errno(ENFILE);
@@ -334,7 +252,7 @@ bool JournalHandle::WriteJournal(const BlockFsJournalType type,
   return true;
 }
 
-bool JournalHandle::WriteJournalExForExpandFile(seq_t seq_no, 
+bool JournalHandle::WriteJournalExForExpandFile(seq_t seq_no,
       FileBlockPtr last_file_block, const std::vector<FileBlockPtr> &file_blocks) {
   META_HANDLE_LOCK();
   auto itor = journal_maps_.find(seq_no);

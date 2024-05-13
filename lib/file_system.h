@@ -79,7 +79,6 @@ class FileSystem : public NonCopyable {
 
   block_fs_config_info* mount_config() { return &mount_config_; }
 
-  virtual bool set_is_master(bool master);
   virtual const bool is_master() noexcept;
   virtual bool set_is_mounted(bool mounted) noexcept;
   virtual const bool is_mounted() noexcept;

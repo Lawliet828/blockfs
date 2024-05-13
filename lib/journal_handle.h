@@ -35,7 +35,6 @@ private:
   bool RemoveJournal(uint64_t seq_no, uint64_t jh);
   void UpdateSequenceNumber(const JournalPtr &journal);
   void UpdateJournalTail();
-  bool PreHandleAllJournal();
 
 public:
   JournalHandle();
@@ -51,7 +50,6 @@ public:
   bool WriteJournal(const BlockFsJournalType type, const DirectoryPtr &dir);
   bool WriteJournalExForExpandFile(seq_t seq_no, FileBlockPtr last_file_block,
                           const std::vector<FileBlockPtr> &file_blocks);
-  bool ReplayAllJournal();
   bool ReplayJournal(uint64_t seq_no);
   bool RecycleJournal(uint64_t seq_no);
   bool ReplayAndRecycleJournal(uint64_t seq_no);

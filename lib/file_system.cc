@@ -30,26 +30,6 @@ FileSystem::FileSystem(/* args */) { PrintVersion(); }
 FileSystem::~FileSystem() {}
 
 /**
- * change master attribute
- *
- * \param master
- *
- * \return true or false
- */
-bool FileSystem::set_is_master(bool master) {
-  if (!mount_stat_.is_master() && master) {
-    mount_stat_.set_is_master(master);
-    if (RemountFileSystem() < 0) {
-      LOG(FATAL) << "remount fs error";
-    }
-  } else {
-    mount_stat_.set_is_master(master);
-  }
-  LOG(INFO) << "set master: " << master;
-  return true;
-}
-
-/**
  * Wether node is master
  *
  * \param void

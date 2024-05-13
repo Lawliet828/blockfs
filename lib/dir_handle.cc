@@ -432,6 +432,7 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(
     const std::string &dirname) {
   std::string dir_name;
   if (!TransformPath(dirname, dir_name)) {
+    LOG(ERROR) << "directory path transform failed: " << dirname;
     return kEmptyDirectoryPtr;
   }
   auto itor = created_dirs_.find(dir_name);
@@ -530,46 +531,18 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
   const DirectoryPtr &parent_dir = dirs.first;
   const DirectoryPtr &curr_dir = dirs.second;
 
-#ifdef STUB_ENABLE
-  block_fs_stub_match("create_dir_1");
-#endif
-
-  // 写Journal操作日志
-  if (!FileStore::Instance()->journal_handle()->WriteJournal(
-          BLOCKFS_JOURNAL_CREATE_DIR, curr_dir)) {
-    return -1;
-  }
-
-#ifdef STUB_ENABLE
-  block_fs_stub_match("create_dir_2");
-#endif
-
   {
     META_HANDLE_LOCK();
     // 持久化文件夹元数据
     if (!curr_dir->WriteMeta()) {
       // 失败处理
-      FileStore::Instance()->journal_handle()->RecycleJournal(curr_dir->seq_no());
       return -1;
     }
   }
 
-#ifdef STUB_ENABLE
-  block_fs_stub_match("create_dir_3");
-#endif
-
   // 添加到内存文件夹
   if (!AddDirectory(parent_dir, curr_dir)) {
     FileStore::Instance()->journal_handle()->RecycleJournal(curr_dir->seq_no());
-    return -1;
-  }
-
-#ifdef STUB_ENABLE
-  block_fs_stub_match("create_dir_4");
-#endif
-
-  if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-          curr_dir->seq_no())) {
     return -1;
   }
 
@@ -632,26 +605,17 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
           BLOCKFS_JOURNAL_DELETE_DIR, curr_dir)) {
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("del_dir_1");
-#endif
 
   // 持久化删除文件夹元数据
   if (!curr_dir->Suicide()) {
     // TODO:失败处理
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("del_dir_2");
-#endif
 
   // 删除内存文件夹
   if (!RemoveDirectory(parent_dir, curr_dir)) {
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("del_dir_3");
-#endif
 
   if (!FileStore::Instance()->journal_handle()->RecycleJournal(
           curr_dir->seq_no())) {

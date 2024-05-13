@@ -20,10 +20,6 @@ class Journal {
   bool ReplayRenameFile();
   bool ReplayExpandFile();
   bool ReplayDeleteDirectory();
-  bool PreHandleTruncateFile();
-  bool PreHandleRenameFile();
-  bool PreHandleExpandFile();
-  bool PreHandleCreateDir();
 
  public:
   Journal(int32_t index, BlockFsJournal *meta) : index_(index), meta_(meta) {}
@@ -45,7 +41,6 @@ class Journal {
  public:
   bool WriteMeta();
   bool Replay();
-  bool PreHandle();
   bool Recycle();
   virtual int check() { return 0; };   // check if journal appears valid
   virtual int create() { return 0; };  // create a fresh journal

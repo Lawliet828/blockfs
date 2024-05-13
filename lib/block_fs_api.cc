@@ -41,10 +41,6 @@ uint32_t block_fs_get_slave_num() { return FileStore::Instance()->slave_num(); }
 
 bool block_fs_is_mounted() { return FileStore::Instance()->is_mounted(); }
 
-bool block_fs_set_master(bool master) {
-  return FileStore::Instance()->set_is_master(master);
-}
-
 bool block_fs_is_master() { return FileStore::Instance()->is_master(); }
 
 int block_fs_remove(const char *path) {

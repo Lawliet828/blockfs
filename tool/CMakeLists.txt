@@ -19,23 +19,6 @@ add_executable(block_fs_mount $<TARGET_OBJECTS:block_fs_mount_objs>)
 target_link_libraries(block_fs_mount ${COMMLIBS})
 set_target_properties(block_fs_mount PROPERTIES VERSION ${BLOCK_FS_VERSION})
 
-# mkdir工具
-add_library(block_fs_mkdir_objs OBJECT
-            block_fs_mkdir.cc)
-redefine_file_macro(block_fs_mkdir_objs)
-add_executable(block_fs_mkdir $<TARGET_OBJECTS:block_fs_mkdir_objs>)
-target_link_libraries(block_fs_mkdir ${COMMLIBS})
-set_target_properties(block_fs_mkdir PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-# rmdir工具
-add_library(block_fs_rmdir_objs OBJECT
-            block_fs_rmdir.cc)
-redefine_file_macro(block_fs_rmdir_objs)
-add_executable(block_fs_rmdir $<TARGET_OBJECTS:block_fs_rmdir_objs>)
-target_link_libraries(block_fs_rmdir ${COMMLIBS})
-set_target_properties(block_fs_rmdir PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-
 # touch工具
 add_library(block_fs_touch_objs OBJECT
             block_fs_touch.cc)
@@ -53,15 +36,6 @@ add_executable(block_fs_unlink $<TARGET_OBJECTS:block_fs_unlink_objs>)
 target_link_libraries(block_fs_unlink ${COMMLIBS})
 set_target_properties(block_fs_unlink PROPERTIES VERSION ${BLOCK_FS_VERSION})
 
-# rm工具
-add_library(block_fs_rm_objs OBJECT
-            block_fs_rm.cc)
-redefine_file_macro(block_fs_rm_objs)
-add_executable(block_fs_rm $<TARGET_OBJECTS:block_fs_rm_objs>)
-target_link_libraries(block_fs_rm ${COMMLIBS})
-set_target_properties(block_fs_rm PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-
 # ls工具
 add_library(block_fs_ls_objs OBJECT
             block_fs_ls.cc)
@@ -70,22 +44,6 @@ add_executable(block_fs_ls $<TARGET_OBJECTS:block_fs_ls_objs>)
 target_link_libraries(block_fs_ls ${COMMLIBS})
 set_target_properties(block_fs_ls PROPERTIES VERSION ${BLOCK_FS_VERSION})
 
-
-# cp工具
-add_library(block_fs_cp_objs OBJECT
-            block_fs_cp.cc)
-redefine_file_macro(block_fs_cp_objs)
-add_executable(block_fs_cp $<TARGET_OBJECTS:block_fs_cp_objs>)
-target_link_libraries(block_fs_cp ${COMMLIBS})
-set_target_properties(block_fs_cp PROPERTIES VERSION ${BLOCK_FS_VERSION})
-
-# cp_range工具
-add_library(block_fs_cp_range_objs OBJECT
-            block_fs_cp_range.cc)
-redefine_file_macro(block_fs_cp_range_objs)
-add_executable(block_fs_cp_range $<TARGET_OBJECTS:block_fs_cp_range_objs>)
-target_link_libraries(block_fs_cp_range ${COMMLIBS})
-set_target_properties(block_fs_cp_range PROPERTIES VERSION ${BLOCK_FS_VERSION})
 
 # extract_device工具
 add_library(block_fs_extract_device_objs OBJECT

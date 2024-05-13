@@ -122,12 +122,6 @@ TEST(TESTGROUP, verify_dir_path) {
     ret = block_fs_rmdir(dirname5);
     EXPECT_EQ(ret, -1);
     EXPECT_EQ(errno, ENOENT);
-
-    // 如果是在只可读的文件系统上创建文件夹创建文件, 不创建, 直接返回成功
-    block_fs_set_master(false);
-    ret = block_fs_mkdir(dirname5, S_IRWXU);
-    EXPECT_EQ(ret, 0);
-    block_fs_set_master(true);
 }
 
 TEST(TESTGROUP, dir_test_with_file) {
@@ -1042,19 +1036,6 @@ TEST_F(TruncateTest, truncate_test) {
     ret = block_fs_rmdir(dir0);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(errno, 0);
-}
-
-TEST_F(TruncateTest, slave_cannot_truncate) {
-    // truncate returns EROFS if the named file resides on a read-only file system
-
-    block_fs_set_master(false);
-    // 检查是否是master
-    ret = block_fs_truncate(name0, 123);
-    // EXPECT_EQ(ret, -1);
-    // EXPECT_EQ(errno, EROFS);
-    EXPECT_EQ(ret, 0);
-    EXPECT_EQ(errno, 0);
-    block_fs_set_master(true);
 }
 
 TEST_F(TruncateTest, length_is_negative) {

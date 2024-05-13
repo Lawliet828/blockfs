@@ -78,8 +78,6 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
     return -1;
   }
 
-  mount_stat_.set_is_master(true);
-
   if (!Initialize()) {
     return -1;
   }
@@ -90,7 +88,6 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
   if (!shm_manager_->Initialize(true)) {
     return -1;
   }
-  // super()->set_uxdb_mount_point(info.mount_point_);
   if (!InitializeMeta(true)) {
     return -1;
   }
@@ -104,11 +101,7 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
 int32_t FileStore::MountFileLock() {
   lock_ = new PosixFileLock(mount_config_.device_uuid_);
   if (!lock_ || !lock_->lock(true)) {
-    // bfs mounted by tool, but not set master
-    // The master node mount is expected to be successful
-    if (mount_stat_.is_master_) {
-      return -1;
-    }
+    return -1;
   }
   return 0;
 }
@@ -930,7 +923,6 @@ bool FileStore::Format(const std::string& dev_name) {
     return false;
   }
 
-  mount_stat_.set_is_master(true);
   if (!device_->Open(dev_name)) {
     return false;
   }
@@ -1014,21 +1006,11 @@ bool FileStore::OpenTarget(const std::string& uuid) {
   return false;
 }
 
-/**
- * change is_master attribute
- *
- * \param is_master
- *
- * \return true or false
- */
 bool FileStore::InitializeMeta(bool dump) {
   for (auto& handle : handle_vector_) {
     if (!handle->InitializeMeta()) {
       return false;
     }
-  }
-  if (!FileStore::Instance()->journal_handle()->ReplayAllJournal()) {
-    return false;
   }
   set_is_mounted(true);
   return true;

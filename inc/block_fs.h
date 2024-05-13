@@ -17,14 +17,12 @@ extern "C" {
 
 typedef struct block_fs_mount_stat_t {
   bool is_mounted_;
-  bool is_master_;
   uint32_t slave_num_;
 #ifdef __cplusplus
   block_fs_mount_stat_t() : is_mounted_(false), slave_num_(0) {}
   void set_is_mounted(bool is_mounted) noexcept { is_mounted_ = is_mounted; }
   bool is_mounted() const noexcept { return is_mounted_; }
-  void set_is_master(bool is_master) noexcept { is_master_ = is_master; }
-  bool is_master() const noexcept { return is_master_; }
+  bool is_master() const noexcept { return true; }
   void set_slave_num(uint32_t slave_num) noexcept { slave_num_ = slave_num; }
   uint32_t slave_num() const noexcept { return slave_num_; }
 #endif
@@ -91,14 +89,6 @@ uint32_t block_fs_get_slave_num();
  * \return Return blockfs ready state
  */
 bool block_fs_is_mounted();
-
-/**
- * Set/Change node master role
- * often returns true
- *
- * \return Return set retcode
- */
-bool block_fs_set_master(bool master);
 
 /**
  * get node master role
