@@ -8,13 +8,19 @@ MESSAGE( STATUS "Build CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
 include (${CMAKE_SOURCE_DIR}/deps/cmake/utils.cmake)
 
-include_directories(/usr/include/fuse3)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FUSE3 REQUIRED fuse3)
+message(STATUS "FUSE3_INCLUDE_DIRS: ${FUSE3_INCLUDE_DIRS}")
+message(STATUS "FUSE3_LIBRARY_DIRS: ${FUSE3_LIBRARY_DIRS}")
+message(STATUS "FUSE3_LIBRARIES: ${FUSE3_LIBRARIES}")
+include_directories(${FUSE3_INCLUDE_DIRS})
+#include_directories(/usr/local/include/fuse3)
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 include_directories(${CMAKE_SOURCE_DIR}/tool)
 link_directories(${CMAKE_SOURCE_DIR}/build/block_fs)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -g -O2 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -g -O2 -Wall -fPIC")
 
 add_definitions(-Wno-builtin-macro-redefined)
 

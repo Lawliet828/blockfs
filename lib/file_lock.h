@@ -4,6 +4,7 @@
 
 #include <assert.h>
 
+#include <condition_variable>
 #include <mutex>
 #include <shared_mutex>
 
