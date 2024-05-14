@@ -65,12 +65,7 @@ bool FileBlockHandle::InitializeMeta() {
           // LOG(ERROR) << "block index: " << i
           //            << " block id: " << meta->block_id_[i];
         }
-        if (FileStore::Instance()->journal_handle()->HasJournal()) {
-          // 先跳过这个fileblock
-          continue;
-        } else {
-          return false;
-        }
+        return false;
       }
       FileBlockPtr fb = std::make_shared<FileBlock>(index, meta);
       // 把Block从空闲列表中摘出来, 不能被分配出去

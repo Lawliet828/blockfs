@@ -66,8 +66,6 @@ bool SuperBlock::FormatAllMeta() {
   meta->dir_meta_size_ = kBlockFsDirMetaSize;
   meta->file_meta_size_ = kBlockFsFileMetaSize;
   meta->file_block_meta_size_ = kBlockFsFileBlockMetaSize;
-  meta->block_fs_journal_size_ = kBlockFsJournalSize;
-  meta->block_fs_journal_num_ = kBlockFsJournalNum;
 
   /* 1. 协商区域 :  起始位置 0 - 4096 */
   meta->negotiation_offset_ = kNegotiationOffset;
@@ -106,14 +104,8 @@ bool SuperBlock::FormatAllMeta() {
       ROUND_UP((tmpSize1 + tmpSize2), kBlockFsPageSize);
   meta->max_support_file_block_num_ = tmpNum1 + tmpNum2;
 
-  /* 6. Journal区域: 起始位置 xxx - xxx */
-  meta->block_fs_journal_offset_ =
-      meta->file_block_meta_offset_ + meta->file_block_meta_total_size_;
-  meta->journal_total_size_ =
-      meta->block_fs_journal_size_ * meta->block_fs_journal_num_;
-
   meta->block_data_start_offset_ =
-      meta->block_fs_journal_offset_ + meta->journal_total_size_;
+      meta->file_block_meta_offset_ + meta->file_block_meta_total_size_;
 
   // 元数据区域大小保证16M对齐,也就是数据区域的起始位置是16M对齐的
   meta->block_data_start_offset_ =
@@ -293,9 +285,6 @@ void SuperBlock::Dump() noexcept {
             << "dir_meta_size: " << meta()->dir_meta_size_ << "\n"
             << "file_meta_size: " << meta()->file_meta_size_ << "\n"
             << "file_block_meta_size: " << meta()->file_block_meta_size_ << "\n"
-            << "block_fs_journal_size: " << meta()->block_fs_journal_size_
-            << "\n"
-            << "block_fs_journal_num: " << meta()->block_fs_journal_num_ << "\n"
             << "negotiation_size: " << meta()->negotiation_size_ << "\n"
             << "super_block_size: " << meta()->super_block_size_ << "\n"
             << "dir_meta_total_size: " << meta()->dir_meta_total_size_ << "\n"
@@ -304,14 +293,11 @@ void SuperBlock::Dump() noexcept {
             << "\n"
             << "file_block_meta_total_size: "
             << meta()->file_block_meta_total_size_ << "\n"
-            << "journal_total_size: " << meta()->journal_total_size_ << "\n"
             << "negotiation_offset: " << meta()->negotiation_offset_ << "\n"
             << "super_block_offset: " << meta()->super_block_offset_ << "\n"
             << "dir_meta_offset: " << meta()->dir_meta_offset_ << "\n"
             << "file_meta_offset: " << meta()->file_meta_offset_ << "\n"
             << "file_block_meta_offset: " << meta()->file_block_meta_offset_
-            << "\n"
-            << "block_fs_journal_offset: " << meta()->block_fs_journal_offset_
             << "\n"
             << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
             << "curr_udisk_size: " << meta()->curr_udisk_size_ << "\n"

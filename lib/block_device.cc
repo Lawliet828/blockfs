@@ -8,7 +8,6 @@
 #include <linux/fs.h>
 // #include <blkid/blkid.h>
 
-#include "injection.h"
 #include "logging.h"
 
 using namespace udisk::blockfs;

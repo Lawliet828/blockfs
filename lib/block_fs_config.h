@@ -21,12 +21,9 @@ typedef struct block_fs_config_info_t {
   std::string log_path_;
   std::string log_timestamps_;
   bool log_time_utc_ = false;
-  bool enable_agent_ = false;
-  std::string agent_server_;
 
   std::string device_uuid_;
   std::string uxdb_mount_point_;
-  int time_update_meta_ = 3600;
 
   std::string fuse_mount_point_;
 
@@ -36,17 +33,11 @@ typedef struct block_fs_config_info_t {
   bool fuse_foreground_ = false;
   /* -s: disable multi-threaded operation */
   bool fuse_multi_threaded_ = false;
-  /* -o clone_fd:
-   * use separate fuse device fd for each thread (may improve performance)*/
-  bool fuse_clone_fd_ = false;
   /* -o max_idle_threads:
    * the maximum number of idle worker threads allowed (default: 10) */
   int fuse_max_idle_threads_ = 10;
   /* -o kernel_cache: cache files in kernel */
   bool fuse_kernel_cache_ = false;
-  /* -o [no]auto_cache:
-   * enable caching based on modification times (off) */
-  bool fuse_auto_cache_ = false;
   /* -o umask=M: set file permissions (octal) */
   bool has_fuse_umask_ = false;
   std::string fuse_umask_ = "0755";
@@ -57,14 +48,8 @@ typedef struct block_fs_config_info_t {
   std::string fuse_gid_;
   /* -o entry_timeout=T: cache timeout for names (1.0s) */
   double fuse_entry_timeout_ = 0.5;
-  /* -o negative_timeout=T: cache timeout for deleted names (0.0s)*/
-  double fuse_negative_timeout_ = 120;
   /* -o attr_timeout=T: cache timeout for attributes (1.0s)*/
   double fuse_attr_timeout_ = 0.5;
-  /* -o noforget: never forget cached inodes*/
-  bool fuse_noforget_ = false;
-  /* -o remember=T: remember cached inodes for T seconds(0s) */
-  double fuse_remember_ = 0;
   /* -o modules=M1[:M2...]:
    * names of modules to push onto filesystem stack */
   std::vector<std::string> fuse_modules_;

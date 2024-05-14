@@ -23,9 +23,6 @@ typedef std::shared_ptr<File> FilePtr;
 class FileBlock;
 typedef std::shared_ptr<FileBlock> FileBlockPtr;
 
-class Journal;
-typedef std::shared_ptr<Journal> JournalPtr;
-
 struct BLOCKFS_DIR_S {
   bool inited_ = false; /* Scan directory yet */
   int32_t fd_;          /* Open directory file descriptor */

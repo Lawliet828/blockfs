@@ -24,13 +24,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
     LOG(ERROR) << "configure invalid, check sections";
     return false;
   }
-  if (ini.GetBoolValue("common", "agent_enable", &config->enable_agent_) != 0) {
-    config->enable_agent_ = false;
-  }
-  if (ini.GetStringValue("common", "agent_server", &config->agent_server_) !=
-      0) {
-    config->agent_server_ = "/data/mysql/bfs.sock";
-  }
 
   if (ini.GetStringValue("common", "log_level", &config->log_level_) != 0) {
     config->log_level_ = "INFO";
@@ -63,10 +56,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   if (ini.GetStringValue("bfs", "uxdb_mount_point",
                          &config->uxdb_mount_point_) != 0) {
     return false;
-  }
-  if (ini.GetIntValue("bfs", "time_update_meta", &config->time_update_meta_) !=
-      0) {
-    config->time_update_meta_ = 3600;
   }
 
   if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {

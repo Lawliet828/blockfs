@@ -174,7 +174,6 @@ void BlockFsTool::ParseOption(int argc, char **argv) {
       } break;
       case 'v':
       case 'h':
-      case '?':
       default: {
         HelpInfo();
         exit(0);
@@ -352,7 +351,6 @@ bool BlockFsTool::DoBlockFsTool() {
           FileStore::Instance()->super()->Dump();
           FileStore::Instance()->dir_handle()->Dump();
           FileStore::Instance()->file_handle()->Dump();
-          FileStore::Instance()->journal_handle()->Dump();
         }
         break;
       case BLOCKFS_BLK:

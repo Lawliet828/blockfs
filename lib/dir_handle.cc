@@ -4,7 +4,6 @@
 
 #include "crc.h"
 #include "file_store_udisk.h"
-#include "injection.h"
 #include "logging.h"
 
 namespace udisk {
@@ -299,30 +298,8 @@ bool DirHandle::AddDirectory2CreateNolock(const DirectoryPtr &child) {
   // 当前文件夹加入内存映射表
   if (created_dirs_.find(child->dir_name()) != created_dirs_.end()) {
     LOG(ERROR) << "directory name has exist, name: " << child->dir_name();
-    if (FileStore::Instance()->journal_handle()->IsReplayingJournal()) {
-      // 在回放日志过程中
-      dh_t cur_dh = child->dh();
-      dh_t journal_dh = FileStore::Instance()->journal_handle()->GetReplayCreateDir(child->dir_name());
-      if (cur_dh == journal_dh) {
-        // 当前文件夹是回放日志创建的
-        if (child->SuicideNolock()) {
-          LOG(ERROR) << "suicide directory success, name: " << child->dir_name();
-        }
-        // 不加入内存映射表,直接返回
-        return true;
-      } else {
-        Directory::ClearMeta(journal_dh);
-        if (!Directory::WriteMeta(journal_dh)) {
-          return false;
-        }
-        created_dirs_[child->dir_name()] = child;
-        created_dhs_[child->dh()] = child;
-        return true;
-      }
-    } else {
-      if (child->SuicideNolock()) {
-        LOG(ERROR) << "suicide directory success, name: " << child->dir_name();
-      }
+    if (child->SuicideNolock()) {
+      LOG(ERROR) << "suicide directory success, name: " << child->dir_name();
     }
     return false;
   }

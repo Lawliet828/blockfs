@@ -809,7 +809,6 @@ bool FileStore::Initialize() {
   }
   handle_vector_[kNegotiationHandle] = new Negotiation();
   handle_vector_[kSuperBlockHandle] = new SuperBlock();
-  handle_vector_[kJournalHandle] = new JournalHandle();
   handle_vector_[kFDHandle] = new FdHandle();
   handle_vector_[kBlockHandle] = new BlockHandle();
   handle_vector_[kDirectoryHandle] = new DirHandle();

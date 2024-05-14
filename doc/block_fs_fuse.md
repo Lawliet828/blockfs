@@ -1,14 +1,5 @@
 ## BlockFS支持FUSE标准本地文件系统挂载
 
-### 1. 背景
-
-BlockFS 是一款基于块存储的通用分布式文件系统，可以作为MySQL、PostgresSQL、Oracle等数据库和云平台的后端存储。
-
-BlockFS 可以通过专有API访问，为互联网应用量身定制，作为通用的分布式文件系统，可以mount到本机通过标准文件接口访问。
-
-如果是通过专有的工具去运维和管理文件和目录会相对麻烦，支持FUSE后就可以对工具的修改无感知，向后无缝的兼容.
-
-
 ### 2. FUSE介绍
 
 FUSE 是Linux Kernel的特性之一：
@@ -107,51 +98,6 @@ fuse提供了 fuse 和 fuseblk 两种文件系统类型，
 
 
 ### 3. FUSE用户态程序
-
-把客户端源码克隆到本地:
-
-```sh
-$ git clone https://github.com/libfuse/libfuse
-```
-
-##### 编译libfuse到ubuntu
-
-```sh
-You can download libfuse from
-https://github.com/libfuse/libfuse/releases. To build and install, you
-must use [Meson](http://mesonbuild.com/) and
-[Ninja](https://ninja-build.org).  After extracting the libfuse
-tarball, create a (temporary) build directory and run Meson:
-
-    $ mkdir build; cd build
-    $ meson ..
-
-Other way to define install dir:
-    $ meson --prefix=/usr build
-
-Normally, the default build options will work fine. If you
-nevertheless want to adjust them, you can do so with the
-*meson configure* command:
-
-    $ meson configure # list options
-    $ meson configure -D disable-mtab=true # set an option
-
-To build, test, and install libfuse, you then use Ninja:
-
-    $ ninja
-    $ sudo python3 -m pytest test/
-    $ sudo ninja install
-
-Running the tests requires the [py.test](http://www.pytest.org/)
-Python module. Instead of running the tests as root, the majority of
-tests can also be run as a regular user if *util/fusermount3* is made
-setuid root first:
-
-    $ sudo chown root:root util/fusermount3
-    $ sudo chmod 4755 util/fusermount3
-    $ python3 -m pytest test/
-
-```
 
 BFS中fuse_main的输入参数: argc、argv，命令行参数
 

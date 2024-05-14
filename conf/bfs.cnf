@@ -7,16 +7,11 @@ core_dump                 = true
 log_timestamps            = SYSTEM
 log_level                 = DEBUG
 log_path                  = /data/mysql/log/
-# 不知道干啥用的，原先配置是false，文档中是true
-agent_enable              = true
-# agent_server            = 127.0.0.1:8888
-agent_server              = /data/mysql/bfs.sock
 
 [bfs]
-device_uuid               = 9df5f094-c5d8-4e05-8048-c1a6248c70da
+device_uuid               = 4ce7cbc8-46df-4afc-90b1-a5f72e4c0cdb
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
-time_update_meta          = 3600
 
 [fuse]
 # the mount point (local path) for FUSE
@@ -28,9 +23,6 @@ fuse_debug                = false
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true
-
-# new thread when enbaled in mysql (don't touch)
-fuse_new_thread           = true
 
 # set the owner (user and group) of new created files and directories
 # the values are:
@@ -59,14 +51,7 @@ fuse_setuid               = mysql
 # empty for the group of the user who runs the fs_fused program
 fuse_gid                  = 1001
 
-# if use separate fuse device fd for each thread
-# set to true for more high performance
-# default value is false
-fuse_clone_fd             = true
-
 fuse_kernel_cache         = false
-
-fuse_auto_cache           = false
 
 # fuse_umask                = 0755
 
@@ -85,14 +70,6 @@ fuse_auto_unmount         = true
 # default value is 1.0s
 fuse_attribute_timeout    = 5.0
 
-fuse_ac_attr_timeout      = 0.0
-
-fuse_noforget             = false
-
-fuse_remember             = 0.0
-
 # cache time for file entry in seconds
 # default value is 1.0s
 fuse_entry_timeout        = 5.0
-
-fuse_negative_timeout     = 0.0

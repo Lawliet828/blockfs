@@ -7,7 +7,6 @@
 
 #include "block_fs.h"
 #include "file_store_udisk.h"
-#include "injection.h"
 #include "logging.h"
 
 static void HelpInfo() {
@@ -193,8 +192,6 @@ int main(int argc, char *argv[]) {
   block_fs_config_info *conf = FileStore::Instance()->mount_config();
 
   ToolLogPreInit("block_fs_mount", conf->log_path_);
-
-  block_fs_stub_init(conf);
 
   daemonize();
   if (FileStore::Instance()->MountFileLock() < 0) {

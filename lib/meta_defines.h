@@ -78,8 +78,6 @@ union SuperBlockMeta {
     uint64_t dir_meta_size_;               // 1K, per directory meta size
     uint64_t file_meta_size_;              // 256B, per file meta size
     uint64_t file_block_meta_size_;        // 4k, per file block meta size
-    uint64_t block_fs_journal_size_;       // 4K, per journal size
-    uint64_t block_fs_journal_num_;        // total journal number
 
     // The total size of each bfs metadata
     uint64_t negotiation_size_;            // total size of negotiation
@@ -87,7 +85,6 @@ union SuperBlockMeta {
     uint64_t dir_meta_total_size_;         // total size of directory meta
     uint64_t file_meta_total_size_;        // total size of file meta
     uint64_t file_block_meta_total_size_;  // total size of file block meta
-    uint64_t journal_total_size_;          // total size of bfs journal
 
     // The offset start in udisk device offset
     uint64_t negotiation_offset_;       // the offset of negotiation
@@ -95,7 +92,6 @@ union SuperBlockMeta {
     uint64_t dir_meta_offset_;          // the offset of directory meta
     uint64_t file_meta_offset_;         // the offset of file meta
     uint64_t file_block_meta_offset_;   // the offset of file block meta
-    uint64_t block_fs_journal_offset_;  // the offset of journal meta
     uint64_t block_data_start_offset_;  // the offset of data block
 
     // variable according to the udisk device size
@@ -194,134 +190,6 @@ union FileBlockMeta {
 static_assert(sizeof(FileBlockMeta) == kBlockFsFileBlockMetaSize,
               "BlockFsBlockMeta size must be 4096 Bytes");
 
-enum BlockFsJournalType {
-  BLOCKFS_JOURNAL_CREATE_FILE,    // 创建文件
-  BLOCKFS_JOURNAL_EXPAND_FILE,    // 文件扩容
-  BLOCKFS_JOURNAL_TRUNCATE_FILE,  // 文件空洞
-  BLOCKFS_JOURNAL_DELETE_FILE,    // 删除文件
-  BLOCKFS_JOURNAL_RENAME_FILE,    // 文件重命名
-  BLOCKFS_JOURNAL_CHMOD_FILE,     // 文件权限
-  BLOCKFS_JOURNAL_CREATE_DIR,     // 创建文件夹
-  BLOCKFS_JOURNAL_DELETE_DIR,     // 删除文件夹
-  BLOCKFS_JOURNAL_CHMOD_DIR       // 文件夹权限
-};
-
-enum JOURNAL_OP {
-  JOURNAL_OP_NONE = 0,   ///< none
-  JOURNAL_OP_INIT,       ///< initial (empty) file system marker
-  JOURNAL_OP_ALLOC_ADD,  ///< add extent to available block storage (extent)
-  JOURNAL_OP_ALLOC_RM,  ///< remove extent from available block storage (extent)
-  JOURNAL_OP_DIR_LINK,  ///< (re)set a dir entry (dirname, filename, ino)
-  JOURNAL_OP_DIR_UNLINK,   ///< remove a dir entry (dirname, filename)
-  JOURNAL_OP_DIR_CREATE,   ///< create a dir (dirname)
-  JOURNAL_OP_DIR_REMOVE,   ///< remove a dir (dirname)
-  JOURNAL_OP_DIR_UPDATE,   ///< set/update file metadata (file)
-  JOURNAL_OP_FILE_CREATE,  ///< create a file (dirname)
-  JOURNAL_OP_FILE_UPDATE,  ///< set/update file metadata (file)
-  JOURNAL_OP_FILE_EXPAND,  ///< set/update file metadata (file)
-  JOURNAL_OP_FILE_SHRINK,  ///< set/update file metadata (file)
-  JOURNAL_OP_FILE_REMOVE,  ///< remove file (ino)
-  JOURNAL_OP_JUMP,         ///< jump the seq # and offset
-  JOURNAL_OP_JUMP_SEQ,     ///< jump the seq #
-};
-
-struct BlockFsJournalCreateFile {
-  FileMeta file_meta_;
-} __attribute__((packed));
-
-struct BlockFsJournalCreateDir {
-  DirMeta dir_meta_;
-} __attribute__((packed));
-
-struct BlockFsJournalExpandFile {
-  int32_t fh_;
-  uint64_t size_;             // 文件原来的大小
-  uint32_t last_file_block_index_;
-  uint32_t used_block_num_;   // 原文件最后一个file block原先使用的block数
-  uint32_t file_block_num_;
-  uint32_t file_block_ids_[1000];
-} __attribute__((packed));
-
-struct BlockFsJournalTruncateFile {
-  FileMeta parent_file_meta_;
-  int32_t new_fh_;
-} __attribute__((packed));
-
-struct BlockFsJournalDeleteFile {
-  int32_t fh_;  // 文件句柄
-} __attribute__((packed));
-
-struct BlockFsJournalDeleteDir {
-  dh_t dh_;  // 文件夹句柄
-} __attribute__((packed));
-
-struct BlockFsJournalRenameFile {
-  int32_t fh_;                             // 原文件的句柄
-  char file_name_[kBlockFsMaxFileNameLen]; // 新文件名
-  dh_t dh_;                             // 新文件的目录
-  time_t atime_;
-  time_t mtime_;
-  time_t ctime_;
-} __attribute__((packed));
-
-struct BlockFsJournalMoveFile {
-  int32_t old_fh_;            // 文件句柄
-  uint8_t target_file_[128];  // 目标文件的路径:rename, move操作
-} __attribute__((packed));
-
-// https://www.cnblogs.com/jikexianfeng/p/5742887.html
-struct BlockFsJournalChmodFile {
-  int32_t fh_;   // 文件句柄
-  mode_t mode_;  // 文件权限
-} __attribute__((packed));
-
-struct BlockFsJournalChmodDir {
-  dh_t dh_;   // 文件夹句柄
-  mode_t mode_;  // 文件夹权限
-} __attribute__((packed));
-
-// BlockFsJournal 限制是每个4K
-// 一个BlockFsJournal没办法容纳信息,可能需要分多个journal?
-// 主需要告诉从分配的block相关元数据信息
-// 多线程同一个fh最好落到一个个线程中 fh % thread
-union BlockFsJournal {
-  struct {
-    uint32_t crc_;
-    seq_t seq_no_;          // 操作序列号
-    uint64_t jh_;              // journal handle编号
-    BlockFsJournalType type_;  // 文件操作类型
-    union {
-      BlockFsJournalCreateFile create_file_;
-      BlockFsJournalExpandFile expand_file_;
-      BlockFsJournalTruncateFile truncate_file_;
-      BlockFsJournalDeleteFile delete_file_;
-      BlockFsJournalRenameFile rename_file_;
-      BlockFsJournalMoveFile move_file_;
-      BlockFsJournalChmodFile chmod_file_;
-      BlockFsJournalCreateDir create_dir_;
-      BlockFsJournalDeleteDir delete_dir_;
-      BlockFsJournalChmodDir chmod_dir_;
-    };
-  } __attribute__((packed));
-  uint8_t reserved_[kBlockFsJournalSize];
-};
-
-static_assert(sizeof(BlockFsJournal) == kBlockFsJournalSize,
-              "BlockFsJournal size must be 4096 Bytes");
-
-// 实现Journal的环形队列
-struct BlockFsJournalRingBuffer {
-  uint32_t head_;
-  uint32_t tail_;
-  BlockFsJournal journals_[0];  // 默认1024,可拓展
-} __attribute__((packed));
-
-// 主给从推送消息
-struct BlockFsJournalMsg {
-  seq_t seq_no_;
-  int head_;
-  int tail_;
-} __attribute__((packed));
 }  // namespace blockfs
 }  // namespace udisk
 #endif

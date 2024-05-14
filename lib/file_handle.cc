@@ -2,7 +2,6 @@
 
 #include "crc.h"
 #include "file_store_udisk.h"
-#include "injection.h"
 #include "logging.h"
 
 namespace udisk {

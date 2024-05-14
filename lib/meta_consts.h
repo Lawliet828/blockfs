@@ -43,8 +43,6 @@ const uint64_t kBlockFsFileMetaSize = 256;
 const uint64_t kBlockFsFileBlockCapacity = 1000;
 const uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 const uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
-const uint64_t kBlockFsJournalSize = kBlockFsPageSize;
-const uint64_t kBlockFsJournalNum = (4 * K);
 }  // namespace blockfs
 }  // namespace udisk
 #endif

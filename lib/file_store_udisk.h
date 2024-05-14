@@ -13,7 +13,6 @@
 #include "file_block_handle.h"
 #include "file_lock.h"
 #include "file_system.h"
-#include "journal_handle.h"
 #include "negotiation.h"
 #include "shm_manager.h"
 #include "super_block.h"
@@ -26,7 +25,6 @@ namespace blockfs {
 enum MetaHandleType {
   kNegotiationHandle,
   kSuperBlockHandle,
-  kJournalHandle,
   kFDHandle,
   kBlockHandle,
   kDirectoryHandle,
@@ -194,9 +192,6 @@ class FileStore : public FileSystem {
   }
   FileBlockHandle *file_block_handle() {
     return dynamic_cast<FileBlockHandle *>(GetMetaHandle(kFileBlockHandle));
-  }
-  JournalHandle *journal_handle() {
-    return dynamic_cast<JournalHandle *>(GetMetaHandle(kJournalHandle));
   }
 
   bool Format(const std::string &dev_name);

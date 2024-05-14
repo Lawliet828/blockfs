@@ -1,7 +1,6 @@
 #include "directory.h"
 
 #include "file_store_udisk.h"
-#include "injection.h"
 #include "logging.h"
 
 // common dir/file functions

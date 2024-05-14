@@ -54,8 +54,6 @@ $ sudo ./block_fs_tool -d /dev/vdf -f
 [91222 20210202 15:13:26.391164Z][INFO][lib/dir_handle.cc:115] write all directory meta success
 [91222 20210202 15:13:26.482517Z][INFO][lib/file_handle.cc:113] write all file meta success
 [91222 20210202 15:13:27.924556Z][INFO][lib/file_block_handle.cc:137] write all file block meta success
-[91222 20210202 15:13:27.951838Z][INFO][lib/journal_handle.cc:77] format journal num: 4096
-[91222 20210202 15:13:27.997450Z][INFO][lib/journal_handle.cc:98] write all journal success
 [91222 20210202 15:13:27.997488Z][INFO][tool/block_fs_tool.cc:820] format block fs success
 [91222 20210202 15:13:27.997497Z][INFO][tool/block_fs_tool.cc:860] total cost time: 1.955 seconds
 ```
@@ -103,8 +101,6 @@ $ sudo ./block_fs_tool -d /dev/vdf -p uuid
 [90922 20210202 15:12:41.941775Z][DEBUG][lib/file_block_handle.cc:73] libblock_fs.a block index: 0 block id: 24489
 [90922 20210202 15:12:41.941779Z][DEBUG][lib/file_block_handle.cc:73] libblock_fs.a block index: 1 block id: 13206
 [90922 20210202 15:12:42.017076Z][INFO][lib/file_block_handle.cc:102] read file block meta success, free num:108387
-[90922 20210202 15:12:42.019811Z][WARN][lib/journal_handle.cc:61] load journal success, journal head_: -1 journal tail_: -1 min_seq_no_: 0 max_seq_no_: 0 available_seq_no_: 1
-[90922 20210202 15:12:42.019830Z][ERROR][lib/journal_handle.cc:104] I am not master, cannot replay journal
 [90922 20210202 15:12:42.019836Z][INFO][tool/block_fs_tool.cc:835] dump uuid: 6a4d31e7-9fc7-427d-8054-c8fa7028f8d4
 [90922 20210202 15:12:42.019841Z][INFO][tool/block_fs_tool.cc:860] total cost time: 2.241 seconds
 ```

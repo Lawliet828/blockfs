@@ -292,8 +292,6 @@ void ShmManager::RegistMetaBaseAddr() {
                                                       super_.file_meta_offset_);
   FileStore::Instance()->file_block_handle()->set_base_addr(
       shm_addr_ + super_.file_block_meta_offset_);
-  FileStore::Instance()->journal_handle()->set_base_addr(
-      shm_addr_ + super_.block_fs_journal_offset_);
 }
 
 /**

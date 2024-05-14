@@ -39,10 +39,6 @@ fuse配置项：
 
 fuse_debug 必须配置，是否开启fuse debug信息打印
 
-fuse_new_thread 必须配置，如果是block_fs_mount工具配置成false
-
-fuse_new_thread 必须配置，如果是实际的mysql配置成true
-
 fuse_mount_point  必须配置，配置本地的挂载点
 
 fuse_auto_unmount 选配，mount进程挂掉自动umount fuse，默认true
@@ -97,8 +93,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58499 20210202 14:51:31.888378Z][INFO][lib/file_handle.cc:80] read file meta success, free num:99999
 [58499 20210202 14:51:31.888396Z][INFO][lib/file_block_handle.cc:14] total file block num: 108388
 [58499 20210202 14:51:31.963230Z][INFO][lib/file_block_handle.cc:102] read file block meta success, free num:108388
-[58499 20210202 14:51:31.965940Z][WARN][lib/journal_handle.cc:61] load journal success, journal head_: -1 journal tail_: -1 min_seq_no_: 0 max_seq_no_: 0 available_seq_no_: 1
-[58499 20210202 14:51:31.965961Z][WARN][lib/journal_handle.cc:108] no need to replay journal
 [58499 20210202 14:51:31.965966Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
 [58499 20210202 14:51:31.965982Z][INFO][lib/super_block.cc:173] mount point has been configured
 [58499 20210202 14:51:31.965990Z][INFO][lib/file_store_udisk.cc:1051] create fs mount point: /mnt/mysql/data/
@@ -176,7 +170,6 @@ root      488509  0.0  0.0  50132  3920 pts/5    S+   10:01   0:00 sudo ./tool/b
 root      488510  0.0  0.9 860940 618076 pts/5   Sl+  10:01   0:00 ./tool/block_fs_mount
 root      488523  0.0  0.0   4540   848 ?        Ss   10:01   0:00 fusermount3 -o rw,nosuid,nodev,allow_other,auto_unmount,subtype=block_fs_mount -- /home/luotang/bfs
 luotang   558187  0.0  0.0  13144  1092 pts/6    S+   11:45   0:00 grep --color=auto mount
-luotang@10-23-227-66:~/bfs$
 
 luotang@10-23-227-66:~/bfs$ cat /proc/mounts
 hugetlbfs /dev/hugepages hugetlbfs rw,relatime,pagesize=2M 0 0
@@ -192,366 +185,6 @@ tmpfs /run/user/1001 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1
 tmpfs /run/user/1000 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1000,gid=1000 0 0
 block_fs_mount /home/luotang/bfs fuse.block_fs_mount rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other 0 0
 
-文件和目录管理
-1. cd命令(进入目录)
-luotang@10-23-227-66:~/blockfs$ cd /home/luotang/bfs/
-
-1. pwd命令(查看当前工作目录)
-
-luotang@10-23-227-66:~/bfs$ pwd
-/home/luotang/bfs
-luotang@10-23-227-66:~/bfs$
-
-3. ls/ll命令(列出文件和目录)
-
-luotang@10-23-227-66:~/bfs$ ll
-total 5
-dr-xr-xr-x  2 root    root    1024 Jan  1  1970 ./
-drwxr-xr-x 20 luotang luotang 4096 Jan 27 11:39 ../
-drwxr-xr-x  0 root    root       0 Jan 26 10:27 haaha/
-
-4. mkdir命令(创建目录)
-
-luotang@10-23-227-66:~/bfs$ mkdir -p test
-luotang@10-23-227-66:~/bfs$ ll
-total 5
-dr-xr-xr-x  2 root    root    1024 Jan  1  1970 ./
-drwxr-xr-x 20 luotang luotang 4096 Jan 27 11:39 ../
-drwxr-xr-x  0 root    root       0 Jan 26 10:27 haaha/
-drwxr-xr-x  0 root    root       0 Jan 27 11:49 test/
-luotang@10-23-227-66:~/bfs$
-
-5. touch命令(创建文件)
-
-luotang@10-23-227-66:~/bfs$ cd test/
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
-luotang@10-23-227-66:~/bfs/test$ touch hello.log
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
-luotang@10-23-227-66:~/bfs/test$
-
-6. rm命令(删除文件或者文件夹)
-
-luotang@10-23-227-66:~/bfs/test$ touch world.log
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
--rwxr-xr-x 0 root root 0 Jan 27 11:54 world.log*
-luotang@10-23-227-66:~/bfs/test$ rm -f world.log
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root 0 Jan 27 11:52 hello.log*
-luotang@10-23-227-66:~/bfs/test$
-
-7. unlink命令
-
-luotang@10-23-227-66:~/bfs/test$ touch world.log
-luotang@10-23-227-66:~/bfs/test$ ll
-total 2
--rwxr-xr-x 0 root root      200 Jan 27 14:00 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
--rwxr-xr-x 0 root root        0 Jan 27 15:04 world.log*
-luotang@10-23-227-66:~/bfs/test$ unlink  world.log
-luotang@10-23-227-66:~/bfs/test$ ll
-total 2
--rwxr-xr-x 0 root root      200 Jan 27 14:00 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$
-
-7. stat命令
-
-luotang@10-23-227-66:~/bfs/test$ stat libblock_fs.a
-  File: libblock_fs.a
-  Size: 29232290        Blocks: 2          IO Block: 16777216 regular file
-Device: 37h/55d Inode: 3           Links: 0
-Access: (0755/-rwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
-Access: 2021-01-27 12:00:54.000000000 +0800
-Modify: 2021-01-27 12:02:40.000000000 +0800
-Change: 2021-01-27 12:02:40.000000000 +0800
- Birth: -
-luotang@10-23-227-66:~/bfs/test$ stat hello.log
-  File: hello.log
-  Size: 200             Blocks: 1          IO Block: 16777216 regular file
-Device: 37h/55d Inode: 4           Links: 0
-Access: (0755/-rwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
-Access: 1970-01-01 08:00:00.000000000 +0800
-Modify: 2021-01-27 14:00:32.000000000 +0800
-Change: 2021-01-27 14:00:32.000000000 +0800
- Birth: -
-luotang@10-23-227-66:~/bfs/test$
-
-8. du命令
-
-luotang@10-23-227-66:~/bfs/test$ ls -lh *
--rwxr-xr-x 0 root root 200 Jan 27 14:00 hello.log
--rwxr-xr-x 0 root root 28M Jan 27 12:02 libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$
-
-luotang@10-23-227-66:~/bfs/test$ ll
-total 49152
--rwxr-xr-x 0 root root      200 Jan 27 14:00 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ ls -lh *
--rwxr-xr-x 0 root root 200 Jan 27 14:00 hello.log
--rwxr-xr-x 0 root root 28M Jan 27 12:02 libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ du -sh *
-16M     hello.log
-32M     libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$
-
-9. df命令
-
-似乎和df命令没啥关系啊？
-
-文件读写
-7. cp命令 - 从本地文件系统拷贝到BFS
-
-luotang@10-23-227-66:~/bfs/test$ ls ../../ -l
-total 53673
-dr-xr-xr-x  2 root    root        1024 Jan  1  1970 bfs
-drwxrwxr-x 11 luotang luotang     4096 Jan 27 11:39 blockfs
--rwxrwxr-x  1 luotang luotang    13135 Sep 28 16:47 block_fs.h
-drwxrwxr-x 11 luotang luotang     4096 Jan 19 10:52 blockfs_stable
-drwxrwxr-x 12 luotang luotang     4096 Dec 23 09:49 blockfs_tools
--rwxrwxrwx  1 luotang luotang 15350210 Aug 10 18:27 errlog.sys
-drwxrwxr-x  9 luotang luotang     4096 Jan 20 15:31 FastCFS
-drwxrwxr-x  8 luotang luotang     4096 Nov 22 21:58 glog
--rwxr-xr-x  1 luotang luotang  8585216 Sep 12 15:50 ib_16384_1.dblwr
-drwxrwxr-x  2 luotang luotang     4096 Jan 26 16:51 kkk
--rw-rw-r--  1 luotang luotang 29232290 Oct 13 19:22 libblock_fs.a
--rw-rw-r--  1 luotang luotang  1717098 Jan 22 23:24 linux-firmware_1.194_all.deb
--rw-------  1 luotang luotang    12304 Dec 24 19:41 nohup.out
--rwxr-xr-x  1 root    root        6144 Jan  7 11:08 posix_test.log
-luotang@10-23-227-66:~/bfs/test$ cp  ../../libblock_fs.a .
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root        0 Jan 27 11:52 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:00 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ md5sum libblock_fs.a
-ecb7adc1047003fa0a08c21a328a2850  libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a
-ecb7adc1047003fa0a08c21a328a2850  ../../libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$
-
-8. cp命令 - 从BFS拷贝到本地文件系统
-
-luotang@10-23-227-66:~/bfs/test$ cp libblock_fs.a ../../libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/test$ md5sum ../../libblock_fs.a.bak
-ecb7adc1047003fa0a08c21a328a2850  ../../libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/test$
-
-
-9. mv命令 - 移动目录或者改名
-
-luotang@10-23-227-66:~/bfs/hahaha$ cp ../../libblock_fs.a.bak .
-luotang@10-23-227-66:~/bfs/hahaha$ ll
-total 32768
------w--w- 0 root root 29232290 Feb  2 15:03 libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/hahaha$ md5sum libblock_fs.a.bak
-ecb7adc1047003fa0a08c21a328a2850  libblock_fs.a.bak
-luotang@10-23-227-66:~/bfs/hahaha$
-luotang@10-23-227-66:~/bfs/hahaha$ mv libblock_fs.a.bak libblock_fs.a
-luotang@10-23-227-66:~/bfs/hahaha$ ll ..
-total 5
-d----w--w-  2 root    root    1024 Feb  2 15:04 ./
-drwxr-xr-x 20 luotang luotang 4096 Feb  2 12:10 ../
------w--w-  0 root    root       0 Feb  2 12:04 1.log
-d----w--w-  0 root    root       0 Feb  2 15:03 hahaha/
-luotang@10-23-227-66:~/bfs/hahaha$ ll
-total 32768
------w--w- 0 root root 29232290 Feb  2 15:04 libblock_fs.a
-luotang@10-23-227-66:~/bfs/hahaha$ mv libblock_fs.a ../
-luotang@10-23-227-66:~/bfs/hahaha$ ll ..
-total 32773
-d----w--w-  2 root    root        1024 Feb  2 15:04 ./
-drwxr-xr-x 20 luotang luotang     4096 Feb  2 12:10 ../
------w--w-  0 root    root           0 Feb  2 12:04 1.log
-d----w--w-  0 root    root           0 Feb  2 15:04 hahaha/
------w--w-  0 root    root    29232290 Feb  2 15:04 libblock_fs.a
-luotang@10-23-227-66:~/bfs/hahaha$ ll
-total 0
-luotang@10-23-227-66:~/bfs/hahaha$
-
-10. vim命令
-
-vim其实会打开临时文件然后写入到目标文件
-
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root        0 Jan 27 11:52 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$ vim hello.log
-luotang@10-23-227-66:~/bfs/test$ cat hello.log
-
-Test BFS vim!!!!!!
-luotang@10-23-227-66:~/bfs/test$
-
-11. echo命令
-
-luotang@10-23-227-66:~/bfs/test$ ll
-total 0
--rwxr-xr-x 0 root root       20 Jan 27 12:05 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs/test$
-luotang@10-23-227-66:~/bfs/test$ echo "UCloud Block File System" > hello.log
-luotang@10-23-227-66:~/bfs/test$ cat hello.log
-UCloud Block File System
-luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ cat hello.log
-UCloud Block File System
-UXDB publish success
-luotang@10-23-227-66:~/bfs/test$
-
-
-12. cat命令
-
-luotang@10-23-227-66:~/bfs/test$ echo "UXDB publish success2" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ cat hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$
-
-
-13. head命令
-
-luotang@10-23-227-66:~/bfs/test$ head hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ head -n 2 hello.log
-UCloud Block File System
-UXDB publish success
-luotang@10-23-227-66:~/bfs/test$ head -n 3 hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$
-
-14. more命令
-
-luotang@10-23-227-66:~/bfs/test$ more  -s hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ more +1 hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$ more +2 hello.log
-UXDB publish success
-UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$
-
-15. tail命令
-
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$ echo "Add new udisk in uxdb" >> hello.log
-luotang@10-23-227-66:~/bfs/test$
-
-luotang@10-23-227-66:~/bfs/test$ tail -F hello.log
-UCloud Block File System
-UXDB publish success
-UXDB publish success2
-
-
-
-Add new udisk in uxdb
-Add new udisk in uxdb
-Add new udisk in uxdb
-Add new udisk in uxdb
-Add new udisk in uxdb
-Add new udisk in uxdb
-
-^C
-luotang@10-23-227-66:~/bfs/test$
-
-
-16. grep命令
-
-luotang@10-23-227-66:~/bfs/test$ grep -rn "udisk" hello.log
-4:Add new udisk in uxdb
-5:Add new udisk in uxdb
-6:Add new udisk in uxdb
-7:Add new udisk in uxdb
-8:Add new udisk in uxdb
-9:Add new udisk in uxdb
-luotang@10-23-227-66:~/bfs/test$ grep -rn "UXDB" hello.log
-2:UXDB publish success
-3:UXDB publish success2
-luotang@10-23-227-66:~/bfs/test$
-
-
-17. hexdump命令
-
-luotang@10-23-227-66:~/bfs/test$ hexdump hello.log
-0000000 4355 6f6c 6475 4220 6f6c 6b63 4620 6c69
-0000010 2065 7953 7473 6d65 550a 4458 2042 7570
-0000020 6c62 7369 2068 7573 6363 7365 0a73 5855
-0000030 4244 7020 6275 696c 6873 7320 6375 6563
-0000040 7373 0a32 6441 2064 656e 2077 6475 7369
-0000050 206b 6e69 7520 6478 0a62 6441 2064 656e
-0000060 2077 6475 7369 206b 6e69 7520 6478 0a62
-0000070 6441 2064 656e 2077 6475 7369 206b 6e69
-0000080 7520 6478 0a62 6441 2064 656e 2077 6475
-0000090 7369 206b 6e69 7520 6478 0a62 6441 2064
-00000a0 656e 2077 6475 7369 206b 6e69 7520 6478
-00000b0 0a62 6441 2064 656e 2077 6475 7369 206b
-00000c0 6e69 7520 6478 0a62
-00000c8
-luotang@10-23-227-66:~/bfs/test$ hexdump -n 10 -C hello.log
-00000000  55 43 6c 6f 75 64 20 42  6c 6f                    |UCloud Blo|
-0000000a
-luotang@10-23-227-66:~/bfs/test$
-luotang@10-23-227-66:~/bfs/test$ hexdump -n 100 -C hello.log
-00000000  55 43 6c 6f 75 64 20 42  6c 6f 63 6b 20 46 69 6c  |UCloud Block Fil|
-00000010  65 20 53 79 73 74 65 6d  0a 55 58 44 42 20 70 75  |e System.UXDB pu|
-00000020  62 6c 69 73 68 20 73 75  63 63 65 73 73 0a 55 58  |blish success.UX|
-00000030  44 42 20 70 75 62 6c 69  73 68 20 73 75 63 63 65  |DB publish succe|
-00000040  73 73 32 0a 41 64 64 20  6e 65 77 20 75 64 69 73  |ss2.Add new udis|
-00000050  6b 20 69 6e 20 75 78 64  62 0a 41 64 64 20 6e 65  |k in uxdb.Add ne|
-00000060  77 20 75 64                                       |w ud|
-00000064
-luotang@10-23-227-66:~/bfs/test$
-
-18. wc命令
-
-# 文件的行数为9、单词数40、字节数200
-luotang@10-23-227-66:~/bfs/test$ wc hello.log
-  9  40 200 hello.log
-luotang@10-23-227-66:~/bfs/test$ wc libblock_fs.a
-  346161   506585 29232290 libblock_fs.a
-luotang@10-23-227-66:~/bfs/test$
-
-
-19. find命令
-
-luotang@10-23-227-66:~/bfs$ find . -name "hello"
-luotang@10-23-227-66:~/bfs$
-luotang@10-23-227-66:~/bfs$ find . -name "hello*"
-./test/hello.log
-luotang@10-23-227-66:~/bfs$ ll haaha/
-total 0
--rwxr-xr-x 0 root root       14 Jan 27 10:09 1.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 10:08 libblock_fs.a*
-luotang@10-23-227-66:~/bfs$ ll test/
-total 0
--rwxr-xr-x 0 root root      200 Jan 27 14:04 hello.log*
--rwxr-xr-x 0 root root 29232290 Jan 27 12:02 libblock_fs.a*
-luotang@10-23-227-66:~/bfs$
-
-磁盘性能统计工具
-块设备性能统计工具:
-iostat、sar （位于sysstat包中， sysstat包括：iostat、mpstat、sar和sa四个工具）；
-
-
-~~~
 
 
 ### 5. 启动问题
@@ -579,7 +212,6 @@ drwxr-xr-x 17 luotang luotang 4096 Feb  5 16:30 ../
 
 
 ```sh
-[31232 20210205 18:17:34.114721Z][ERROR][lib/journal_handle.cc:104] I am not master, cannot replay journal
 [31232 20210205 18:17:34.114725Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
 [31232 20210205 18:17:34.114728Z][INFO][lib/super_block.cc:173] mount point has been configured
 [31232 20210205 18:17:34.114731Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
@@ -622,8 +254,6 @@ user_allow_other
 [31813 20210205 18:19:26.861753Z][INFO][lib/file_handle.cc:85] read file meta success, free num:99979
 [31813 20210205 18:19:26.861773Z][INFO][lib/file_block_handle.cc:14] total file block num: 108388
 [31813 20210205 18:19:26.925318Z][INFO][lib/file_block_handle.cc:102] read file block meta success, free num:108368
-[31813 20210205 18:19:26.927965Z][WARN][lib/journal_handle.cc:61] load journal success, journal head_: -1 journal tail_: -1 min_seq_no_: 0 max_seq_no_: 0 available_seq_no_: 1
-[31813 20210205 18:19:26.927986Z][ERROR][lib/journal_handle.cc:104] I am not master, cannot replay journal
 [31813 20210205 18:19:26.927990Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
 [31813 20210205 18:19:26.927993Z][INFO][lib/super_block.cc:173] mount point has been configured
 [31813 20210205 18:19:26.927996Z][INFO][lib/file_store_udisk.cc:1053] create fs mount point: /mnt/mysql/data/
