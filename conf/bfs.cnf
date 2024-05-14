@@ -5,7 +5,7 @@ version                   = 0.1
 core_dump                 = true
 # UTC / SYSTEM
 log_timestamps            = SYSTEM
-log_level                 = INFO
+log_level                 = DEBUG
 log_path                  = /data/mysql/log/
 # 不知道干啥用的，原先配置是false，文档中是true
 agent_enable              = true
@@ -13,8 +13,7 @@ agent_enable              = true
 agent_server              = /data/mysql/bfs.sock
 
 [bfs]
-#device_uuid               = 1a3231ed-5595-4e54-adbf-9c9d1cd19fd3
-device_uuid               = a25ae7ea-c93b-489f-ac61-83924db4d2a3
+device_uuid               = 875b1185-f962-4156-9272-4172b90c41c4
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 time_update_meta          = 3600
@@ -24,7 +23,7 @@ fuse_enable               = true
 
 # the mount point (local path) for FUSE
 # the local path must exist
-fuse_mount_point          = /data/mysql/bfs/
+fuse_mount_point          = /home/ubuntu/bfs/
 
 # enbale libfuse debug (don't touch)
 fuse_debug                = false
@@ -45,7 +44,6 @@ fuse_owner_type           = caller
 # this parameter is valid only when owner_type set to fixed
 # empty for the user who runs the fs_fused program
 fuse_uid                  = 1001
-fuse_owner_user           = mysql
 
 # mount.fuse3 options:
 #        These options are interpreted by mount.fuse3 and are thus only
@@ -62,30 +60,17 @@ fuse_setuid               = mysql
 # this parameter is valid only when owner_type set to fixed
 # empty for the group of the user who runs the fs_fused program
 fuse_gid                  = 1001
-fuse_owner_group          = mysql
-
-# if single thread mode
-# set true to disable multi-threaded operation
-# default value is false
-fuse_single_thread        = false
 
 # if use separate fuse device fd for each thread
 # set to true for more high performance
 # default value is false
 fuse_clone_fd             = true
 
-# the max idle worker threads for FUSE
-# default value is 10
-fuse_max_idle_threads     = 10
-
 fuse_kernel_cache         = false
 
 fuse_auto_cache           = false
 
 # fuse_umask                = 0755
-# fuse_umask                = 0444
-
-fuse_read_only            = false
 
 # access permissions for other users
 # the values are:

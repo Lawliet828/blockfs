@@ -49,7 +49,6 @@ class UDiskBFS {
   static void FuseLoop(block_fs_config_info *info);
 
   const std::string &uxdb_mount_point() { return uxdb_mount_point_; }
-  bool fuse_read_only() { return info_->fuse_read_only_; }
 
   void RunFuse(block_fs_config_info *info) {
     info_ = info;
@@ -269,10 +268,6 @@ static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int res;
 
   // res = posix_mknod_wrapper(AT_FDCWD, path, nullptr, mode, rdev);
@@ -294,10 +289,6 @@ static int bfs_mkdir(const char *path, mode_t mode) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int res;
 
   res = block_fs_mkdir(in_path.c_str(), mode);
@@ -313,10 +304,6 @@ static int bfs_unlink(const char *path) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int res;
 
   res = block_fs_unlink(in_path.c_str());
@@ -331,10 +318,6 @@ static int bfs_rmdir(const char *path) {
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int res;
 
@@ -352,10 +335,6 @@ int bfs_symlink(const char *from, const char *to) {
   std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
   from_path += from;
   to_path += to;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int res;
 
@@ -382,10 +361,6 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
   from_path += from;
   to_path += to;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int res;
   /* When we have renameat2() in libc, then we can implement flags */
   if (flags) return -EINVAL;
@@ -404,10 +379,6 @@ int bfs_link(const char *from, const char *to) {
   std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
   from_path += from;
   to_path += to;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   // 尚未实现
   return -1;
@@ -428,10 +399,6 @@ static int bfs_chmod(const char *path, mode_t mode)
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int res;
 
@@ -460,10 +427,6 @@ static int bfs_chown(const char *path, uid_t uid, gid_t gid)
 #endif
 {
   LOG(INFO) << "call bfs_chown file: " << path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int res;
 
@@ -495,10 +458,6 @@ static int bfs_truncate(const char *path, off_t newsize)
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int res;
 
@@ -564,10 +523,6 @@ static int bfs_open(const char *path, struct fuse_file_info *fi) {
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only() && (fi->flags & O_CREAT)) {
-    return -EROFS;
-  }
 
   int32_t fd = block_fs_open(in_path.c_str(), fi->flags);
   if (fd < 0) {
@@ -639,10 +594,6 @@ static int bfs_write(const char *path, const char *buf, size_t size,
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int fd;
   int res;
@@ -1082,10 +1033,6 @@ static int bfs_create(const char *path, mode_t mode,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int fd;
 
   fd = block_fs_open(in_path.c_str(), fi->flags, mode);
@@ -1131,10 +1078,6 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int fd;
   int res;
@@ -1258,10 +1201,6 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int fd;
   uint64_t res;
@@ -1406,10 +1345,6 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
-
   int fd;
   int res;
 
@@ -1441,10 +1376,6 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
 static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
                          struct fuse_file_info *fi) {
   LOG(INFO) << "call bfs_fallocate: " << path;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int fd;
   int res;
@@ -1483,10 +1414,6 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
                             size_t size, int flags) {
   LOG(INFO) << "call bfs_copy_file_range: " << path_in
             << " path_out: " << path_out;
-
-  if (UDiskBFS::Instance()->fuse_read_only()) {
-    return -EROFS;
-  }
 
   int fd_in, fd_out;
   ssize_t res;

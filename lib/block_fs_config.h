@@ -38,12 +38,9 @@ typedef struct block_fs_config_info_t {
 
   // mount on fuse
   bool fuse_enabled_ = false;
-  bool fuse_read_only_ = true;
 
   std::string fuse_name_;
   std::string fuse_mount_point_;
-
-  bool fuse_read_only = false;
 
   // bfs main loop not blocked
   bool fuse_new_fuse_thread_ = true;

@@ -74,12 +74,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   }
   LOG(DEBUG) << "fuse enable: " << config->fuse_enabled_;
 
-  if (ini.GetBoolValue("fuse", "fuse_read_only", &config->fuse_read_only_) !=
-      0) {
-    config->fuse_read_only_ = true;
-  }
-  LOG(DEBUG) << "fuse_read_only: " << config->fuse_read_only_;
-
   if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {
     config->fuse_debug_ = false;
   }
