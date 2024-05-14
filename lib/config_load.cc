@@ -69,11 +69,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
     config->time_update_meta_ = 3600;
   }
 
-  if (ini.GetBoolValue("fuse", "fuse_enable", &config->fuse_enabled_) != 0) {
-    config->fuse_enabled_ = false;
-  }
-  LOG(DEBUG) << "fuse enable: " << config->fuse_enabled_;
-
   if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {
     config->fuse_debug_ = false;
   }
@@ -84,8 +79,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
     config->fuse_foreground_ = false;
   }
   LOG(DEBUG) << "fuse_foreground: " << config->fuse_foreground_;
-
-  config->fuse_name_ = "block_fs_mount";
 
   if (ini.GetStringValue("fuse", "fuse_mount_point",
                          &config->fuse_mount_point_) != 0) {
@@ -132,17 +125,10 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   LOG(DEBUG) << "fuse_umask: " << config->fuse_umask_
              << " enable: " << config->has_fuse_umask_;
 
-  if (ini.GetBoolValue("fuse", "fuse_new_thread",
-                       &config->fuse_new_fuse_thread_) != 0) {
-    config->fuse_new_fuse_thread_ = true;
-  }
-  LOG(DEBUG) << "fuse new_fuse_thread: " << config->fuse_new_fuse_thread_;
-
   if (ini.GetBoolValue("fuse", "fuse_auto_unmount",
                        &config->fuse_auto_unmount_) != 0) {
     config->fuse_auto_unmount_ = true;
   }
-  LOG(DEBUG) << "fuse_auto_unmount: " << config->fuse_new_fuse_thread_;
 
   return true;
 }

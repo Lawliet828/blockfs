@@ -13,17 +13,15 @@ agent_enable              = true
 agent_server              = /data/mysql/bfs.sock
 
 [bfs]
-device_uuid               = 875b1185-f962-4156-9272-4172b90c41c4
+device_uuid               = 9df5f094-c5d8-4e05-8048-c1a6248c70da
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 time_update_meta          = 3600
 
 [fuse]
-fuse_enable               = true
-
 # the mount point (local path) for FUSE
 # the local path must exist
-fuse_mount_point          = /home/ubuntu/bfs/
+fuse_mount_point          = /data/mysql/bfs/
 
 # enbale libfuse debug (don't touch)
 fuse_debug                = false

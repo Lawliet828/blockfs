@@ -115,7 +115,7 @@ $ sudo ./block_fs_tool -d /dev/vdf -p uuid
 
 ### 9. block_fs_touch工具
 ```sh
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_touch -m -n /mnt/mysql/data/sbtest_file
+luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_touch -n /mnt/mysql/data/sbtest_file
 [863075 20210315 14:17:16.098775Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
 [863075 20210315 14:17:16.211707Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
 [863075 20210315 14:17:16.211733Z][INFO][lib/super_block.cc:173] mount point has been configured
@@ -132,13 +132,12 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_touch -m -n /mnt/mysq
 [863081 20210315 14:17:16.212004Z][INFO][lib/block_fs_fuse.cc:1579] argv_cnt: 6
 [863075 20210315 14:17:16.212025Z][INFO][lib/file_handle.cc:481] create file success: sbtest_file
 [863075 20210315 14:17:16.212034Z][INFO][tool/block_fs_touch.cc:72] create file: /mnt/mysql/data/sbtest_file success
-luotang@10-23-227-66:~/blockfs$
 ```
 
 
 #### block_fs_unlink工具
 ```sh
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_unlink -n /mnt/mysql/data/sbtest_file -m
+luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_unlink -n /mnt/mysql/sbtest_file
 [873268 20210315 15:23:37.914516Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
 [873268 20210315 15:23:38.009363Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/
 [873268 20210315 15:23:38.009402Z][INFO][lib/super_block.cc:173] mount point has been configured
@@ -169,7 +168,7 @@ fuse: bad mount point `/home/luotang/bfs/': Transport endpoint is not connected
 
 #### block_fs_ls工具
 ```sh
-luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_ls -m -n /mnt/mysql/data
+luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_ls -n /mnt/mysql
 [891591 20210315 16:40:25.662723Z][WARN][lib/dir_handle.cc:39] directory handle: 0 name: /mnt/mysql/data/ seq_no: 0 crc: 802599935
 [891591 20210315 16:40:25.662820Z][WARN][lib/dir_handle.cc:39] directory handle: 1 name: /mnt/mysql/data/test_dir2/ seq_no: 0 crc: 2171320134
 [891591 20210315 16:40:25.753179Z][INFO][lib/super_block.cc:157] UXDB root path: /mnt/mysql/data/

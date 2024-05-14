@@ -6,15 +6,7 @@
 #define HAVE_FUSE3
 #endif
 
-#ifdef HAVE_FUSE3
-#ifndef FUSE_USE_VERSION
-#define FUSE_USE_VERSION 35
-#endif
-#else
-#ifndef FUSE_USE_VERSION
-#define FUSE_USE_VERSION 26
-#endif
-#endif
+#define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
 
 #include <string>
 #include <vector>
@@ -36,14 +28,7 @@ typedef struct block_fs_config_info_t {
   std::string uxdb_mount_point_;
   int time_update_meta_ = 3600;
 
-  // mount on fuse
-  bool fuse_enabled_ = false;
-
-  std::string fuse_name_;
   std::string fuse_mount_point_;
-
-  // bfs main loop not blocked
-  bool fuse_new_fuse_thread_ = true;
 
   /* -d: enable debug output (implies -f) */
   bool fuse_debug_ = false;
@@ -89,10 +74,6 @@ typedef struct block_fs_config_info_t {
   bool fuse_allow_root_ = false;
   /* -o auto_unmount: auto unmount on process termination */
   bool fuse_auto_unmount_ = true;
-#ifndef HAVE_FUSE3
-  bool fuse_direct_io_ = true;
-  bool fuse_nonempty_ = true;
-#endif
 } block_fs_config_info;
 
 }  // namespace blockfs

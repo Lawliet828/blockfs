@@ -10,7 +10,6 @@
 #include <map>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "block_fs.h"
@@ -24,11 +23,7 @@ namespace blockfs {
 
 // #define BFS_USE_READ_WRITE_BUFFER
 
-#ifdef HAVE_FUSE3
 #define DIR_FILLER(F, B, N, S, O) F(B, N, S, O, FUSE_FILL_DIR_PLUS)
-#else
-#define DIR_FILLER(F, B, N, S, O) F(B, N, S, O)
-#endif
 
 #ifndef __NR_copy_file_range
 #define __NR_copy_file_range (-1)
@@ -57,19 +52,10 @@ class UDiskBFS {
     if (uxdb_mount_point_[uxdb_mount_point_.size() - 1] == '/') {
       uxdb_mount_point_.erase(uxdb_mount_point_.size() - 1);
     }
-    if (info_->fuse_enabled_) {
-      if (info_->fuse_new_fuse_thread_) {
-        fuse_th_ = std::thread(FuseLoop, info);
-      } else {
-        FuseLoop(info);
-      }
-    }
+    FuseLoop(info);
   }
 
   void StopFuse() {
-    if (info_->fuse_enabled_ && info_->fuse_new_fuse_thread_) {
-      fuse_th_.join();
-    }
   }
 
   uint64_t PushOpenDirectory(BLOCKFS_DIR *dp) {
@@ -118,7 +104,6 @@ class UDiskBFS {
   block_fs_config_info *info_;
 
   std::string uxdb_mount_point_;
-  std::thread fuse_th_;
 
   std::mutex mutex_;
   std::map<uint64_t, BLOCKFS_DIR *> open_dirs_;
@@ -1469,7 +1454,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
   return res;
 }
 
-static const struct fuse_operations kUDiskBFSOps = {
+static const struct fuse_operations kBFSOps = {
     .getattr = bfs_getattr,
     .readlink = bfs_readlink,
     .mknod = bfs_mknod,
@@ -1557,7 +1542,7 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   // if mount point directory not exist
   // ::mkdir(info->mount_point_.c_str(), 0755);
 
-  new_argv[argv_cnt++] = const_cast<char *>(info->fuse_name_.c_str());
+  new_argv[argv_cnt++] = const_cast<char *>("block_fs_mount");
   if (info->fuse_debug_) {
     LOG(INFO) << "fuse enable debug";
     new_argv[argv_cnt++] = (char *)"-d";
@@ -1596,14 +1581,6 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   mount_arg += ",entry_timeout=" + std::to_string(info->fuse_entry_timeout_);
   mount_arg += ",attr_timeout=" + std::to_string(info->fuse_attr_timeout_);
 
-#ifndef HAVE_FUSE3
-  if (info->fuse_direct_io_) {
-    mount_arg += ",direct_io";
-  }
-  if (info->fuse_nonempty_) {
-    mount_arg += ",nonempty";
-  }
-#endif
   LOG(INFO) << "fuse mount_arg: " << mount_arg;
 
   if (!CreatePath(info->fuse_mount_point_, atoi(info->fuse_umask_.c_str()))) {
@@ -1618,7 +1595,7 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
 
   LOG(INFO) << "argv_cnt: " << argv_cnt;
 
-  if (!fuse_main(argv_cnt - 1, new_argv, &kUDiskBFSOps, info)) {
+  if (!fuse_main(argv_cnt - 1, new_argv, &kBFSOps, info)) {
     LOG(WARNING) << "fuse mount loop exit";
   }
 }

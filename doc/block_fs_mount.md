@@ -37,8 +37,6 @@ uxdb_mount_point 必须配置，是uxdb的虚拟挂载点，使用专有api打�
 
 fuse配置项：
 
-fuse_enable 必须配置，是否需要开启fuse本地挂载
-
 fuse_debug 必须配置，是否开启fuse debug信息打印
 
 fuse_new_thread 必须配置，如果是block_fs_mount工具配置成false

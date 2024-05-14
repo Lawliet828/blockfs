@@ -14,7 +14,7 @@ static void HelpInfo() {
   LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
   LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
-  LOG(INFO) << " -c, --config   /usr/local/mysql/blockfs/bfs.cnf";
+  LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
   LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
 }
@@ -201,8 +201,6 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  conf->fuse_enabled_ = true;
-  conf->fuse_new_fuse_thread_ = false;
   block_fs_fuse_mount(FileStore::Instance()->mount_config());
   return 0;
 }

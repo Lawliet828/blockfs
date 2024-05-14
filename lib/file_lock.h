@@ -47,7 +47,7 @@ class FileRwLock {
 
   void ReadLockAcquire() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cond_read_.wait(lock, [=]() -> bool {
+    cond_read_.wait(lock, [this]() -> bool {
       return (write_count_ == 0) && (wait_write_count_ == 0);
     });
     ++read_count_;
@@ -67,7 +67,7 @@ class FileRwLock {
   void WriteLockAcquire() {
     std::unique_lock<std::mutex> lock(mutex_);
     ++wait_write_count_;
-    cond_write_.wait(lock, [=]() -> bool {
+    cond_write_.wait(lock, [this]() -> bool {
       return (write_count_ == 0) && (read_count_ == 0);
     });
     assert(write_count_ == 0);

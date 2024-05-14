@@ -26,7 +26,7 @@ FUSE由内核模块 fuse.ko 和用户空间的动态链接库 libfuse.* 组成�
 如果要开发使用fuse的用户态程序，需要安装 fuse-devel
 
 ```sh
-ubuntu: 
+ubuntu:
 
 apt-get install fuse
 
@@ -141,7 +141,7 @@ To build, test, and install libfuse, you then use Ninja:
     $ ninja
     $ sudo python3 -m pytest test/
     $ sudo ninja install
-    
+
 Running the tests requires the [py.test](http://www.pytest.org/)
 Python module. Instead of running the tests as root, the majority of
 tests can also be run as a regular user if *util/fusermount3* is made
@@ -167,23 +167,14 @@ BFS中fuse_main的输入参数：op，文件操作函数
 fuse_operations 在文件 /usr/include/fuse3/fuse.h 中定义
 
 ```c++
-
 #ifndef HAVE_FUSE3
 #define HAVE_FUSE3
 #endif
 
-#ifdef HAVE_FUSE3
-#ifndef FUSE_USE_VERSION
-#define FUSE_USE_VERSION 35
-#endif
-#else
-#ifndef FUSE_USE_VERSION
-#define FUSE_USE_VERSION 26
-#endif
-#endif
+#define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
 
 
-static const struct fuse_operations kUDiskBFSOps = {
+static const struct fuse_operations kBFSOps = {
     .getattr = bfs_getattr,
     .readlink = bfs_readlink,
     .mknod = bfs_mknod,
@@ -241,10 +232,10 @@ static const struct fuse_operations kUDiskBFSOps = {
 
   LOG(INFO) << "argv_cnt: " << argv_cnt;
 
-  if (!fuse_main(argv_cnt - 1, new_argv, &kUDiskBFSOps, info)) {
+  if (!fuse_main(argv_cnt - 1, new_argv, &kBFSOps, info)) {
     LOG(WARNING) << "fuse mount loop exit";
   }
-  
+
 ```
 
 FUSE版本和支持的命令行参数
@@ -256,11 +247,9 @@ FUSE library version 3.10.1
 using FUSE kernel interface version 7.31
 fusermount3 version: 3.10.1
 [876191 20210120 11:06:15.627930Z][ERROR][app/bfs_mount.cc:362] fuse mount exit
-luotang@10-23-227-66:~/blockfs/build$ 
-
 
 luotang@10-23-227-66:~/blockfs/build$ sudo ./app/bfs_mount -h
-[sudo] password for luotang: 
+[sudo] password for luotang:
 [875750 20210120 11:04:46.009927Z][INFO][app/bfs_mount.cc:329] FUSE version: 3.10.1
 usage: ./app/bfs_mount [options] <mountpoint>
 
@@ -313,7 +302,7 @@ Capabilities:
         FUSE_CAP_POSIX_LOCKS
         FUSE_CAP_ATOMIC_O_TRUNC
         FUSE_CAP_EXPORT_SUPPORT
-        
+
 ........
 
 [877656 20210120 11:11:20.468840Z][INFO][lib/file_handle.cc:80] read file meta success, free num:99979
@@ -354,26 +343,6 @@ Capabilities:
 
 
 
-luotang@10-23-227-66:~$ ll /home/luotang/bfs/
-total 4
-dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
-drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
-----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
-----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
-----------  0 root    root    12582912 Jan 18 18:45  ibdata1
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
-----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
-d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
-d---------  0 root    root           0 Jan 18 18:47  luotang/
-----------  0 root    root    25165824 Jan 18 18:45  mysql.ibd
-d---------  0 root    root           0 Jan 18 18:47  sys/
-----------  0 root    root    10485760 Jan 18 18:45  undo_001
-----------  0 root    root    10485760 Jan 18 18:45  undo_002
-luotang@10-23-227-66:~$ 
-
-
-
 查看挂载信息:
 fusectl /sys/fs/fuse/connections fusectl rw,relatime 0 0
 binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc rw,relatime 0 0
@@ -382,12 +351,12 @@ tmpfs /run/user/1002 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1
 tmpfs /run/user/1001 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1001,gid=1001 0 0
 tmpfs /run/user/1000 tmpfs rw,nosuid,nodev,relatime,size=6574104k,mode=700,uid=1000,gid=1000 0 0
 bfs_mount /home/luotang/bfs fuse.bfs_mount rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other 0 0
-luotang@10-23-227-66:~$ cat /proc/mounts 
+luotang@10-23-227-66:~$ cat /proc/mounts
 
 
-luotang@10-23-227-66:~$ sudo umount /home/luotang/bfs 
-[sudo] password for luotang: 
-luotang@10-23-227-66:~$ 
+luotang@10-23-227-66:~$ sudo umount /home/luotang/bfs
+[sudo] password for luotang:
+luotang@10-23-227-66:~$
 
 
 [877657 20210120 11:12:59.789965Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
@@ -395,68 +364,8 @@ luotang@10-23-227-66:~$
 [877657 20210120 11:12:59.790015Z][INFO][lib/dir_handle.cc:657] close directory name: /mnt/mysql/data/ fd: 0
 
 [877654 20210120 11:15:03.637325Z][ERROR][app/bfs_mount.cc:362] fuse mount exit
-luotang@10-23-227-66:~/blockfs/build$ 
-luotang@10-23-227-66:~/blockfs/build$ 
-luotang@10-23-227-66:~/blockfs/build$ 
+luotang@10-23-227-66:~/blockfs/build$
 
-
-
-luotang@10-23-227-66:~/bfs$ ll
-total 4
-dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
-drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
-----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
-----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
-----------  0 root    root    12582912 Jan 18 18:45  ibdata1
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
-----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
-d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
-d---------  0 root    root           0 Jan 18 18:47  luotang/
-----------  0 root    root    25165824 Jan 18 18:45  mysql.ibd
-d---------  0 root    root           0 Jan 18 18:47  sys/
-----------  0 root    root    10485760 Jan 18 18:45  undo_001
-----------  0 root    root    10485760 Jan 18 18:45  undo_002
-luotang@10-23-227-66:~/bfs$ rm -f mysql.ibd
-luotang@10-23-227-66:~/bfs$ ll
-total 4
-dr-xr-xr-x  2 root    root           0 Jan  1  1970  ./
-drwxr-xr-x 19 luotang luotang     4096 Jan 20 03:29  ../
-----------  0 root    root      196608 Jan 18 18:45 '#ib_16384_0.dblwr'
-----------  0 root    root     8585216 Jan 18 18:45 '#ib_16384_1.dblwr'
-----------  0 root    root    12582912 Jan 18 18:45  ibdata1
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile0
-----------  0 root    root    50331648 Jan 18 18:45  ib_logfile1
-----------  0 root    root    12582912 Jan 18 19:34  ibtmp1
-d---------  0 root    root           0 Jan 18 18:47 '#innodb_temp'/
-d---------  0 root    root           0 Jan 18 18:47  luotang/
-d---------  0 root    root           0 Jan 18 18:47  sys/
-----------  0 root    root    10485760 Jan 18 18:45  undo_001
-----------  0 root    root    10485760 Jan 18 18:45  undo_002
-luotang@10-23-227-66:~/bfs$ 
-
-
-[948171 20210120 14:30:23.888888Z][INFO][lib/file_store_udisk.cc:318] stat path: /mnt/mysql/data/mysql.ibd
-[948171 20210120 14:30:23.888926Z][INFO][lib/file_store_udisk.cc:327] stat path: /mnt/mysql/data/mysql.ibd
-[948171 20210120 14:30:23.888935Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/mysql.ibd
-[948171 20210120 14:30:23.888942Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd mount point: /mnt/mysql/data/
-[948171 20210120 14:30:23.888952Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
-[948171 20210120 14:30:23.888957Z][INFO][lib/file_handle.cc:136] transformPath filename: mysql.ibd
-[948170 20210120 14:30:23.889025Z][INFO][lib/file_handle.cc:597] unlink file: /mnt/mysql/data/mysql.ibd
-[948170 20210120 14:30:23.889056Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd/ mount point: /mnt/mysql/data/
-[948170 20210120 14:30:23.889065Z][WARN][lib/dir_handle.cc:406] directory not exist: /mnt/mysql/data/mysql.ibd/
-[948170 20210120 14:30:23.889073Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/mysql.ibd mount point: /mnt/mysql/data/
-[948170 20210120 14:30:23.889076Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
-[948170 20210120 14:30:23.889080Z][INFO][lib/file_handle.cc:136] transformPath filename: mysql.ibd
-[948170 20210120 14:30:23.889085Z][INFO][lib/file.cc:214] mysql.ibd remove file block cut: 0
-[948170 20210120 14:30:23.889091Z][INFO][lib/block_handle.cc:117] current block pool size: 31938
-[948170 20210120 14:30:23.889097Z][INFO][lib/block_handle.cc:120] put block id: 8874 to free pool done
-[948170 20210120 14:30:23.889102Z][INFO][lib/block_handle.cc:120] put block id: 27466 to free pool done
-[948170 20210120 14:30:23.889107Z][INFO][lib/file_block.cc:8] clear file block index: 20 fh: 20
-[948170 20210120 14:30:23.889128Z][INFO][lib/file_block.cc:29] write file block meta index: 20 crc:3285807419
-[948170 20210120 14:30:23.889246Z][INFO][lib/file.cc:44] clear file name: mysql.ibd fh: 20
-[948170 20210120 14:30:23.889254Z][INFO][lib/file.cc:173] release file name: mysql.ibd fh: 20 seq_no: 0
-[948170 20210120 14:30:23.889261Z][INFO][lib/file.cc:29] write file meta, name: mysql.ibd fh: 20 align_index: 16 crc: 1024740913
 ```
 
 

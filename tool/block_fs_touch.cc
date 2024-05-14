@@ -11,16 +11,14 @@ static void HelpInfo() {
   LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
   LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
-  LOG(INFO) << " -c, --config   /usr/local/mysql/blockfs/bfs.cnf";
-  LOG(INFO) << " -m, --master   Run as master node";
+  LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
   LOG(INFO) << " -n, --name     Input file name";
   LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
 }
 
 int main(int argc, char *argv[]) {
-  const char *config_path = "/usr/local/mysql/blockfs/bfs.cnf";
-  bool master = false;
+  const char *config_path = "/data/blockfs/conf/bfs.cnf";
   const char *file_name = nullptr;
 
   int c;
@@ -28,7 +26,6 @@ int main(int argc, char *argv[]) {
     int optIndex = 0;
     static struct option longOpts[] = {
         {"config", required_argument, nullptr, 'c'},
-        {"master", no_argument, nullptr, 'm'},
         {"name", required_argument, nullptr, 'n'},
         {"version", no_argument, nullptr, 'v'},
         {"help", no_argument, nullptr, 'h'},
@@ -44,9 +41,6 @@ int main(int argc, char *argv[]) {
           HelpInfo();
           std::exit(1);
         }
-      } break;
-      case 'm': {
-        master = true;
       } break;
       case 'n': {
         file_name = optarg;
