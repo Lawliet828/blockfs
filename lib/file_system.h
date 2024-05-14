@@ -83,8 +83,6 @@ class FileSystem : public NonCopyable {
   virtual bool set_is_mounted(bool mounted) noexcept;
   virtual const bool is_mounted() noexcept;
 
-  virtual void set_slave_num(uint32_t slave_num) noexcept;
-  virtual const uint32_t slave_num() const noexcept;
   virtual const int64_t time_update() noexcept;
 
   virtual const uint64_t GetMaxSupportFileNumber() noexcept = 0;

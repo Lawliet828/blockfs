@@ -17,14 +17,11 @@ extern "C" {
 
 typedef struct block_fs_mount_stat_t {
   bool is_mounted_;
-  uint32_t slave_num_;
 #ifdef __cplusplus
-  block_fs_mount_stat_t() : is_mounted_(false), slave_num_(0) {}
+  block_fs_mount_stat_t() : is_mounted_(false) {}
   void set_is_mounted(bool is_mounted) noexcept { is_mounted_ = is_mounted; }
   bool is_mounted() const noexcept { return is_mounted_; }
   bool is_master() const noexcept { return true; }
-  void set_slave_num(uint32_t slave_num) noexcept { slave_num_ = slave_num; }
-  uint32_t slave_num() const noexcept { return slave_num_; }
 #endif
 } block_fs_mount_stat;
 
@@ -63,24 +60,6 @@ int block_fs_resizefs(uint64_t size);
  * \return version string
  */
 const char *block_fs_get_version();
-
-/**
- * BlockFs use to update uxdb mysql salve number as soon as posible
- *
- * \param num The uxdb mysql slave num
- *
- * \return void
- */
-void block_fs_update_slave_num(uint32_t num);
-
-/**
- * BlockFs use to get slave num in uxdb mysql
- *
- * \param num The uxdb mysql slave num
- *
- * \return void
- */
-uint32_t block_fs_get_slave_num();
 
 /**
  * Check blockfs whther is mounted

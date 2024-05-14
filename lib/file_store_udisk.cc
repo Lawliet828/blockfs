@@ -496,10 +496,6 @@ int32_t FileStore::RenamePath(const std::string& oldpath,
     errno = EINVAL;
     return -1;
   }
-  if (!is_master()) {
-    LOG(INFO) << "mock rename return success";
-    return 0;
-  }
   if (!is_mounted()) {
     return -1;
   }
@@ -529,10 +525,6 @@ int32_t FileStore::CopyFile(const std::string& from, const std::string& to) {
 }
 
 int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
-  if (!is_master()) {
-    LOG(INFO) << "mock return success";
-    return 0;
-  }
   if (!CheckPermission("truncate", filename.c_str())) {
     return -1;
   }
@@ -550,10 +542,6 @@ int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
 }
 
 int32_t FileStore::TruncateFile(const int32_t fd, int64_t size) {
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, fd: " << fd;
-    return 0;
-  }
   if (!CheckPermission("ftruncate", fd)) {
     return -1;
   }

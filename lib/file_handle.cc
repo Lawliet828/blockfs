@@ -452,17 +452,6 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
   DirectoryPtr parent_dir = dirs.first;
   FilePtr curr_file = dirs.second;
 
-  // 临时文件创建不写日志，但是写持久化到元数据,方便外部DUMP查看
-  if (!tmpfile) {
-    // 写操作日志
-    if (!FileStore::Instance()->journal_handle()->WriteJournal(
-            BLOCKFS_JOURNAL_CREATE_FILE, curr_file)) {
-      return kEmptyFilePtr;
-    }
-  }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("createfile_1");
-#endif
   {
     META_HANDLE_LOCK();
     // 持久化文件元数据
@@ -474,14 +463,6 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
 
   // 添加到内存文件列表和父文件夹中
   AddFileToDirectory(parent_dir, curr_file);
-
-  if (!tmpfile) {
-    // 回收日志
-    if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-            curr_file->seq_no())) {
-      return kEmptyFilePtr;
-    }
-  }
 
   LOG(INFO) << "create file success: " << curr_file->file_name();
   block_fs_set_errno(0);
@@ -517,13 +498,6 @@ int FileHandle::UnlinkFileNolock(const int fh) {
     return -1;
   }
 
-//  if (!file->is_temp()) {
-//    if (!FileStore::Instance()->journal_handle()->WriteJournal(
-//            BLOCKFS_JOURNAL_DELETE_FILE, file)) {
-//      return -1;
-//    }
-//  }
-
   // 持久化删除fileblock
   if (!file->RemoveAllFileBlock()) {
     return -1;
@@ -539,12 +513,6 @@ int FileHandle::UnlinkFileNolock(const int fh) {
     return -1;
   }
 
-//  if (unlikely(!file->is_temp())) {
-//    if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-//            file->seq_no())) {
-//      return -1;
-//    }
-//  }
   // 同步从节点
   LOG(INFO) << "remove file success: " << file->file_name();
   block_fs_set_errno(0);
@@ -580,40 +548,19 @@ int FileHandle::unlink(const std::string &filename) {
     return 0;
   }
 
-  if (!curr_file->is_temp()) {
-    if (!FileStore::Instance()->journal_handle()->WriteJournal(
-            BLOCKFS_JOURNAL_DELETE_FILE, curr_file)) {
-      return -1;
-    }
-  }
-
   // 持久化删除fileblock
   if (!curr_file->RemoveAllFileBlock()) {
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("unlink_1");
-#endif
 
   // 持久化删除文件
   if (!curr_file->Release()) {
     // TODO:失败处理
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("unlink_2");
-#endif
 
   if (!RemoveFileFromoDirectory(parent_dir, curr_file)) {
     return -1;
-  }
-
-  if (!curr_file->is_temp()) {
-    // 写操作日志
-    if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-            curr_file->seq_no())) {
-      return -1;
-    }
   }
 
   // 同步从节点
@@ -821,10 +768,6 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
     }
   }
 
-#ifdef STUB_ENABLE
-  block_fs_stub_match("open_file_1");
-#endif
-
   /* allocate a file fd for this new file */
   int32_t fd = FileStore::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
@@ -837,18 +780,11 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   AddOpenFile(fd, open_file);
   open_file->set_open_fd(fd);
 
-#ifdef STUB_ENABLE
-  block_fs_stub_match("open_file_2");
-#endif
-
   if (HasAppendFlag(flags)) {
     open_file->set_append_pos(file->file_size());
   } else {
     open_file->set_append_pos(0);
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("open_file_3");
-#endif
   file->IncLinkCount();
 
   block_fs_set_errno(0);

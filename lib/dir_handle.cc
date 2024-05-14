@@ -392,9 +392,6 @@ bool DirHandle::RemoveDirectory(const DirectoryPtr &parent,
   if (!parent->RemovChildDirectory(child)) {
     return false;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("del_dir_5");
-#endif
   META_HANDLE_LOCK();
   return RemoveDirectoryFromCreateNolock(child);
 }
@@ -542,7 +539,6 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
 
   // 添加到内存文件夹
   if (!AddDirectory(parent_dir, curr_dir)) {
-    FileStore::Instance()->journal_handle()->RecycleJournal(curr_dir->seq_no());
     return -1;
   }
 
@@ -600,12 +596,6 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
     return -1;
   }
 
-  // 写Journal操作日志
-  if (!FileStore::Instance()->journal_handle()->WriteJournal(
-          BLOCKFS_JOURNAL_DELETE_DIR, curr_dir)) {
-    return -1;
-  }
-
   // 持久化删除文件夹元数据
   if (!curr_dir->Suicide()) {
     // TODO:失败处理
@@ -617,10 +607,6 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
     return -1;
   }
 
-  if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-          curr_dir->seq_no())) {
-    return -1;
-  }
   // 同步从节点
   LOG(INFO) << "remove directory success: " << path;
   block_fs_set_errno(0);
@@ -665,22 +651,12 @@ int32_t DirHandle::RenameDirectory(const std::string &from,
   }
   const DirectoryPtr &curr_dir = dirs.second;
 
-  // 写Journal操作日志
-  if (!FileStore::Instance()->journal_handle()->WriteJournal(
-          BLOCKFS_JOURNAL_DELETE_DIR, curr_dir)) {
-    return -1;
-  }
-
   // 持久化文件夹元数据
   if (!curr_dir->rename(to_dir_name)) {
     // TODO:失败处理
     return -1;
   }
 
-  if (!FileStore::Instance()->journal_handle()->RecycleJournal(
-          curr_dir->seq_no())) {
-    return -1;
-  }
   block_fs_set_errno(0);
   return 0;
 }

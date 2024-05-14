@@ -336,7 +336,5 @@ void block_fs_stub_inject(const std::string &key, uint32_t count) {
   g_inject.InjectOne(InjectionPoint(key, count));
 }
 
-void block_fs_stub_match(const std::string &key) { g_inject.MatchStub(key); }
-
 }  // namespace blockfs
 }  // namespace udisk

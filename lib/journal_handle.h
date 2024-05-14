@@ -45,15 +45,6 @@ public:
   virtual void Dump() noexcept override;
   virtual void Dump(const std::string &file_name) noexcept override;
 
-  bool WriteJournal(BlockFsJournal *buf);
-  bool WriteJournal(const BlockFsJournalType type, const FilePtr &file);
-  bool WriteJournal(const BlockFsJournalType type, const DirectoryPtr &dir);
-  bool WriteJournalExForExpandFile(seq_t seq_no, FileBlockPtr last_file_block,
-                          const std::vector<FileBlockPtr> &file_blocks);
-  bool ReplayJournal(uint64_t seq_no);
-  bool RecycleJournal(uint64_t seq_no);
-  bool ReplayAndRecycleJournal(uint64_t seq_no);
-
   // 主备模式下采用同步写日志,操作,删日志的模式
   // 如果期间进程因为各种原因异常, 需要根据日志回放.
   void set_sync_journal(bool sync = false) { sync_journal_ = sync; }

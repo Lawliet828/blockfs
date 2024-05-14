@@ -164,14 +164,6 @@ int File::rename(const std::string &to) {
         set_dh(new_dir->dh());
         UpdateTimeStamp(false, true, true);
 
-        if (!FileStore::Instance()->journal_handle()->WriteJournal(
-            BLOCKFS_JOURNAL_RENAME_FILE, shared_from_this())) {
-          return false;
-        }
-#ifdef STUB_ENABLE
-        block_fs_stub_match("rename_1");
-#endif
-
         // 添加新的文件映射
         FileStore::Instance()->file_handle()->AddFileNoLock(file);
         if (!new_dir->AddChildFile(file)) {
@@ -179,13 +171,6 @@ int File::rename(const std::string &to) {
         }
 
         if (!WriteMeta()) {
-          return false;
-        }
-#ifdef STUB_ENABLE
-        block_fs_stub_match("rename_2");
-#endif
-
-        if (!FileStore::Instance()->journal_handle()->RecycleJournal(seq_no())) {
           return false;
         }
 
@@ -287,9 +272,6 @@ bool File::RemoveAllFileBlock() {
     if (!RemoveFileBlock(iter->second)) {
       return false;
     }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("removeallfileblock_1");
-#endif
   }
   item_maps_.clear();
   // 清空列表
@@ -394,21 +376,6 @@ int File::ExtendFile(uint64_t offset) {
     }
   }
 
-  // 如果真的申请了block,才写journal
-  if (block_num > 0 && !is_temp()) {
-    if (!FileStore::Instance()->journal_handle()->WriteJournal(
-        BLOCKFS_JOURNAL_EXPAND_FILE, shared_from_this())) {
-      return -1;
-    }
-    if (!FileStore::Instance()->journal_handle()->WriteJournalExForExpandFile(
-                    seq_no(), last_file_block, file_blocks)) {
-      return -1;
-    }
-  }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("extendfile_1");
-#endif
-
   // 开始填充fileblock的参数
   uint32_t block_ids_cursor = 0;
   uint32_t file_block_cursor = 0;
@@ -473,9 +440,6 @@ int File::ExtendFile(uint64_t offset) {
       AddFileBlockNoLock(file_blocks[i]);
     }
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("extendfile_2");
-#endif
 
   bool success =
       FileStore::Instance()->file_handle()->RunInMetaGuard([this, offset] {
@@ -489,11 +453,6 @@ int File::ExtendFile(uint64_t offset) {
       });
   if (unlikely(!success)) {
     return -1;
-  }
-  if (block_num > 0 && !is_temp()) {
-    if (!FileStore::Instance()->journal_handle()->RecycleJournal(seq_no())) {
-      return -1;
-    }
   }
   return 0;
 }
@@ -622,9 +581,6 @@ int File::ShrinkFile(uint64_t offset) {
                   << " no completed block inherited from parent file";
         break;
       }
-#ifdef STUB_ENABLE
-      block_fs_stub_match("shrinkfile_1");
-#endif
 
       for (uint32_t j = 0; j < kBlockFsFileBlockCapacity; ++j) {
         LOG(INFO) << file_name() << " now copy parent block index: " << i
@@ -649,9 +605,6 @@ int File::ShrinkFile(uint64_t offset) {
       uint32_t new_block_id = block_ids[0];
       LOG(INFO) << file_name() << " new block id: " << new_block_id;
       LOG(INFO) << file_name() << " new file block id: " << new_fb->index();
-#ifdef STUB_ENABLE
-      block_fs_stub_match("shrinkfile_2");
-#endif
 
       // 可能已经在下一个fileblock
       // 0 1 2 3 4 ............ 998 999 [1000个] 0 1 2 3 4 ......
@@ -666,17 +619,9 @@ int File::ShrinkFile(uint64_t offset) {
       new_fb->add_block_id(new_block_id);
     }
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("shrinkfile_3");
-#endif
 
   // 老的文件需要找到子文件
   old_meta->child_fh_ = new_meta->fh_;
-  // 做了一部分工作之后, 改动父fh之前
-//  if (!FileStore::Instance()->journal_handle()->WriteJournal(
-//          BLOCKFS_JOURNAL_TRUNCATE_FILE, shared_from_this())) {
-//    return -1;
-//  }
   // seq在老文件中,需要记录下来, 供回收日志时使用
 //  uint64_t tmp_seq_no = seq_no();
 
@@ -707,17 +652,11 @@ int File::ShrinkFile(uint64_t offset) {
 
   // 更新到实际truncate后的size
   this->set_file_size(offset);
-#ifdef STUB_ENABLE
-  block_fs_stub_match("shrinkfile_4");
-#endif
 
   // 先写新文件file元数据, 如果失败自然没有fileblock的元数据
   if (!WriteMeta()) {
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("shrinkfile_5");
-#endif
   // 写新文件FileBlock的元数据
   for (const auto &fb : file_blocks) {
     if (!fb->WriteMeta()) {
@@ -729,13 +668,7 @@ int File::ShrinkFile(uint64_t offset) {
   if (!WriteMeta(old_meta->fh_)) {
     return -1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("shrinkfile_6");
-#endif
 
-//  if (!FileStore::Instance()->journal_handle()->RecycleJournal(tmp_seq_no)) {
-//    return -1;
-//  }
   LOG(INFO) << "shrink for: " << file_name()
             << " block_offset: " << block_offset;
 
@@ -836,9 +769,6 @@ off_t OpenFile::lseek(off_t offset, int whence) {
       errno = EINVAL;
       return (off_t)-1;
   }
-#ifdef STUB_ENABLE
-  block_fs_stub_match("lseek_1");
-#endif
   /* set and return final file position */
   // current_pos计算出来为负数如何处理?
   set_append_pos(current_pos);
@@ -1031,9 +961,6 @@ int64_t OpenFile::FileReader::ReadData() {
       break;
     }
     ret += block_read;
-#ifdef STUB_ENABLE
-    block_fs_stub_match("readdata_1");
-#endif
   }
   if (!direct_) {
     open_file_->set_append_pos(open_file_->append_pos() + ret);

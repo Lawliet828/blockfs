@@ -40,9 +40,6 @@ $ sudo ./build/tool/block_fs_tool -v
 [90002 20210202 15:09:50.261121Z][INFO][tool/block_fs_tool.cc:248]  simu    : [ls,pwd,cd,mkdir,stat,cat,echo,rename,rmdir,touch,rm,unlink]
 ```
 
-
-### 使用demo
-
 ##### 格式化文件系统
 ```sh
 $ sudo ./block_fs_tool -d /dev/vdf -f

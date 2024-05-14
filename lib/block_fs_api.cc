@@ -33,12 +33,6 @@ const char *block_fs_get_version() {
   return FileStore::Instance()->GetVersion();
 }
 
-void block_fs_update_slave_num(uint32_t num) {
-  FileStore::Instance()->set_slave_num(num);
-}
-
-uint32_t block_fs_get_slave_num() { return FileStore::Instance()->slave_num(); }
-
 bool block_fs_is_mounted() { return FileStore::Instance()->is_mounted(); }
 
 bool block_fs_is_master() { return FileStore::Instance()->is_master(); }

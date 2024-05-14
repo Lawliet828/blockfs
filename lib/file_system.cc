@@ -66,34 +66,6 @@ const bool FileSystem::is_mounted() noexcept {
 }
 
 /**
- * set slave node number
- * to sync file system metadata
- * Update uxdb mysql salve number as soon as posible
- *
- * \param void
- *
- * \return true or false
- */
-void FileSystem::set_slave_num(uint32_t slave_num) noexcept {
-  if (unlikely(slave_num == 0)) {
-    LOG(DEBUG) << "block fs has no slave node?";
-  }
-  LOG(DEBUG) << "block fs has set slave num: " << slave_num;
-  mount_stat_.set_slave_num(slave_num);
-}
-
-/**
- * get slave node number
- *
- * \param void
- *
- * \return true or false
- */
-const uint32_t FileSystem::slave_num() const noexcept {
-  return mount_stat_.slave_num();
-}
-
-/**
  * time seconds to update atime, mtime, ctme
  *
  * \param void
