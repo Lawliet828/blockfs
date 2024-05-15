@@ -3,10 +3,8 @@
 #define LIB_FILE_STORE_H_
 
 #include "aligned_buffer.h"
-// clang-format off
 #include "block_fs_internal.h"
-#include "block_fs_fuse.h"
-// clang-format on
+#include "bfs_fuse.h"
 #include "block_handle.h"
 #include "dir_handle.h"
 #include "fd_handle.h"

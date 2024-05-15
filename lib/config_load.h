@@ -2,7 +2,7 @@
 #ifndef LIB_CONFIG_LOAD_H_
 #define LIB_CONFIG_LOAD_H_
 
-#include "block_fs_fuse.h"
+#include "bfs_fuse.h"
 
 namespace udisk {
 namespace blockfs {

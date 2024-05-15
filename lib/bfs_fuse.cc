@@ -1,7 +1,7 @@
 // Copyright (c) 2020 UCloud All rights reserved.
-#include "block_fs_fuse.h"
+#include "bfs_fuse.h"
 
-#include <fuse.h>
+#include <fuse3/fuse.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h> /* flock(2) */
@@ -10,13 +10,12 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "block_fs.h"
 #include "comm_utils.h"
 #include "logging.h"
-
-using namespace udisk::blockfs;
 
 namespace udisk {
 namespace blockfs {
@@ -35,7 +34,6 @@ loff_t copy_file_range(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
 
 #endif
 
-// UCloud Disk Block FileSystem
 class UDiskBFS {
  public:
   UDiskBFS() = default;
@@ -189,57 +187,6 @@ static int bfs_readlink(const char *path, char *buf, size_t size) {
   buf[res] = '\0';
   return 0;
 }
-
-#if 0
-/*
- * Creates files on the underlying file system in response to a FUSE_MKNOD
- * operation
- */
-static int posix_mknod_wrapper(int dirfd, const char *path, const char *link,
-                         int mode, dev_t rdev) {
-  int res;
-  if (S_ISREG(mode)) {
-    res = openat(dirfd, path, O_CREAT | O_EXCL | O_WRONLY, mode);
-    if (res >= 0) res = close(res);
-  } else if (S_ISDIR(mode)) {
-    res = mkdirat(dirfd, path, mode);
-  } else if (S_ISLNK(mode) && link != nullptr) {
-    res = symlinkat(link, dirfd, path);
-  } else if (S_ISFIFO(mode)) {
-    res = mkfifoat(dirfd, path, mode);
-    // res = ::mkfifo(path, mode);
-#ifdef __FreeBSD__
-  } else if (S_ISSOCK(mode)) {
-    struct sockaddr_un su;
-    int fd;
-
-    if (strlen(path) >= sizeof(su.sun_path)) {
-      errno = ENAMETOOLONG;
-      return -1;
-    }
-    fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (fd >= 0) {
-      /*
-       * We must bind the socket to the underlying file
-       * system to create the socket file, even though
-       * we'll never listen on this socket.
-       */
-      su.sun_family = AF_UNIX;
-      strncpy(su.sun_path, path, sizeof(su.sun_path));
-      res = bindat(dirfd, fd, (struct sockaddr *)&su, sizeof(su));
-      if (res == 0) close(fd);
-    } else {
-      res = -1;
-    }
-#endif
-  } else {
-    res = mknodat(dirfd, path, mode, rdev);
-    // res = ::mknod(path, mode, rdev);
-  }
-
-  return res;
-}
-#endif
 
 /** Create a file node
  *
@@ -1533,11 +1480,75 @@ bool CreatePath(const std::string &path, mode_t mode) {
 
 void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   ::umask(0);
+  LOG(INFO) << "FUSE version: " << fuse_pkgversion();
+
+#if 0
+  auto fuse_thread_func = [](block_fs_config_info *info) {
+    pthread_setname_np(pthread_self(), "fuse");
+    struct fuse_cmdline_opts opts;
+    int ret = 0;
+
+    char *mountpoint = (char *)malloc(info->fuse_mount_point_.size() + 1);
+    memcpy(mountpoint, info->fuse_mount_point_.c_str(), info->fuse_mount_point_.size());
+    mountpoint[info->fuse_mount_point_.size()] = 0;
+
+    std::string fsname = "BFS:test";
+    char *fsname_str = (char *)malloc(fsname.size() + 1);
+    memcpy(fsname_str, fsname.c_str(), fsname.size());
+    fsname_str[fsname.size()] = 0;
+    std::vector<char *> argv;
+    argv.push_back(fsname_str);
+    argv.push_back("-f");
+    argv.push_back(mountpoint);
+    argv.push_back("-oallow_other");
+    argv.push_back("-odefault_permissions");
+    argv.push_back("-orw"); // 读写权限
+    for (size_t i = 0; i < argv.size(); ++i) {
+      LOG(INFO) << "fuse args: " << argv[i];
+    }
+
+    int argc = argv.size();
+    char **argv_ptr = argv.data();
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv_ptr);
+    if (fuse_parse_cmdline(&args, &opts) != 0) {
+      LOG(ERROR) << "failed to parse fuse command line";
+      return;
+    }
+
+    struct fuse_session *se = fuse_session_new(
+        &args, &kBFSOps, sizeof(kBFSOps), nullptr);
+    if (se == nullptr) {
+      LOG(FATAL) << "fuse create session failed";
+    }
+    if ((ret = fuse_set_signal_handlers(se)) != 0) {
+      LOG(FATAL) << "fuse set signal handlers failed, ret:" << ret;
+    }
+    if ((ret = fuse_session_mount(se, opts.mountpoint)) != 0) {
+      LOG(FATAL) << "fuse mount dir failed, ret:" << ret;
+    }
+    // 这里面会fork
+    // fuse_daemonize(1);
+    LOG(INFO) << "fuse opts idle_threads " << opts.max_idle_threads
+              << " max_threads " << opts.max_threads << " clone_fd "
+              << opts.clone_fd;
+    struct fuse_loop_config *config = fuse_loop_cfg_create();
+    fuse_loop_cfg_set_idle_threads(config, -1);
+    fuse_loop_cfg_set_max_threads(config, 4);
+    fuse_loop_cfg_set_clone_fd(config, 1);
+    fuse_session_loop_mt(se, config);
+    fuse_session_unmount(se);
+    fuse_loop_cfg_destroy(config);
+
+    LOG(INFO) << "fuse umount";
+    exit(0);
+  };
+  std::thread fuse_thread(fuse_thread_func, info);
+  fuse_thread.detach();
+#endif
 
   int argv_cnt = 0;
   char *new_argv[16];
 
-  LOG(INFO) << "FUSE version: " << fuse_pkgversion();
 
   // if mount point directory not exist
   // ::mkdir(info->mount_point_.c_str(), 0755);
@@ -1603,8 +1614,6 @@ void block_fs_fuse_mount(block_fs_config_info *info) {
 #endif
   UDiskBFS::Instance()->RunFuse(info);
 }
-
-void block_fs_fuse_destroy() { UDiskBFS::Instance()->Destroy(); }
 
 }  // namespace blockfs
 }  // namespace udisk

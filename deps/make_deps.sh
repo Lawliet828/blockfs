@@ -41,31 +41,6 @@ else
 fi
 pip3 install meson ninja
 
-# libuuid项目地址 https://sourceforge.net/projects/libuuid/
-# 去掉系统库,因为是动态库,尽量使用静态库
-# if [[ "$OSTYPE" == "linux-gnu" ]]; then
-#     if [ -f /etc/redhat-release ]; then
-#         echo "Redhat/Centos detected."
-#         yum remove libuuid-devel -y
-#     elif [ -f /etc/debian_version ]; then
-#         echo "Ubuntu/Debian Linux detected."
-#         sudo apt-get remove uuid-dev
-#     else
-#         echo "Unknown Linux distribution."
-#     fi
-# fi
-
-# if [ ! -f "libuuid-1.0.3.tar.gz" ]; then
-#     wget https://nchc.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz
-#     sudo tar -xvf libuuid-1.0.3.tar.gz
-#     cd libuuid-1.0.3
-#     sudo ./configure --prefix=/usr
-#     sudo make -j8
-#     sudo make install
-#     cd ..
-#     sudo rm -rf libuuid-1.0.3
-# fi
-
 
 if [ ! -d "googletest" ]; then
     git clone git@github.com:google/googletest.git

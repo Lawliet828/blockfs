@@ -82,12 +82,12 @@ void daemonize(bool chdir = false, bool close = false) {
    *       进程活动时,其工作目录所在的文件系统不能被umount
    */
   if (chdir) {
-    // char path_dir[0x100] = {0};
-    // (void)getcwd(path_dir, 0x100);
-    // if (::chdir(path_dir) != 0) {
-    //   LOG(ERROR) << "daemon process chdir failed, exit";
-    //   exit(EXIT_FAILURE);
-    // }
+    char path_dir[0x100] = {0};
+    (void)getcwd(path_dir, 0x100);
+    if (::chdir(path_dir) != 0) {
+      LOG(ERROR) << "daemon process chdir failed, exit";
+      exit(EXIT_FAILURE);
+    }
   }
 
   /* 步骤5: 重定向标准输入输出到/dev/null
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 
   ToolLogPreInit("block_fs_mount", conf->log_path_);
 
-  // daemonize();
+  daemonize(true, false);
   if (FileStore::Instance()->MountFileLock() < 0) {
     return -1;
   }
