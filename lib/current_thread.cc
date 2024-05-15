@@ -1,12 +1,9 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #include "current_thread.h"
 
 #include <cxxabi.h>
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-
-using namespace udisk::blockfs;
 
 namespace udisk {
 namespace blockfs {

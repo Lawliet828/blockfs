@@ -39,10 +39,6 @@ bool SuperBlock::InitializeMeta() {
  * format blockfs super metadata
  */
 bool SuperBlock::FormatAllMeta() {
-  if (!block_fs_is_master()) {
-    LOG(ERROR) << "cannot format super block, not master role";
-    return false;
-  }
   buffer_ = std::make_shared<AlignBuffer>(
       kSuperBlockSize, FileStore::Instance()->dev()->block_size());
 

@@ -1,7 +1,7 @@
 配置：
 
 4核8G
-20G RSSD数据盘
+40G RSSD数据盘
 
 write-iops
 fio --name=4k_rw --ioengine=libaio --blocksize=4k --readwrite=randwrite --filesize=64M --numjobs=4 --iodepth=32 --direct=1 --group_reporting -time_based=1 -runtime=90

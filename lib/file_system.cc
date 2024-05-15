@@ -30,15 +30,6 @@ FileSystem::FileSystem(/* args */) { PrintVersion(); }
 FileSystem::~FileSystem() {}
 
 /**
- * Wether node is master
- *
- * \param void
- *
- * \return true or false
- */
-const bool FileSystem::is_master() noexcept { return mount_stat_.is_master(); }
-
-/**
  * change master attribute
  *
  * \param master

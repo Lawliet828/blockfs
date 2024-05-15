@@ -21,7 +21,6 @@ typedef struct block_fs_mount_stat_t {
   block_fs_mount_stat_t() : is_mounted_(false) {}
   void set_is_mounted(bool is_mounted) noexcept { is_mounted_ = is_mounted; }
   bool is_mounted() const noexcept { return is_mounted_; }
-  bool is_master() const noexcept { return true; }
 #endif
 } block_fs_mount_stat;
 

@@ -700,11 +700,6 @@ static bool IsNeedCreateTempFile(const int32_t flags) {
     block_fs_set_errno(EINVAL);
     return false;
   }
-  if (!block_fs_is_master()) {
-    LOG(ERROR) << "slave node cannot create temp file";
-    block_fs_set_errno(EPERM);
-    return false;
-  }
   return true;
 }
 
@@ -712,11 +707,6 @@ static bool IsNeedCreateNormalFile(const int32_t flags) {
   /* file does not exist, create file if O_CREAT is set */
   if (!HasCreateFlag(flags)) {
     LOG(DEBUG) << "open file without create flag";
-    return false;
-  }
-  if (!block_fs_is_master()) {
-    LOG(ERROR) << "slave node cannot create normal file";
-    block_fs_set_errno(EPERM);
     return false;
   }
   return true;
@@ -750,19 +740,14 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
       }
     } else {
       /* file already exists */
-      if (block_fs_is_master()) {
-        if (!VerifyOpenExistFileFlag(flags)) {
+      if (!VerifyOpenExistFileFlag(flags)) {
+        return -1;
+      }
+      if (HasTruncateFlag(flags)) {
+        ret = file->ftruncate(0);
+        if (ret < 0) {
           return -1;
         }
-        if (HasTruncateFlag(flags)) {
-          ret = file->ftruncate(0);
-          if (ret < 0) {
-            return -1;
-          }
-        }
-      } else {
-        LOG(WARNING) << "mock return success, slave just open file: "
-                     << filename;
       }
     }
   }

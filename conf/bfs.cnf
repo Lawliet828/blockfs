@@ -1,10 +1,10 @@
 [common]
 core_dump                 = true
-log_level                 = DEBUG
+log_level                 = INFO
 log_path                  = /var/log/bfs/
 
 [bfs]
-device_uuid               = fc80a231-52f0-408d-aa15-18867b2307d8
+device_uuid               = 23d36a99-cef9-4639-a6f2-93dc80335b28
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 
@@ -14,7 +14,7 @@ uxdb_mount_point          = /mnt/mysql/
 fuse_mount_point          = /data/mysql/bfs/
 
 # enbale libfuse debug
-fuse_debug                = true
+fuse_debug                = false
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true
@@ -26,13 +26,6 @@ fuse_foreground           = true
 fuse_owner_type           = caller
 
 fuse_kernel_cache         = false
-
-# access permissions for other users
-# the values are:
-##  all for all users
-##  root for root only
-##  empty or other values for none
-fuse_allow_permission     = allow_all
 
 # auto unmount on process termination
 # default value is true

@@ -89,9 +89,6 @@ uint32_t DirHandle::PageAlignIndex(uint32_t index) const {
 }
 
 bool DirHandle::FormatAllMeta() {
-  if (!block_fs_is_master()) {
-    return false;
-  }
   uint64_t dir_meta_total_size =
       FileStore::Instance()->super_meta()->dir_meta_total_size_;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
@@ -592,13 +589,6 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
 
 int32_t DirHandle::RenameDirectory(const std::string &from,
                                    const std::string &to) {
-  // 校验读写权限
-  if (!block_fs_is_master()) {
-    LOG(ERROR) << "I am not master, cannot rename: " << from << " to: " << to;
-    block_fs_set_errno(EPERM);
-    return -1;
-  }
-
   if (!CheckFileExist(to)) {
     return -1;
   }

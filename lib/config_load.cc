@@ -53,19 +53,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   }
   LOG(DEBUG) << "fuse_foreground: " << config->fuse_foreground_;
 
-  std::string allow_str;
-  if (ini.GetStringValue("fuse", "fuse_allow_permission", &allow_str) != 0) {
-    config->fuse_allow_other_ = true;
-  }
-  if (allow_str.find("allow_other")) {
-    config->fuse_allow_other_ = true;
-    config->fuse_allow_root_ = false;
-  } else if (allow_str.find("allow_root")) {
-    config->fuse_allow_other_ = false;
-    config->fuse_allow_root_ = true;
-  }
-  LOG(DEBUG) << "fuse_allow_permission: " << allow_str;
-
   if (ini.GetBoolValue("fuse", "fuse_auto_unmount",
                        &config->fuse_auto_unmount_) != 0) {
     config->fuse_auto_unmount_ = true;

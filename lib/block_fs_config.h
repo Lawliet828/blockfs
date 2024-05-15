@@ -39,13 +39,6 @@ struct block_fs_config_info {
   double fuse_entry_timeout_ = 0.5;
   /* -o attr_timeout=T: cache timeout for attributes (1.0s)*/
   double fuse_attr_timeout_ = 0.5;
-  /* -o modules=M1[:M2...]:
-   * names of modules to push onto filesystem stack */
-  std::vector<std::string> fuse_modules_;
-  /* -o allow_other:  allow access by all users */
-  bool fuse_allow_other_ = true;
-  /* -o allow_root: allow access by root */
-  bool fuse_allow_root_ = false;
   /* -o auto_unmount: auto unmount on process termination */
   bool fuse_auto_unmount_ = true;
 };

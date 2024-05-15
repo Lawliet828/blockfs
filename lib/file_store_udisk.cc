@@ -169,10 +169,6 @@ int32_t FileStore::UnmountFileSystem() {
  */
 int32_t FileStore::CreateDirectory(const std::string& path) {
   LOG(INFO) << "make directory: " << path;
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, dirname: " << path;
-    return 0;
-  }
   if (!CheckPermission("mkdir", path.c_str())) {
     return -1;
   }
@@ -199,10 +195,6 @@ int32_t FileStore::ListDirectory(const std::string& path, FileInfo** filelist,
  */
 int32_t FileStore::DeleteDirectory(const std::string& path, bool recursive) {
   LOG(INFO) << "remove directory: " << path;
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, dirname: " << path;
-    return 0;
-  }
   if (!CheckPermission("rmdir", path.c_str())) {
     return -1;
   }
@@ -258,10 +250,6 @@ int32_t FileStore::ChangeWorkDirectory(const std::string& path) {
   if (!is_mounted()) {
     return -1;
   }
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, dirname: " << path;
-    return 0;
-  }
   LOG(WARNING) << "chdir not implemented yet";
   return 0;
 }
@@ -285,10 +273,6 @@ int32_t FileStore::Access(const std::string& path, int32_t mode) {
   }
   if (!is_mounted()) {
     return -1;
-  }
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, path: " << path;
-    return 0;
   }
   FilePtr file = file_handle()->GetCreatedFile(path);
   if (!file) {
@@ -457,10 +441,6 @@ int32_t FileStore::CloseFile(int32_t fd) {
 int32_t FileStore::FileExists(const std::string& path) { return 0; }
 
 int32_t FileStore::CreateFile(const std::string& path, mode_t mode) {
-  if (!is_master()) {
-    LOG(INFO) << "mock return success";
-    return 0;
-  }
   if (!CheckPermission("create", path.c_str())) {
     return -1;
   }
@@ -469,10 +449,6 @@ int32_t FileStore::CreateFile(const std::string& path, mode_t mode) {
 }
 
 int32_t FileStore::DeleteFile(const std::string& path) {
-  if (!is_master()) {
-    LOG(INFO) << "mock return success";
-    return 0;
-  }
   if (!CheckPermission("unlink", path.c_str())) {
     return -1;
   }
@@ -582,10 +558,6 @@ int32_t FileStore::ChmodPath(const std::string& path, int32_t mode) {
   if (!is_mounted()) {
     errno = EBUSY;
     return -1;
-  }
-  if (!is_master()) {
-    LOG(INFO) << "mock return success";
-    return 0;
   }
   FilePtr file = file_handle()->GetCreatedFile(path);
   if (!file) {
@@ -733,10 +705,6 @@ int32_t FileStore::FileSync(const int32_t fd) {
 
 int32_t FileStore::FileDataSync(const int32_t fd) {
   LOG(INFO) << "fdatasync file fd: " << fd;
-  if (!is_master()) {
-    LOG(WARNING) << "mock return success, fd: " << fd;
-    return 0;
-  }
   if (!CheckPermission("fdatasync", fd)) {
     return -1;
   }
@@ -759,10 +727,6 @@ int32_t FileStore::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
  */
 int32_t FileStore::RemovePath(const std::string& path) {
   LOG(INFO) << "remove path: " << path;
-  if (!is_master()) {
-    LOG(INFO) << "mock return success";
-    return 0;
-  }
   if (!is_mounted()) {
     return -1;
   }
@@ -1045,11 +1009,6 @@ bool FileStore::CheckPermission(const char* op, const char* path) {
     return false;
   }
 
-  if (!is_master()) {
-    LOG(ERROR) << "I am not is_master, cannot " << op << " " << path;
-    block_fs_set_errno(EPERM | EROFS);
-    return false;
-  }
   return true;
 }
 
@@ -1064,10 +1023,6 @@ bool FileStore::CheckPermission(const char* op, const char* path) {
 bool FileStore::CheckPermission(const char* op, const int32_t handle) {
   if (unlikely(!is_mounted())) {
     LOG(ERROR) << "mount has not finshed yet";
-    return false;
-  }
-  if (unlikely(!is_master())) {
-    LOG(ERROR) << "I am not is_master, cannot " << op << " " << handle;
     return false;
   }
   return true;
