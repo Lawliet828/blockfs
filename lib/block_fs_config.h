@@ -14,7 +14,7 @@
 namespace udisk {
 namespace blockfs {
 
-typedef struct block_fs_config_info_t {
+struct block_fs_config_info {
   bool enable_coredump_ = true;
   std::string log_level_;
   std::string log_path_;
@@ -22,7 +22,7 @@ typedef struct block_fs_config_info_t {
   std::string device_uuid_;
   std::string uxdb_mount_point_;
 
-  std::string fuse_mount_point_;
+  std::string fuse_mount_point;
 
   /* -d: enable debug output (implies -f) */
   bool fuse_debug_ = false;
@@ -48,7 +48,7 @@ typedef struct block_fs_config_info_t {
   bool fuse_allow_root_ = false;
   /* -o auto_unmount: auto unmount on process termination */
   bool fuse_auto_unmount_ = true;
-} block_fs_config_info;
+};
 
 }  // namespace blockfs
 }  // namespace udisk

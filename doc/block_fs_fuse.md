@@ -170,18 +170,6 @@ static const struct fuse_operations kBFSOps = {
     .lseek = bfs_lseek,
 };
 
-
-  LOG(INFO) << "fuse mount_arg: " << mount_arg;
-  new_argv[argv_cnt++] = const_cast<char *>(mount_arg.c_str());
-  new_argv[argv_cnt++] = const_cast<char *>(info->fuse_mount_point_.c_str());
-  new_argv[argv_cnt++] = (char *)nullptr;
-
-  LOG(INFO) << "argv_cnt: " << argv_cnt;
-
-  if (!fuse_main(argv_cnt - 1, new_argv, &kBFSOps, info)) {
-    LOG(WARNING) << "fuse mount loop exit";
-  }
-
 ```
 
 FUSE版本和支持的命令行参数

@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -x
+
+PFS_BIN=/data/blockfs/build/tool/block_fs_mount
+CONFIG_FILE=/data/blockfs/conf/bfs.cnf
+
+print_help() {
+    echo "Usage: $0 dir [-h] [-o options]"
+    echo "options:"
+    echo "  -h           Print this help message"
+    echo "  options      -o ro,rw,_netdev,nosuid,conf=/data/blockfs/conf/bfs.cnf"
+}
+
+if [ $# -lt 1 ]; then
+    echo "Error: Missing required arguments."
+    print_help
+    exit 1
+fi
+
+if [ ! -e "$PFS_BIN" ]; then
+    echo "Error: $PFS_BIN not found."
+    exit 1
+fi
+
+# 获取最后一个参数，即目标目录
+TARGET=$1
+shift 1
+
+# 检查是否提供了必要的参数
+if [ -z "$TARGET" ]; then
+    echo "Error: Missing required arguments."
+    print_help
+    exit 1
+fi
+
+# 检查目标目录是否存在
+if [ ! -d "$TARGET" ]; then
+    echo "Error: Target directory $TARGET does not exist."
+    exit 1
+fi
+
+# 检查是否已经挂载
+if mountpoint -q "$TARGET"; then
+    echo "Error: $TARGET is already mounted."
+    exit 0
+fi
+
+# 判断配置文件是否存在
+if [ ! -e "$CONFIG_FILE" ]; then
+    echo "Error: Config file $CONFIG_FILE does not exist."
+    exit 1
+fi
+
+save_dir=$(pwd)
+cd /
+# 防止client被oom kill
+echo -1000 > /proc/$$/oom_score_adj
+# 执行挂载命令
+nohup $PFS_BIN -c $CONFIG_FILE -m $TARGET >/dev/null 2>&1 &
+cd ${save_dir}

@@ -53,13 +53,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   }
   LOG(DEBUG) << "fuse_foreground: " << config->fuse_foreground_;
 
-  if (ini.GetStringValue("fuse", "fuse_mount_point",
-                         &config->fuse_mount_point_) != 0) {
-    config->fuse_mount_point_ = "/data/mysql/bfs/";
-  }
-
-  LOG(DEBUG) << "fuse mount point: " << config->fuse_mount_point_;
-
   std::string allow_str;
   if (ini.GetStringValue("fuse", "fuse_allow_permission", &allow_str) != 0) {
     config->fuse_allow_other_ = true;

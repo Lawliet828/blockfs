@@ -51,6 +51,8 @@ class UDiskBFS {
       uxdb_mount_point_.erase(uxdb_mount_point_.size() - 1);
     }
     FuseLoop(info);
+    // std::thread fuse_thread(FuseLoop, info);
+    // fuse_thread.detach();
   }
 
   void StopFuse() {
@@ -1451,33 +1453,6 @@ static const struct fuse_operations kBFSOps = {
     .lseek = bfs_lseek,
 };
 
-// /data/mysql/bfs
-bool CreatePath(const std::string &path, mode_t mode) {
-  std::string dir;
-  int index = 1;
-  while (true) {
-    index = path.find('/', index) + 1;
-    dir = path.substr(0, index);
-    if (dir.length() == 0) {
-      break;
-    }
-    LOG(INFO) << "create dir: " << dir;
-    if (::access(dir.c_str(), F_OK) < 0) {
-      if (::mkdir(dir.c_str(), mode) < 0) {
-        LOG(ERROR) << "failed to create dir: " << path;
-        return false;
-      }
-    }
-  }
-
-  if (::chmod(path.c_str(), mode) < 0) {
-    LOG(ERROR) << "failed to chmod path: " << path;
-    return false;
-  }
-
-  return true;
-}
-
 void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   ::umask(0);
   LOG(INFO) << "FUSE version: " << fuse_pkgversion();
@@ -1488,10 +1463,9 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
     struct fuse_cmdline_opts opts;
     int ret = 0;
 
-    char *mountpoint = (char *)malloc(info->fuse_mount_point_.size() + 1);
-    memcpy(mountpoint, info->fuse_mount_point_.c_str(), info->fuse_mount_point_.size());
-    mountpoint[info->fuse_mount_point_.size()] = 0;
-
+    char *mountpoint = (char *)malloc(info->fuse_mount_point.size() + 1);
+    memcpy(mountpoint, info->fuse_mount_point.c_str(), info->fuse_mount_point.size());
+    mountpoint[info->fuse_mount_point.size()] = 0;
     std::string fsname = "BFS:test";
     char *fsname_str = (char *)malloc(fsname.size() + 1);
     memcpy(fsname_str, fsname.c_str(), fsname.size());
@@ -1546,54 +1520,34 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   fuse_thread.detach();
 #endif
 
-  int argv_cnt = 0;
-  char *new_argv[16];
-
-
-  // if mount point directory not exist
-  // ::mkdir(info->mount_point_.c_str(), 0755);
-
-  new_argv[argv_cnt++] = const_cast<char *>("block_fs_mount");
+  char *mountpoint = (char *)malloc(info->fuse_mount_point.size() + 1);
+  memcpy(mountpoint, info->fuse_mount_point.c_str(), info->fuse_mount_point.size());
+  mountpoint[info->fuse_mount_point.size()] = 0;
+  std::string fsname = "BFS:test";
+  char *fsname_str = (char *)malloc(fsname.size() + 1);
+  memcpy(fsname_str, fsname.c_str(), fsname.size());
+  fsname_str[fsname.size()] = 0;
+  std::vector<char *> argv;
+  argv.push_back(fsname_str);
   if (info->fuse_debug_) {
     LOG(INFO) << "fuse enable debug";
-    new_argv[argv_cnt++] = (char *)"-d";
+    argv.push_back((char *)"-d");
+  }
+  argv.push_back("-f");
+  argv.push_back(mountpoint);
+  argv.push_back("-oallow_other");
+  argv.push_back("-odefault_permissions");
+  argv.push_back("-orw"); // 读写权限
+  argv.push_back("-oauto_unmount");
+  for (size_t i = 0; i < argv.size(); ++i) {
+    LOG(INFO) << "fuse args: " << argv[i];
   }
 
-  if (info->fuse_foreground_) {
-    LOG(INFO) << "fuse enable foreground";
-    new_argv[argv_cnt++] = (char *)"-f";
-  }
+  int argc = argv.size();
+  char **argv_ptr = argv.data();
+  struct fuse_args args = FUSE_ARGS_INIT(argc, argv_ptr);
 
-  new_argv[argv_cnt++] = (char *)"-o";
-
-  std::string mount_arg;
-  if (info->fuse_allow_root_) {
-    mount_arg += "allow_root";
-  } else if (info->fuse_allow_other_) {
-    mount_arg += "allow_other";
-  }
-  mount_arg += (",umask=0755");
-  if (info->fuse_auto_unmount_) {
-    mount_arg += ",auto_unmount";
-  }
-  mount_arg += ",entry_timeout=" + std::to_string(info->fuse_entry_timeout_);
-  mount_arg += ",attr_timeout=" + std::to_string(info->fuse_attr_timeout_);
-
-  LOG(INFO) << "fuse mount_arg: " << mount_arg;
-
-  if (!CreatePath(info->fuse_mount_point_, atoi("0755"))) {
-    LOG(ERROR) << "failed to create mount directory: "
-               << info->fuse_mount_point_;
-    return;
-  }
-
-  new_argv[argv_cnt++] = const_cast<char *>(mount_arg.c_str());
-  new_argv[argv_cnt++] = const_cast<char *>(info->fuse_mount_point_.c_str());
-  new_argv[argv_cnt++] = (char *)nullptr;
-
-  LOG(INFO) << "argv_cnt: " << argv_cnt;
-
-  if (!fuse_main(argv_cnt - 1, new_argv, &kBFSOps, info)) {
+  if (!fuse_main(args.argc, args.argv, &kBFSOps, info)) {
     LOG(WARNING) << "fuse mount loop exit";
   }
 }
@@ -1608,7 +1562,7 @@ void block_fs_fuse_mount(block_fs_config_info *info) {
   if (!KillAll("fusermount3")) {
     return;
   }
-  if (!UnmountPath(info->fuse_mount_point_)) {
+  if (!UnmountPath(info->fuse_mount_point)) {
     return;
   }
 #endif

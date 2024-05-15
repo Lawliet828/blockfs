@@ -39,8 +39,6 @@ fuse配置项：
 
 fuse_debug 必须配置，是否开启fuse debug信息打印
 
-fuse_mount_point  必须配置，配置本地的挂载点
-
 fuse_auto_unmount 选配，mount进程挂掉自动umount fuse，默认true
 
 fuse_attribute_timeout 选配，默认是5.0s

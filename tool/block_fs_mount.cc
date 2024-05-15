@@ -14,6 +14,7 @@ static void HelpInfo() {
   LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
   LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
+  LOG(INFO) << " -m, --mountpoint  /data/mysql/bfs";
   LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
 }
@@ -43,7 +44,7 @@ void daemonize(bool chdir = false, bool close = false) {
   }
   if (pid > 0) {
     // 为了子进程完成fuse的调用后再返回,此处停留1s
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
     exit(EXIT_SUCCESS);
   }
 
@@ -153,25 +154,26 @@ void ToolLogPreInit(const std::string &name, const std::string &dirname) {
 
 int main(int argc, char *argv[]) {
   const char *config_path = "/data/blockfs/conf/bfs.cnf";
+  std::string mountpoint;
   int c;
   while (true) {
     int optIndex = 0;
     static struct option longOpts[] = {
         {"config", required_argument, nullptr, 'c'},
+        {"mountpoint", required_argument, nullptr, 'm'},
         {"version", no_argument, nullptr, 'v'},
         {"help", no_argument, nullptr, 'h'},
         {0, 0, 0, 0}};
-    c = ::getopt_long(argc, argv, "c:vh?", longOpts, &optIndex);
+    c = ::getopt_long(argc, argv, "c:m:vh?", longOpts, &optIndex);
     if (c == -1) {
       break;
     }
     switch (c) {
       case 'c': {
         config_path = optarg;
-        if (!config_path) {
-          HelpInfo();
-          std::exit(1);
-        }
+      } break;
+      case 'm': {
+        mountpoint = std::string(optarg);
       } break;
       case 'v':
       case 'h':
@@ -180,6 +182,16 @@ int main(int argc, char *argv[]) {
         std::exit(0);
       }
     }
+  }
+  if (!config_path) {
+    printf("config path is empty\n");
+    HelpInfo();
+    std::exit(1);
+  }
+  if (mountpoint.empty()) {
+    printf("mountpoint is empty\n");
+    HelpInfo();
+    std::exit(1);
   }
   if (!KillAll("block_fs_mount")) {
     return -1;
@@ -190,10 +202,11 @@ int main(int argc, char *argv[]) {
   }
 
   block_fs_config_info *conf = FileStore::Instance()->mount_config();
+  conf->fuse_mount_point = mountpoint;
 
   ToolLogPreInit("block_fs_mount", conf->log_path_);
 
-  daemonize(true, false);
+  // daemonize(true, false);
   if (FileStore::Instance()->MountFileLock() < 0) {
     return -1;
   }
