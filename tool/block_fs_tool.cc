@@ -336,8 +336,6 @@ bool BlockFsTool::DoBlockFsTool() {
       case BLOCKFS_DUMP:
         if (dump_arg_.find("check") != std::string::npos) {
           LOG(INFO) << "check load block fs success";
-        } else if (dump_arg_.find("negot") != std::string::npos) {
-          FileStore::Instance()->negot()->Dump();
         } else if (dump_arg_.find("super") != std::string::npos) {
           FileStore::Instance()->super()->Dump();
         } else if (dump_arg_.find("uuid") != std::string::npos) {
@@ -347,7 +345,6 @@ bool BlockFsTool::DoBlockFsTool() {
         } else if (dump_arg_.find("files") != std::string::npos) {
           FileStore::Instance()->file_handle()->Dump();
         } else {
-          FileStore::Instance()->negot()->Dump();
           FileStore::Instance()->super()->Dump();
           FileStore::Instance()->dir_handle()->Dump();
           FileStore::Instance()->file_handle()->Dump();

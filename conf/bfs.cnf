@@ -1,15 +1,10 @@
-# BlockFS Configuration
-version                   = 0.1
-
 [common]
 core_dump                 = true
-# UTC / SYSTEM
-log_timestamps            = SYSTEM
 log_level                 = DEBUG
-log_path                  = /data/mysql/log/
+log_path                  = /var/log/bfs/
 
 [bfs]
-device_uuid               = 4ce7cbc8-46df-4afc-90b1-a5f72e4c0cdb
+device_uuid               = fc80a231-52f0-408d-aa15-18867b2307d8
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 
@@ -18,8 +13,8 @@ uxdb_mount_point          = /mnt/mysql/
 # the local path must exist
 fuse_mount_point          = /data/mysql/bfs/
 
-# enbale libfuse debug (don't touch)
-fuse_debug                = false
+# enbale libfuse debug
+fuse_debug                = true
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true
@@ -30,30 +25,7 @@ fuse_foreground           = true
 ## fixed: fixed user and group
 fuse_owner_type           = caller
 
-# set the user owner (username) of the new created files and directories
-# this parameter is valid only when owner_type set to fixed
-# empty for the user who runs the fs_fused program
-fuse_uid                  = 1001
-
-# mount.fuse3 options:
-#        These options are interpreted by mount.fuse3 and are thus only
-#        available when mounting a file system via mount.fuse3 (such as
-#        when mounting via the generic mount(1) command or /etc/fstab).
-#        Supported options are:
-# setuid=USER
-#        Switch to USER and its primary group before launching the
-#        FUSE file system process. mount.fuse3 must be run as root
-#         or with CAP_SETUID and CAP_SETGID for this to work.
-fuse_setuid               = mysql
-
-# set the group owner (group name) of the new created files and directories
-# this parameter is valid only when owner_type set to fixed
-# empty for the group of the user who runs the fs_fused program
-fuse_gid                  = 1001
-
 fuse_kernel_cache         = false
-
-# fuse_umask                = 0755
 
 # access permissions for other users
 # the values are:

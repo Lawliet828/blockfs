@@ -5,8 +5,6 @@
 #include "config_parser.h"
 #include "logging.h"
 
-using namespace udisk::blockfs;
-
 namespace udisk {
 namespace blockfs {
 
@@ -30,23 +28,9 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
   }
   LOG(DEBUG) << "log level: " << config->log_level_;
   if (ini.GetStringValue("common", "log_path", &config->log_path_) != 0) {
-    config->log_path_ = "/data/mysql/log/";
+    config->log_path_ = "/var/log/bfs/";
   }
   LOG(DEBUG) << "log path: " << config->log_path_;
-
-  if (ini.GetStringValue("common", "log_timestamps",
-                         &config->log_timestamps_) != 0) {
-    config->log_timestamps_ = "INFO";
-  }
-  LOG(DEBUG) << "log timestamps: " << config->log_timestamps_;
-
-  if (config->log_timestamps_ == "UTC") {
-    config->log_time_utc_ = true;
-  } else if (config->log_timestamps_ == "SYSTEM") {
-    config->log_time_utc_ = false;
-  } else {
-    config->log_time_utc_ = false;
-  }
 
   Logger::set_min_level(Logger::LogLevelConvert(config->log_level_));
 
@@ -88,31 +72,6 @@ bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
     config->fuse_allow_root_ = true;
   }
   LOG(DEBUG) << "fuse_allow_permission: " << allow_str;
-
-  if (ini.GetStringValue("fuse", "fuse_setuid", &config->fuse_setuid_) != 0) {
-    return false;
-  }
-  LOG(DEBUG) << "fuse_setuid: " << config->fuse_setuid_;
-
-  if (ini.GetStringValue("fuse", "fuse_uid", &config->fuse_uid_) != 0) {
-    return false;
-  }
-  LOG(DEBUG) << "fuse_uid: " << config->fuse_uid_;
-
-  if (ini.GetStringValue("fuse", "fuse_gid", &config->fuse_gid_) != 0) {
-    return false;
-  }
-  LOG(DEBUG) << "fuse_gid: " << config->fuse_gid_;
-
-  if (ini.GetStringValue("fuse", "fuse_umask", &config->fuse_umask_) != 0) {
-    config->fuse_umask_ = "0755";
-  } else {
-    if (!config->fuse_umask_.empty()) {
-      config->has_fuse_umask_ = true;
-    }
-  }
-  LOG(DEBUG) << "fuse_umask: " << config->fuse_umask_
-             << " enable: " << config->has_fuse_umask_;
 
   if (ini.GetBoolValue("fuse", "fuse_auto_unmount",
                        &config->fuse_auto_unmount_) != 0) {

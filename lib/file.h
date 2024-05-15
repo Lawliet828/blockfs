@@ -6,8 +6,6 @@
 #include "file_lock.h"
 #include "inode.h"
 
-using namespace udisk::blockfs;
-
 namespace udisk {
 namespace blockfs {
 
@@ -132,7 +130,6 @@ class File : public Inode<FileMeta, FileBlock>,
     ::memset(meta_->file_name_, 0, sizeof(meta_->file_name_));
     ::memcpy(meta_->file_name_, file_name.c_str(), sizeof(meta_->file_name_));
   }
-  std::string full_file_name() const noexcept;
   std::string file_name() const { return std::string(meta_->file_name_); }
 
   void set_child_fh(int32_t child_fh) noexcept { meta_->child_fh_ = child_fh; }

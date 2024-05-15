@@ -25,10 +25,8 @@ const uint64_t kUXDBMountPrefixMaxLen = 256;
 const uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
 
 const uint64_t kBlockFsPageSize = (4 * K);
-const uint64_t kNegotiationSize = kBlockFsPageSize;
 const uint64_t kSuperBlockSize = kBlockFsPageSize;
-const uint64_t kNegotiationOffset = 0;
-const uint64_t kSuperBlockOffset = (kNegotiationOffset + kNegotiationSize);
+const uint64_t kSuperBlockOffset = 0;
 const uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
 
 const uint64_t kBlockFsMaxFileNum = 100000;

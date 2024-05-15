@@ -49,7 +49,6 @@ $ sudo ./block_fs_tool -d /dev/vdf -f
 [91222 20210202 15:13:26.042334Z][INFO][lib/block_device.cc:447] open block device /dev/vdf success
 [91222 20210202 15:13:26.042338Z][INFO][lib/block_device.cc:214] get block device size: 536870912000 B
 [91222 20210202 15:13:26.042341Z][INFO][lib/block_device.cc:234] get block device blk size: 512
-[91222 20210202 15:13:26.042651Z][INFO][lib/negotiation.cc:40] write all negotiation success
 [91222 20210202 15:13:26.042748Z][INFO][lib/super_block.cc:145] write all super block success
 [91222 20210202 15:13:26.391164Z][INFO][lib/dir_handle.cc:115] write all directory meta success
 [91222 20210202 15:13:26.482517Z][INFO][lib/file_handle.cc:113] write all file meta success
@@ -83,7 +82,6 @@ $ sudo ./block_fs_tool -d /dev/vdf -p uuid
 [90922 20210202 15:12:39.778890Z][INFO][lib/shm_manager.cc:205] using posix mem aligned meta
 [90922 20210202 15:12:41.889680Z][INFO][lib/shm_manager.cc:228] read all meta into shm success
 [90922 20210202 15:12:41.889729Z][INFO][lib/shm_manager.cc:263] init and register meta success
-[90922 20210202 15:12:41.889741Z][INFO][lib/negotiation.cc:20] read negotiation success
 [90922 20210202 15:12:41.889746Z][INFO][lib/super_block.cc:34] read super block success
 [90922 20210202 15:12:41.889758Z][INFO][lib/fd_handle.cc:20] max fd num: 400000
 [90922 20210202 15:12:41.904908Z][INFO][lib/block_handle.cc:30] set max block num: 31964

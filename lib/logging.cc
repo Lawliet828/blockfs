@@ -12,8 +12,6 @@
 #include "comm_utils.h"
 #include "current_thread.h"
 
-extern bool block_fs_log_utc();
-
 namespace udisk {
 namespace blockfs {
 
@@ -124,11 +122,7 @@ std::string Logger::GetCurrentTime(int flag) const {
     struct tm tm_time;
     ::memset(&tm_time, 0, sizeof(struct tm));
 
-    if (block_fs_log_utc()) {
-      ::gmtime_r(&seconds, &tm_time);  // FIXME TimeZone::fromUtcTime
-    } else {
-      ::localtime_r(&seconds, &tm_time);
-    }
+    ::localtime_r(&seconds, &tm_time);
 
     int len =
         snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d",

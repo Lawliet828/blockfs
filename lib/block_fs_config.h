@@ -15,12 +15,9 @@ namespace udisk {
 namespace blockfs {
 
 typedef struct block_fs_config_info_t {
-  std::string bfs_version_;
   bool enable_coredump_ = true;
   std::string log_level_;
   std::string log_path_;
-  std::string log_timestamps_;
-  bool log_time_utc_ = false;
 
   std::string device_uuid_;
   std::string uxdb_mount_point_;
@@ -38,14 +35,6 @@ typedef struct block_fs_config_info_t {
   int fuse_max_idle_threads_ = 10;
   /* -o kernel_cache: cache files in kernel */
   bool fuse_kernel_cache_ = false;
-  /* -o umask=M: set file permissions (octal) */
-  bool has_fuse_umask_ = false;
-  std::string fuse_umask_ = "0755";
-  /* -o uid=N: set file owner */
-  std::string fuse_setuid_;
-  std::string fuse_uid_;
-  /* -o gid=N: set file group*/
-  std::string fuse_gid_;
   /* -o entry_timeout=T: cache timeout for names (1.0s) */
   double fuse_entry_timeout_ = 0.5;
   /* -o attr_timeout=T: cache timeout for attributes (1.0s)*/

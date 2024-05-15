@@ -284,7 +284,6 @@ bool ShmManager::Destroy() {
  * \return void
  */
 void ShmManager::RegistMetaBaseAddr() {
-  FileStore::Instance()->negot()->set_base_addr(shm_addr_ + kNegotiationOffset);
   FileStore::Instance()->super()->set_base_addr(shm_addr_ + kSuperBlockOffset);
   FileStore::Instance()->dir_handle()->set_base_addr(shm_addr_ +
                                                      super_.dir_meta_offset_);

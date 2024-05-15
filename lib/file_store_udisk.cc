@@ -807,7 +807,6 @@ bool FileStore::Initialize() {
     device_ = new BlockDevice();
     shm_manager_ = new ShmManager();
   }
-  handle_vector_[kNegotiationHandle] = new Negotiation();
   handle_vector_[kSuperBlockHandle] = new SuperBlock();
   handle_vector_[kFDHandle] = new FdHandle();
   handle_vector_[kBlockHandle] = new BlockHandle();

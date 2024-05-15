@@ -1561,20 +1561,7 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   } else if (info->fuse_allow_other_) {
     mount_arg += "allow_other";
   }
-  // if (!info->fuse_setuid_.empty()) {
-  //   mount_arg += ",setuid=" + info->fuse_setuid_;
-  // }
-  if (!info->fuse_uid_.empty()) {
-    mount_arg += ",uid=" + info->fuse_uid_;
-  }
-  if (!info->fuse_gid_.empty()) {
-    mount_arg += (",gid=" + info->fuse_gid_);
-  }
-  // ::setuid(1001);
-  // ::setgid(1001);
-  if (info->has_fuse_umask_) {
-    mount_arg += (",umask=" + info->fuse_umask_);
-  }
+  mount_arg += (",umask=0755");
   if (info->fuse_auto_unmount_) {
     mount_arg += ",auto_unmount";
   }
@@ -1583,7 +1570,7 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
 
   LOG(INFO) << "fuse mount_arg: " << mount_arg;
 
-  if (!CreatePath(info->fuse_mount_point_, atoi(info->fuse_umask_.c_str()))) {
+  if (!CreatePath(info->fuse_mount_point_, atoi("0755"))) {
     LOG(ERROR) << "failed to create mount directory: "
                << info->fuse_mount_point_;
     return;

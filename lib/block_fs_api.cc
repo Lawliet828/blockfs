@@ -297,7 +297,3 @@ bool block_fs_set_available_size(uint64_t available_size) {
 uint64_t block_fs_get_available_size() {
   return FileStore::Instance()->super()->get_available_udisk_size();
 }
-
-bool block_fs_log_utc() {
-  return FileStore::Instance()->mount_config()->log_time_utc_;
-}

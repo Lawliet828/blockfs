@@ -67,14 +67,11 @@ bool SuperBlock::FormatAllMeta() {
   meta->file_meta_size_ = kBlockFsFileMetaSize;
   meta->file_block_meta_size_ = kBlockFsFileBlockMetaSize;
 
-  /* 1. 协商区域 :  起始位置 0 - 4096 */
-  meta->negotiation_offset_ = kNegotiationOffset;
-  meta->negotiation_size_ = kNegotiationSize;
-  /* 2. 超级块区域: 起始位置 4096 - 8192 */
+  /* 2. 超级块区域: 起始位置 0 - 4096 */
   meta->super_block_offset_ = kSuperBlockOffset;
   meta->super_block_size_ = kSuperBlockSize;
 
-  /* 3. 文件夹区域: 起始位置 8192 - meta->file_meta_offset_ */
+  /* 3. 文件夹区域: 起始位置 4096 - meta->file_meta_offset_ */
   meta->dir_meta_offset_ = kDirMetaOffset;
   meta->dir_meta_total_size_ =
       meta->dir_meta_size_ * meta->max_support_file_num_;
@@ -285,7 +282,6 @@ void SuperBlock::Dump() noexcept {
             << "dir_meta_size: " << meta()->dir_meta_size_ << "\n"
             << "file_meta_size: " << meta()->file_meta_size_ << "\n"
             << "file_block_meta_size: " << meta()->file_block_meta_size_ << "\n"
-            << "negotiation_size: " << meta()->negotiation_size_ << "\n"
             << "super_block_size: " << meta()->super_block_size_ << "\n"
             << "dir_meta_total_size: " << meta()->dir_meta_total_size_ << "\n"
             << "file_meta_total_size: " << meta()->file_meta_total_size_ << "\n"
@@ -293,7 +289,6 @@ void SuperBlock::Dump() noexcept {
             << "\n"
             << "file_block_meta_total_size: "
             << meta()->file_block_meta_total_size_ << "\n"
-            << "negotiation_offset: " << meta()->negotiation_offset_ << "\n"
             << "super_block_offset: " << meta()->super_block_offset_ << "\n"
             << "dir_meta_offset: " << meta()->dir_meta_offset_ << "\n"
             << "file_meta_offset: " << meta()->file_meta_offset_ << "\n"

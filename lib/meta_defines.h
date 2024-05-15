@@ -36,24 +36,6 @@ static const int32_t kJournalUnusedIndex = -1;
 static const int32_t kMinJournalIndex = 0;
 static const int32_t kMaxJournalIndex = 4095;
 
-/* 协商区元数据
- * 大小: 4K
- * 作用: 比如UDisk逻辑盘扩容/缩容多少个Extent(10G)
- **/
-enum ResizeType { ExpandExtend, ShrinkExtend };
-union NegotMeta {
-  struct {
-    uint32_t crc_;
-    seq_t seq_no_;
-    ResizeType resize_type_;
-    uint32_t resize_extend_num_;
-  } __attribute__((packed));
-  char reserved_[kNegotiationSize];
-};
-
-static_assert(sizeof(NegotMeta) == kNegotiationSize,
-              "NegotMeta size must be 4096 Bytes");
-
 /* 文件系统的超级块
  * 大小: 4K
  * 作用: 记录文件系统的一些规格参数
@@ -80,14 +62,12 @@ union SuperBlockMeta {
     uint64_t file_block_meta_size_;        // 4k, per file block meta size
 
     // The total size of each bfs metadata
-    uint64_t negotiation_size_;            // total size of negotiation
     uint64_t super_block_size_;            // total size of super block
     uint64_t dir_meta_total_size_;         // total size of directory meta
     uint64_t file_meta_total_size_;        // total size of file meta
     uint64_t file_block_meta_total_size_;  // total size of file block meta
 
     // The offset start in udisk device offset
-    uint64_t negotiation_offset_;       // the offset of negotiation
     uint64_t super_block_offset_;       // the offset of supber block
     uint64_t dir_meta_offset_;          // the offset of directory meta
     uint64_t file_meta_offset_;         // the offset of file meta

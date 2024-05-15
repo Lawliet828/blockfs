@@ -13,7 +13,6 @@
 #include "file_block_handle.h"
 #include "file_lock.h"
 #include "file_system.h"
-#include "negotiation.h"
 #include "shm_manager.h"
 #include "super_block.h"
 
@@ -23,7 +22,6 @@ namespace udisk {
 namespace blockfs {
 
 enum MetaHandleType {
-  kNegotiationHandle,
   kSuperBlockHandle,
   kFDHandle,
   kBlockHandle,
@@ -170,9 +168,6 @@ class FileStore : public FileSystem {
     return handle_vector_[type];
   }
 
-  Negotiation *negot() {
-    return dynamic_cast<Negotiation *>(GetMetaHandle(kNegotiationHandle));
-  }
   SuperBlock *super() {
     return dynamic_cast<SuperBlock *>(GetMetaHandle(kSuperBlockHandle));
   }
