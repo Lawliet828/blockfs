@@ -11,7 +11,6 @@
 #include "dir_handle.h"
 #include "fd_handle.h"
 #include "file_block_handle.h"
-#include "file_lock.h"
 #include "file_system.h"
 #include "shm_manager.h"
 #include "super_block.h"
@@ -34,7 +33,6 @@ class FileStore : public FileSystem {
   std::mutex mutex_;
   bool remount_ = false;
 
-  PosixFileLock *lock_;
   BlockDevice *device_;
   ShmManager *shm_manager_;
 
@@ -76,8 +74,6 @@ class FileStore : public FileSystem {
   int32_t MountGrowfs(uint64_t size) override;
   int32_t RemountFileSystem() override;
   int32_t UnmountFileSystem() override;
-  // 文件锁
-  int32_t MountFileLock();
 
   // Create directory
   int32_t CreateDirectory(const std::string &path) override;

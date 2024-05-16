@@ -14,9 +14,6 @@ int block_fs_mount(const char *config_path, bool is_master) {
   if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
-  if (FileStore::Instance()->MountFileLock() < 0) {
-    return -1;
-  }
   block_fs_fuse_mount(FileStore::Instance()->mount_config());
   return 0;
 }

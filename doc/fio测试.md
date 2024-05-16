@@ -11,10 +11,7 @@ fio --ioengine=libaio --name=4k_rw --direct=1 --iodepth=32 --rw=write --blocksiz
 
 4K随机读写
 ```
-fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bs=4k -size=64M -numjobs=1 -runtime=300 -group_reporting -filename=/data/mysql/bfs/testfile -fallocate=none -name=Test_4K_RandRW -verify=md5
-
-
-fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bs=4k -size=64M -numjobs=1 -runtime=300 -group_reporting -filename=/opt/fastcfs/fuse/testfile -fallocate=none -name=Test_4K_RandRW -verify=md5
+fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bs=4k -size=64M -numjobs=1 -runtime=300 -group_reporting -filename=/data/mysql/bfs/testfile -fallocate=none -name=Test_4K_RandRW -verify=md5 --do_verify=1 --verify_fatal=1
 ```
 
 2023/03/07 11:40 rssd云盘

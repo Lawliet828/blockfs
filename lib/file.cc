@@ -724,13 +724,13 @@ void File::UpdateTimeStamp(bool a, bool m, bool c) {
 
 bool File::UpdateMeta() { return WriteMeta(); }
 
-void File::WriteLockAcquire() { io_lock_.WriteLockAcquire(); }
+void File::WriteLockAcquire() { io_lock_.lock(); }
 
-void File::WriteLockRelease() { io_lock_.WriteLockRelease(); }
+void File::WriteLockRelease() { io_lock_.unlock(); }
 
-void File::ReadLockAcquire() { io_lock_.ReadLockAcquire(); }
+void File::ReadLockAcquire() { io_lock_.lock_shared(); }
 
-void File::ReadLockRelease() { io_lock_.ReadLockRelease(); }
+void File::ReadLockRelease() { io_lock_.unlock_shared(); }
 
 /*****************************************************************/
 // https://www.cnblogs.com/mickole/p/3182033.html

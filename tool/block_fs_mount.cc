@@ -213,9 +213,6 @@ int main(int argc, char *argv[]) {
   ToolLogPreInit("block_fs_mount", conf->log_path_);
 
   // daemonize(true, false);
-  if (FileStore::Instance()->MountFileLock() < 0) {
-    return -1;
-  }
 
   block_fs_fuse_mount(FileStore::Instance()->mount_config());
   return 0;

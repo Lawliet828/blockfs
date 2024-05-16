@@ -98,14 +98,6 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
   return 0;
 }
 
-int32_t FileStore::MountFileLock() {
-  lock_ = new PosixFileLock(mount_config_.device_uuid_);
-  if (!lock_ || !lock_->lock(true)) {
-    return -1;
-  }
-  return 0;
-}
-
 /**
  * mount the blockfs filesystem
  *
@@ -736,10 +728,6 @@ void FileStore::Destroy() {
     if (device_) {
       delete device_;
       device_ = nullptr;
-    }
-    if (lock_) {
-      delete lock_;
-      lock_ = nullptr;
     }
   }
 }

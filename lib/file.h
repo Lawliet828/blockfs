@@ -2,8 +2,9 @@
 #ifndef LIB_FILE_H_
 #define LIB_FILE_H_
 
+#include <shared_mutex>
+
 #include "block_device.h"
-#include "file_lock.h"
 #include "inode.h"
 
 namespace udisk {
@@ -49,7 +50,7 @@ class File : public Inode<FileMeta, FileBlock>,
   bool deleted_ = false;
 
   // File read/write lock, write first
-  FileRwLock io_lock_;
+  std::shared_mutex io_lock_;
 
  private:
   enum FileType {
