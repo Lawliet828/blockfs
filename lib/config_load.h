@@ -12,7 +12,7 @@ class ConfigLoader {
   ConfigLoader(const std::string &config_path) : config_path_(config_path) {}
   ~ConfigLoader() {}
 
-  bool ParseConfig(block_fs_config_info *config);
+  bool ParseConfig(bfs_config_info *config);
 
  private:
   std::string config_path_;

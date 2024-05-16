@@ -7,7 +7,7 @@
 namespace udisk {
 namespace blockfs {
 
-void block_fs_fuse_mount(block_fs_config_info *info);
+void block_fs_fuse_mount(bfs_config_info *info);
 
 }  // namespace blockfs
 }  // namespace udisk

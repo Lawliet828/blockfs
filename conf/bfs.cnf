@@ -4,7 +4,7 @@ log_level                 = INFO
 log_path                  = /var/log/bfs/
 
 [bfs]
-device_uuid               = 23d36a99-cef9-4639-a6f2-93dc80335b28
+device_uuid               = 8897500f-14d3-475f-b8bd-36dc5904336d
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 

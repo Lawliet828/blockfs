@@ -70,14 +70,14 @@ struct FileInfo {
 
 class FileSystem : public NonCopyable {
  protected:
-  block_fs_config_info mount_config_;
+  bfs_config_info mount_config_;
   block_fs_mount_stat mount_stat_;
 
  public:
   explicit FileSystem();
   virtual ~FileSystem();
 
-  block_fs_config_info* mount_config() { return &mount_config_; }
+  bfs_config_info* mount_config() { return &mount_config_; }
 
   virtual bool set_is_mounted(bool mounted) noexcept;
   virtual const bool is_mounted() noexcept;

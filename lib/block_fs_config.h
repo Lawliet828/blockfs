@@ -14,11 +14,12 @@
 namespace udisk {
 namespace blockfs {
 
-struct block_fs_config_info {
+struct bfs_config_info {
   bool enable_coredump_ = true;
   std::string log_level_;
   std::string log_path_;
 
+  std::string device;
   std::string device_uuid_;
   std::string uxdb_mount_point_;
 

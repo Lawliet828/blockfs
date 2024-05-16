@@ -8,7 +8,7 @@
 namespace udisk {
 namespace blockfs {
 
-bool ConfigLoader::ParseConfig(block_fs_config_info *config) {
+bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   if (config_path_.empty()) {
     LOG(ERROR) << "config path empty";
     return false;

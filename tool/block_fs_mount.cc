@@ -14,6 +14,7 @@ static void HelpInfo() {
   LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
   LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
+  LOG(INFO) << " -d, --device   /dev/vdc";
   LOG(INFO) << " -m, --mountpoint  /data/mysql/bfs";
   LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
@@ -154,23 +155,28 @@ void ToolLogPreInit(const std::string &name, const std::string &dirname) {
 
 int main(int argc, char *argv[]) {
   const char *config_path = "/data/blockfs/conf/bfs.cnf";
+  std::string device;
   std::string mountpoint;
   int c;
   while (true) {
     int optIndex = 0;
     static struct option longOpts[] = {
         {"config", required_argument, nullptr, 'c'},
+        {"device", required_argument, nullptr, 'd'},
         {"mountpoint", required_argument, nullptr, 'm'},
         {"version", no_argument, nullptr, 'v'},
         {"help", no_argument, nullptr, 'h'},
         {0, 0, 0, 0}};
-    c = ::getopt_long(argc, argv, "c:m:vh?", longOpts, &optIndex);
+    c = ::getopt_long(argc, argv, "c:d:m:vh?", longOpts, &optIndex);
     if (c == -1) {
       break;
     }
     switch (c) {
       case 'c': {
         config_path = optarg;
+      } break;
+      case 'd': {
+        device = std::string(optarg);
       } break;
       case 'm': {
         mountpoint = std::string(optarg);
@@ -188,8 +194,8 @@ int main(int argc, char *argv[]) {
     HelpInfo();
     std::exit(1);
   }
-  if (mountpoint.empty()) {
-    printf("mountpoint is empty\n");
+  if (device.empty() || mountpoint.empty()) {
+    printf("device or mountpoint is empty\n");
     HelpInfo();
     std::exit(1);
   }
@@ -201,7 +207,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  block_fs_config_info *conf = FileStore::Instance()->mount_config();
+  bfs_config_info *conf = FileStore::Instance()->mount_config();
   conf->fuse_mount_point = mountpoint;
 
   ToolLogPreInit("block_fs_mount", conf->log_path_);

@@ -39,11 +39,11 @@ class UDiskBFS {
   UDiskBFS() = default;
   ~UDiskBFS() = default;
 
-  static void FuseLoop(block_fs_config_info *info);
+  static void FuseLoop(bfs_config_info *info);
 
   const std::string &uxdb_mount_point() { return uxdb_mount_point_; }
 
-  void RunFuse(block_fs_config_info *info) {
+  void RunFuse(bfs_config_info *info) {
     info_ = info;
     // 去掉后面的反斜杠,FUSE挂载默认会带
     uxdb_mount_point_ = info_->uxdb_mount_point_;
@@ -101,7 +101,7 @@ class UDiskBFS {
 
  private:
   struct fuse_config fuse_cfg_;
-  block_fs_config_info *info_;
+  bfs_config_info *info_;
 
   std::string uxdb_mount_point_;
 
@@ -1453,12 +1453,12 @@ static const struct fuse_operations kBFSOps = {
     .lseek = bfs_lseek,
 };
 
-void UDiskBFS::FuseLoop(block_fs_config_info *info) {
+void UDiskBFS::FuseLoop(bfs_config_info *info) {
   ::umask(0);
   LOG(INFO) << "FUSE version: " << fuse_pkgversion();
 
 #if 0
-  auto fuse_thread_func = [](block_fs_config_info *info) {
+  auto fuse_thread_func = [](bfs_config_info *info) {
     pthread_setname_np(pthread_self(), "fuse");
     struct fuse_cmdline_opts opts;
     int ret = 0;
@@ -1552,7 +1552,7 @@ void UDiskBFS::FuseLoop(block_fs_config_info *info) {
   }
 }
 
-void block_fs_fuse_mount(block_fs_config_info *info) {
+void block_fs_fuse_mount(bfs_config_info *info) {
   if (!RunAsAdmin()) {
     LOG(ERROR) << "fuse mount requires root privileges";
     return;
