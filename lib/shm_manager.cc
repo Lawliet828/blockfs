@@ -8,8 +8,7 @@
 #include "file_store_udisk.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 // https://blog.csdn.net/ababab12345/article/details/102931841
 
@@ -336,5 +335,4 @@ void ShmManager::CleanupDirtyShareMemory() {
   }
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

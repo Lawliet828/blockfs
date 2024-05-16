@@ -1,6 +1,5 @@
 #include "block_device.h"
 
-// clang-format off
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/ioctl.h>
@@ -145,8 +144,6 @@ int64_t WritevFull(int fd, iovec *iov, uint64_t size) {
 int64_t PwritevFull(int fd, iovec *iov, uint64_t size, off_t offset) {
   return WrapvFull(::pwritev, fd, iov, size, offset);
 }
-
-BlockDevice::BlockDevice(bool io_no_merges) {}
 
 BlockDevice::~BlockDevice() { Close(); }
 
@@ -472,93 +469,6 @@ static void DebugDiscardStats(int act, uint64_t stats[]) {
                  << stats[0];
       break;
   }
-}
-// trim
-int BlockDevice::Discard(uint64_t offset, uint64_t len) {
-  if (!support_discard_) {
-    LOG(ERROR) << "discard has not been supported yet";
-    return -1;
-  }
-
-  struct timeval now, last;
-  uint64_t end, step, range[2], stats[2];
-  range[0] = 0;
-  range[1] = UINT64_MAX;
-  step = 0;
-  TRIM_ACT act = ACT_DISCARD;
-
-  /* check offset alignment to the sector size */
-  if (range[0] % sector_size_) {
-    LOG(ERROR) << "offset " << range[0]
-               << " is not aligned "
-                  "to sector size "
-               << sector_size_;
-    return -1;
-  }
-
-  /* is the range end behind the end of the device ?*/
-  if (range[0] > dev_size_) {
-    LOG(ERROR) << "offset " << range[0] << " is greater than device size";
-    return -1;
-  }
-  end = range[0] + range[1];
-  if (end < range[0] || end > dev_size_) {
-    end = dev_size_;
-  }
-  range[1] = (step > 0) ? step : end - range[0];
-
-  /* check offset alignment to the sector size */
-  if (range[1] % sector_size_) {
-    LOG(ERROR) << "offset " << range[1]
-               << " is not aligned "
-                  "to sector size "
-               << sector_size_;
-    return -1;
-  }
-
-  stats[0] = range[0], stats[1] = 0;
-  gettime_monotonic(&last);
-  for (/* nothing */; range[0] < end; range[0] += range[1]) {
-    if (range[0] + range[1] > end) range[1] = end - range[0];
-
-    switch (act) {
-      case ACT_ZEROOUT:
-        if (::ioctl(dev_fd_direct_, BLKZEROOUT, &range)) {
-          LOG(ERROR) << "BLKZEROOUT ioctl failed, errno: " << errno;
-          return -1;
-        }
-        break;
-      case ACT_SECURE:
-        if (::ioctl(dev_fd_direct_, BLKSECDISCARD, &range)) {
-          LOG(ERROR) << "BLKSECDISCARD ioctl failed, errno: " << errno;
-          return -1;
-        }
-        break;
-      case ACT_DISCARD:
-        // uint64_t range[2] = {offset, len};
-        // return ::ioctl(dev_fd_direct_, BLKDISCARD, range);
-        if (::ioctl(dev_fd_direct_, BLKDISCARD, &range)) {
-          LOG(ERROR) << "BLKDISCARD ioctl failed, errno: " << errno;
-          return -1;
-        }
-        break;
-    }
-    stats[1] += range[1];
-    /* reporting progress at most once per second */
-    if (verbose_discard_ && step) {
-      gettime_monotonic(&now);
-      if (now.tv_sec > last.tv_sec &&
-          (now.tv_usec >= last.tv_usec || now.tv_sec > last.tv_sec + 1)) {
-        DebugDiscardStats(act, stats);
-        stats[0] += stats[1], stats[1] = 0;
-        last = now;
-      }
-    }
-  }
-
-  if (verbose_discard_ && stats[1]) DebugDiscardStats(act, stats);
-
-  return 0;
 }
 
 int64_t BlockDevice::ReadCache(void *buf, uint64_t len) {

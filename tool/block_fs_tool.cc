@@ -31,8 +31,8 @@ class BlockFsTool {
   void HelpInfo();
 
  public:
-  BlockFsTool();
-  ~BlockFsTool();
+  BlockFsTool() {}
+  ~BlockFsTool() {}
   void ParseOption(int argc, char **argv);
   bool DoBlockFsTool();
 
@@ -40,10 +40,6 @@ class BlockFsTool {
   void PrintFileMetadata(const std::string &file_name);
   bool ExportBlkDeviceContents();
 };
-
-BlockFsTool::BlockFsTool() {}
-
-BlockFsTool::~BlockFsTool() {}
 
 void BlockFsTool::ParseOption(int argc, char **argv) {
   int c;

@@ -71,8 +71,6 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
     return -1;
   }
 
-  FILE_STORE_LOCK();
-
   ConfigLoader loader = ConfigLoader(config_path);
   if (!loader.ParseConfig(&mount_config_)) {
     return -1;
@@ -118,7 +116,6 @@ int32_t FileStore::MountGrowfs(uint64_t size) {
  * \return success is zero, otherwise -1
  */
 int32_t FileStore::RemountFileSystem() {
-  FILE_STORE_LOCK();
   remount_ = true;
   Destroy();
 
@@ -146,7 +143,6 @@ int32_t FileStore::RemountFileSystem() {
  * \return success is zero, otherwise -1
  */
 int32_t FileStore::UnmountFileSystem() {
-  FILE_STORE_LOCK();
   Destroy();
   return 0;
 }

@@ -5,8 +5,7 @@
 #include "comm_utils.h"
 #include "meta_defines.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class BlockDevice {
  private:
@@ -15,8 +14,6 @@ class BlockDevice {
   int32_t dev_fd_cache_ = -1;
   uint64_t dev_size_ = 0;
   uint32_t sector_size_ = 0;
-  bool verbose_discard_ = true;
-  bool support_discard_ = false; /* trim supported */
 
  private:
   int64_t GetStringProperty(const char *property, char *val,
@@ -32,7 +29,7 @@ class BlockDevice {
   int WholeDisk(std::string *s) const;
 
  public:
-  BlockDevice(bool io_no_merges = true);
+  BlockDevice() {}
   virtual ~BlockDevice();
   std::string dev_name() const { return dev_name_; }
   uint64_t dev_size() const { return dev_size_; }
@@ -51,7 +48,6 @@ class BlockDevice {
   int Fsync();
   int Fdatasync();
   int SyncFS();
-  int Discard(uint64_t offset, uint64_t len);
 
   int64_t ReadCache(void *buf, uint64_t len);
   int64_t PreadCache(void *buf, uint64_t len, off_t offset);
@@ -63,6 +59,5 @@ class BlockDevice {
   int64_t WriteDirect(void *buf, uint64_t len);
   int64_t PwriteDirect(void *buf, uint64_t len, off_t offset);
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

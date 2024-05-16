@@ -7,8 +7,7 @@
 #include "block_device.h"
 #include "inode.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class FileBlock;
 typedef std::shared_ptr<FileBlock> FileBlockPtr;
@@ -95,9 +94,6 @@ class File : public Inode<FileMeta, FileBlock>,
   int RecycleParentFh(int32_t fh, bool immediately = false);
   int ShrinkFile(uint64_t offset);
 
-  void AddRef();
-  void DecRef();
-
  public:
   File();
   File(FileMeta *meta);
@@ -162,10 +158,10 @@ class File : public Inode<FileMeta, FileBlock>,
   static bool WriteMeta(int32_t fh);
   static void ClearMeta(FileMeta *meta);
 
-  void WriteLockAcquire();
-  void WriteLockRelease();
-  void ReadLockAcquire();
-  void ReadLockRelease();
+  void WriteLockAcquire() { io_lock_.lock(); }
+  void WriteLockRelease() { io_lock_.unlock(); }
+  void ReadLockAcquire() { io_lock_.lock_shared(); }
+  void ReadLockRelease() { io_lock_.unlock_shared(); }
 
  public:
   // common file posix functions
@@ -300,6 +296,5 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   friend class File;
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

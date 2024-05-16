@@ -30,7 +30,6 @@ enum MetaHandleType {
 
 class FileStore : public FileSystem {
  private:
-  std::mutex mutex_;
   bool remount_ = false;
 
   BlockDevice *device_;
@@ -41,7 +40,6 @@ class FileStore : public FileSystem {
   static FileStore *g_instance;
 
  private:
-#define FILE_STORE_LOCK() std::lock_guard<std::mutex> lock(mutex_)
   bool FormatFSMeta();
   bool FormatFSData();
   bool Initialize();

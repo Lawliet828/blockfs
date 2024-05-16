@@ -724,14 +724,6 @@ void File::UpdateTimeStamp(bool a, bool m, bool c) {
 
 bool File::UpdateMeta() { return WriteMeta(); }
 
-void File::WriteLockAcquire() { io_lock_.lock(); }
-
-void File::WriteLockRelease() { io_lock_.unlock(); }
-
-void File::ReadLockAcquire() { io_lock_.lock_shared(); }
-
-void File::ReadLockRelease() { io_lock_.unlock_shared(); }
-
 /*****************************************************************/
 // https://www.cnblogs.com/mickole/p/3182033.html
 // 如果offset比文件的当前长度更大，下一个写操作就会把文件"撑大(extend)"
@@ -748,7 +740,7 @@ off_t OpenFile::lseek(off_t offset, int whence) {
   /* get current file position */
   off_t current_pos = append_pos();
 
-  LOG(WARNING) << file_->file_name() << " lseek fh: " << file_->fh()
+  LOG(DEBUG) << file_->file_name() << " lseek fh: " << file_->fh()
                << " offset: " << current_pos;
 
   switch (whence) {
