@@ -62,6 +62,7 @@ if [ ! -d "libfuse" ]; then
     meson configure -D disable-mtab=true -D default_library=both
     sudo ninja
     sudo ninja install
+    ln -s /usr/local/lib64/libfuse3.so.3 /usr/lib64/libfuse3.so.3
     cd ../..
 fi
 
