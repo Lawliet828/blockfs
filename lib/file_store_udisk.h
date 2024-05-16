@@ -2,6 +2,8 @@
 #ifndef LIB_FILE_STORE_H_
 #define LIB_FILE_STORE_H_
 
+#include <sys/statvfs.h>
+
 #include "aligned_buffer.h"
 #include "block_fs_internal.h"
 #include "bfs_fuse.h"
@@ -111,8 +113,8 @@ class FileStore : public FileSystem {
   int32_t StatPath(const std::string &path, struct stat *fileinfo) override;
   int32_t StatPath(const int32_t fd, struct stat *fileinfo) override;
   int32_t StatVFS(const std::string &path,
-                  struct block_fs_statvfs *buf) override;
-  int32_t StatVFS(const int32_t fd, struct block_fs_statvfs *buf) override;
+                  struct statvfs *buf) override;
+  int32_t StatVFS(const int32_t fd, struct statvfs *buf) override;
   // GetFileSize: get real file size
   int32_t GetFileSize(const std::string &path, int64_t *file_size) override;
 

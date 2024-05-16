@@ -492,25 +492,8 @@ int block_fs_fcntl(int fd, int cmd, ...);
 
 ssize_t block_fs_sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 
-// https://www.cnblogs.com/zzb-Dream-90Time/p/10114615.html
-#include <sys/types.h>
-struct block_fs_statvfs {
-  uint32_t f_type;         /* file system type */
-  unsigned long f_bsize;   /* file system block size */
-  unsigned long f_frsize;  /* fragment size */
-  fsblkcnt_t f_blocks;     /* size of fs in f_frsize units */
-  fsblkcnt_t f_bfree;      /* # free blocks */
-  fsblkcnt_t f_bavail;     /* # free blocks for unprivileged users */
-  fsfilcnt_t f_files;      /* # inodes */
-  fsfilcnt_t f_ffree;      /* # free inodes */
-  fsfilcnt_t f_favail;     /* # free inodes for unprivileged users */
-  unsigned long f_fsid;    /* file system ID */
-  unsigned long f_flag;    /* mount flags */
-  unsigned long f_namemax; /* maximum filename length */
-};
-
-int block_fs_statvfs(const char *path, struct block_fs_statvfs *buf);
-int block_fs_fstatvfs(int fd, struct block_fs_statvfs *buf);
+int block_fs_statvfs(const char *path, struct statvfs *buf);
+int block_fs_fstatvfs(int fd, struct statvfs *buf);
 
 #if 0
 void clearerr(BLOCKFS_FILE *stream);

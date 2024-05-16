@@ -112,66 +112,6 @@ BFS中fuse_main的输入参数：op，文件操作函数
 
 fuse_operations 在文件 /usr/include/fuse3/fuse.h 中定义
 
-```c++
-#ifndef HAVE_FUSE3
-#define HAVE_FUSE3
-#endif
-
-#define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
-
-
-static const struct fuse_operations kBFSOps = {
-    .getattr = bfs_getattr,
-    .readlink = bfs_readlink,
-    .mknod = bfs_mknod,
-    .mkdir = bfs_mkdir,
-    .unlink = bfs_unlink,
-    .rmdir = bfs_rmdir,
-    .symlink = bfs_symlink,
-    .rename = bfs_rename,
-    .link = bfs_link,
-    .chmod = bfs_chmod,
-    .chown = bfs_chown,
-    .truncate = bfs_truncate,
-    .open = bfs_open,
-    .read = bfs_read,
-    .write = bfs_write,
-    .statfs = bfs_statfs,
-    .flush = bfs_flush,
-    .release = bfs_release,
-    .fsync = bfs_fsync,
-    .setxattr = bfs_setxattr,
-    .getxattr = bfs_getxattr,
-    .listxattr = bfs_listxattr,
-    .removexattr = bfs_removexattr,
-    .opendir = bfs_opendir,
-    .readdir = bfs_readdir,
-    .releasedir = bfs_releasedir,
-    .fsyncdir = bfs_fsyncdir,
-    .init = bfs_init,
-    .destroy = bfs_destroy,
-    .access = bfs_access,
-    .create = bfs_create,
-    .lock = bfs_lock,
-    .utimens = bfs_utimens,
-    .bmap = bfs_bmap,
-    .ioctl = bfs_ioctl,
-    .poll = bfs_poll,
-#ifdef BFS_USE_READ_WRITE_BUFFER
-    .write_buf = bfs_write_buf,
-    .read_buf = bfs_read_buf,
-#else
-    .write_buf = nullptr,
-    .read_buf = nullptr,
-#endif
-    .flock = bfs_flock,
-    .fallocate = bfs_fallocate,
-    .copy_file_range = bfs_copy_file_range,
-    .lseek = bfs_lseek,
-};
-
-```
-
 FUSE版本和支持的命令行参数
 
 ```sh

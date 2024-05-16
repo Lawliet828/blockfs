@@ -1,6 +1,6 @@
 [common]
 core_dump                 = true
-log_level                 = INFO
+log_level                 = DEBUG
 log_path                  = /var/log/bfs/
 
 [bfs]
@@ -14,7 +14,7 @@ uxdb_mount_point          = /mnt/mysql/
 fuse_mount_point          = /data/mysql/bfs/
 
 # enbale libfuse debug
-fuse_debug                = false
+fuse_debug                = true
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true

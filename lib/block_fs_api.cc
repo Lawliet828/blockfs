@@ -61,11 +61,11 @@ int block_fs_fstat(int fd, struct stat *buf) {
   return FileStore::Instance()->StatPath(fd, buf);
 }
 
-int block_fs_statvfs(const char *path, struct block_fs_statvfs *buf) {
+int block_fs_statvfs(const char *path, struct statvfs *buf) {
   return FileStore::Instance()->StatVFS(path, buf);
 }
 
-int block_fs_fstatvfs(int fd, struct block_fs_statvfs *buf) {
+int block_fs_fstatvfs(int fd, struct statvfs *buf) {
   return FileStore::Instance()->StatVFS(fd, buf);
 }
 

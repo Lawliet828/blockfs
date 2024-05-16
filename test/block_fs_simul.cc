@@ -482,7 +482,7 @@ void simul_readdir(int shared) {
 
 void simul_statfs(int shared) {
   char *filename;
-  struct block_fs_statvfs buf;
+  struct statvfs buf;
 
   begin("setup");
   filename = create_files("simul_statfs", 0, shared);

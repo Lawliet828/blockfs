@@ -355,36 +355,30 @@ int32_t FileStore::StatPath(const int32_t fd, struct stat* fileinfo) {
 }
 
 int32_t FileStore::StatVFS(const std::string& path,
-                           struct block_fs_statvfs* buf) {
-  buf->f_type = kBlockFsMagic;
+                           struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = GetBlockSize();
-  // f_frsize: 分栈大小
-  buf->f_frsize = 0;
+  // f_frsize: 文件系统的片段大小，单位是字节
+  buf->f_frsize = 512;
   // f_blocks: 文件系统数据块总数
   buf->f_blocks = GetMaxSupportBlockNumer();
   // f_bfree: 可用块数
-  buf->f_bavail = GetFreeBlockNumber();
-  // f_bavail:非超级用户可获取的块数
-  buf->f_blocks = GetMaxSupportBlockNumer();
+  buf->f_bfree = GetFreeBlockNumber();
+  buf->f_bavail = buf->f_bfree;
   // f_files: 文件结点总数
   buf->f_files = GetMaxSupportFileNumber();
   // f_ffree: 可用文件结点数
   buf->f_ffree = GetFreeFileNumber();
-  // f_favail: 非超级用户的可用文件结点数
-  buf->f_favail = GetMaxSupportFileNumber();
+  buf->f_favail = buf->f_ffree;
 
   // f_fsid: 文件系统标识 ID
   buf->f_fsid = 0;
-  // f_flag: 挂载标记
-  buf->f_flag = 0;
   // f_namemax: 最大文件长度
   buf->f_namemax = GetMaxFileNameLength();
   return 0;
 }
 
-int32_t FileStore::StatVFS(const int32_t fd, struct block_fs_statvfs* buf) {
-  buf->f_type = kBlockFsMagic;
+int32_t FileStore::StatVFS(const int32_t fd, struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = GetBlockSize();
   // f_frsize: 分栈大小

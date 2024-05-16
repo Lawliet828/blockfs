@@ -133,8 +133,8 @@ class FileSystem : public NonCopyable {
   virtual int32_t StatPath(const std::string& path, struct stat* fileinfo) = 0;
   virtual int32_t StatPath(const int32_t fd, struct stat* fileinfo) = 0;
   virtual int32_t StatVFS(const std::string& path,
-                          struct block_fs_statvfs* buf) = 0;
-  virtual int32_t StatVFS(const int32_t fd, struct block_fs_statvfs* buf) = 0;
+                          struct statvfs* buf) = 0;
+  virtual int32_t StatVFS(const int32_t fd, struct statvfs* buf) = 0;
   // GetFileSize: get real file size
   virtual int32_t GetFileSize(const std::string& path, int64_t* file_size) = 0;
 

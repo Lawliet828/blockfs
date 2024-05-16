@@ -142,7 +142,7 @@ static int bfs_getattr(const char *path, struct stat *sb)
     sb->st_uid = ::getuid();
     sb->st_gid = ::getgid();
 
-    struct block_fs_statvfs vfs;
+    struct statvfs vfs;
     if (block_fs_statvfs(in_path.c_str(), &vfs) < 0) {
       return -errno;
     }
@@ -556,9 +556,7 @@ static int bfs_write(const char *path, const char *buf, size_t size,
 static int bfs_statfs(const char *path, struct statvfs *vfs) {
   LOG(INFO) << "call bfs_statfs file: " << path;
 
-  int res;
-
-  res = block_fs_statvfs(path, (struct block_fs_statvfs *)vfs);
+  int res = block_fs_statvfs(path, vfs);
   if (res < 0) return -errno;
 
   return 0;
