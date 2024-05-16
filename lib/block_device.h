@@ -15,7 +15,6 @@ class BlockDevice {
   int32_t dev_fd_cache_ = -1;
   uint64_t dev_size_ = 0;
   uint32_t sector_size_ = 0;
-  bool io_no_merges_ = true;
   bool verbose_discard_ = true;
   bool support_discard_ = false; /* trim supported */
 
@@ -45,7 +44,6 @@ class BlockDevice {
   bool BlkDevGetSize();
   bool BlkDevGetSectorSize();
   bool BlkDevIsMisaligned();
-  bool SetIONomerges();
   bool Open(const std::string &dev_name);
   int ReOpen(const std::string &dev_name);
   void Close();

@@ -77,7 +77,6 @@ union SuperBlockMeta {
     // variable according to the udisk device size
     uint64_t curr_udisk_size_;  // current udisk size (device size)
     uint64_t curr_block_num_;   // current udisk supported block number
-    uint64_t available_udisk_size_; // 可用空间大小
 
     // 待定
     // uint64_t all_dh_bitmap_;        // 所有已创建的文件夹

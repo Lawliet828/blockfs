@@ -20,8 +20,6 @@ static const std::string kBlockDeviceVda = "/dev/vda";
 static const std::string kBlockDeviceCurrent = "/dev/.";
 static const std::string kBlockDeviceParent = "/dev/..";
 
-static const int32_t kIoNoMergedFlagOn = 2;
-static const int32_t kIoNoMergedFlagOff = 0;
 static constexpr uint32_t kIovMax = IOV_MAX;
 
 static const int kBlkOpenWithDirect =
@@ -148,19 +146,19 @@ int64_t PwritevFull(int fd, iovec *iov, uint64_t size, off_t offset) {
   return WrapvFull(::pwritev, fd, iov, size, offset);
 }
 
-BlockDevice::BlockDevice(bool io_no_merges) : io_no_merges_(io_no_merges) {}
+BlockDevice::BlockDevice(bool io_no_merges) {}
 
 BlockDevice::~BlockDevice() { Close(); }
 
 const char *BlockDevice::sysfsdir() const { return "/sys"; }
 
 bool BlockDevice::IsBlkDev() {
-  struct stat st;
-  if (::stat(dev_name_.c_str(), &st)) {
-    LOG(ERROR) << "failed to stat: " << dev_name_;
+  struct stat file_stat;
+  if (::stat(dev_name_.c_str(), &file_stat)) {
+    LOG(ERROR) << "failed to stat: " << dev_name_ << ", error: " << strerror(errno);
     return false;
   }
-  return S_ISBLK(st.st_mode);
+  return S_ISBLK(file_stat.st_mode);
 }
 
 dev_t BlockDevice::BlkDevId() const {
@@ -347,55 +345,11 @@ int BlockDevice::WholeDisk(std::string *s) const {
   return r;
 }
 
-// 如何改变只读的system或者根文件系统为读写
-// https://blog.csdn.net/zhenwenxian/article/details/6658494
-// http://www.360doc.com/content/16/0105/09/25419505_525574037.shtml
-// https://blog.51cto.com/9291927/1796547
-
-// echo 2 > /sys/block/vdb/queue/nomerges
-bool BlockDevice::SetIONomerges() {
-  std::string path = "/sys/block/" +
-                     std::string(::basename(dev_name_.c_str())) +
-                     "/queue/nomerges";
-  int32_t write_flag = io_no_merges_ ? kIoNoMergedFlagOn : kIoNoMergedFlagOff;
-  int32_t check_flag = -1;
-  FILE *fp = nullptr;
-  if (io_no_merges_) {
-    LOG(DEBUG) << "master node need to set nomerges flag";
-    fp = ::fopen(path.c_str(), "w+");
-    if (!fp) {
-      LOG(ERROR) << "failed to open path: " << path << " errno:" << errno;
-      return false;
-    }
-    ::fprintf(fp, "%d\n", write_flag);
-    ::fflush(fp);
-    ::rewind(fp);
-  } else {
-    LOG(DEBUG) << "slave node no need to set nomerges, only check";
-    fp = ::fopen(path.c_str(), "r+");
-    if (!fp) {
-      LOG(ERROR) << "failed to open path: " << path << " errno:" << errno;
-      return false;
-    }
-  }
-  // check whether is success
-  if (::fscanf(fp, "%d", &check_flag) == 1 && check_flag == write_flag) {
-    LOG(DEBUG) << "set " << dev_name_ << " nomerges " << write_flag
-               << " successfully";
-    ::fclose(fp);
-    return true;
-  }
-  LOG(ERROR) << "failed to set nomerges for:" << dev_name_
-             << " flag:" << write_flag;
-  ::fclose(fp);
-  return false;
-}
-
 bool BlockDevice::Open(const std::string &dev_name) {
   if (dev_name.empty() || dev_name == kBlockDeviceSda ||
       dev_name == kBlockDeviceVda || dev_name == kBlockDeviceCurrent ||
       dev_name == kBlockDeviceParent) {
-    LOG(DEBUG) << "device: " << dev_name << " not allowed, skip it";
+    LOG(TRACE) << "device: " << dev_name << " not allowed, skip it";
     return false;
   }
   dev_name_ = dev_name;
@@ -405,16 +359,6 @@ bool BlockDevice::Open(const std::string &dev_name) {
     errno = ENOTBLK;
     return false;
   }
-
-  // blkid | grep /dev/vdb | wc -l
-  // cat /proc/mounts | grep /dev/vdb | wc -l
-  // /proc/mounts 已经被mount过
-  // sudo blkid 查看是否做了文件系统
-
-  // set and check flag before open device
-  // if (!SetIONomerges()) {
-  //   return false;
-  // }
 
   dev_fd_direct_ = ::open(dev_name.c_str(), kBlkOpenWithDirect);
   if (dev_fd_direct_ < 0) {

@@ -20,16 +20,12 @@ class BlockFsTool {
     BLOCKFS_DUMP,
     BLOCKFS_BLK,
     BLOCKFS_FILE_META,  // file meta
-    BLOCKFS_DF,
-    BLOCKFS_SET_SIZE,
-    BLOCKFS_GET_SIZE,
   };
   ToolType tool_type_ = BLOCKFS_NONE;
   std::string dump_arg_;
   std::string dev_name_;
   std::string blk_info_;  // offset and size
   std::string file_name_;
-  uint64_t available_size_; // 可用空间大小
 
  private:
   void HelpInfo();
@@ -59,13 +55,9 @@ void BlockFsTool::ParseOption(int argc, char **argv) {
         {"dump", required_argument, nullptr, 'p'},
         {"meta", required_argument, nullptr, 'm'},
         {"blk", required_argument, nullptr, 'b'},
-        {"df", no_argument, nullptr, 'D'},
-        {"set", required_argument, nullptr, 'S'},
-        {"get", no_argument, nullptr, 'G'},
-        {"version", no_argument, nullptr, 'v'},
         {"help", no_argument, nullptr, 'h'},
         {0, 0, 0, 0}};
-    c = ::getopt_long(argc, argv, "m:b:d:p:fDS:Gvh?", longOpts, &optIndex);
+    c = ::getopt_long(argc, argv, "m:b:d:p:fh", longOpts, &optIndex);
     if (c == -1) {
       break;
     }
@@ -136,43 +128,6 @@ void BlockFsTool::ParseOption(int argc, char **argv) {
         file_name_ = std::string(optarg);
         LOG(INFO) << "file name: " << blk_info_;
       } break;
-      case 'D': {
-        if (tool_type_ != BLOCKFS_NONE) {
-          LOG(ERROR) << "other option already exist, Please check";
-          HelpInfo();
-          exit(1);
-        }
-        tool_type_ = BLOCKFS_DF;
-      } break;
-      case 'S': {
-        if (argc < 5) {
-          LOG(ERROR) << "there is too few argument: " << argc;
-          HelpInfo();
-          exit(1);
-        }
-        if (tool_type_ != BLOCKFS_NONE) {
-          LOG(ERROR) << "other option already exist, Please check";
-          HelpInfo();
-          exit(1);
-        }
-        tool_type_ = BLOCKFS_SET_SIZE;
-        int64_t size = atoll(optarg);
-        if (size <= 0) {
-          LOG(ERROR) << "input size is illegal";
-          exit(1);
-        }
-        available_size_ = static_cast<uint64_t>(size);
-        LOG(INFO) << "available_size: " << available_size_;
-      } break;
-      case 'G': {
-        if (tool_type_ != BLOCKFS_NONE) {
-          LOG(ERROR) << "other option already exist, Please check";
-          HelpInfo();
-          exit(1);
-        }
-        tool_type_ = BLOCKFS_GET_SIZE;
-      } break;
-      case 'v':
       case 'h':
       default: {
         HelpInfo();
@@ -196,17 +151,11 @@ void BlockFsTool::HelpInfo() {
   LOG(INFO) << " -p, --dump     Dump device, xxx args.";
   LOG(INFO) << " -m, --meta     Dump file meta content.";
   LOG(INFO) << " -b, --blk      Export blk device content.";
-  LOG(INFO) << " -D, --df       Check disk usage.";
-  LOG(INFO) << " -S, --set      Set available size.";
-  LOG(INFO) << " -G, --get      Get available size.";
-  LOG(INFO) << " -v, --version  Print the version.";
   LOG(INFO) << " -h, --help     Print help info.";
 
   LOG(INFO) << "Examples:";
   LOG(INFO) << " help    : ./block_fs_tool -h";
-  LOG(INFO) << " version : ./block_fs_tool -v";
   LOG(INFO) << " format  : ./block_fs_tool -d /dev/vdb -f";
-  LOG(INFO) << " format  : ./block_fs_tool -d /dev/vdb --format";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p check";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p negot";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p super";
@@ -217,8 +166,6 @@ void BlockFsTool::HelpInfo() {
   LOG(INFO) << " meta    : ./block_fs_tool -d /dev/vdb -m file_name";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb --dump xxx";
   LOG(INFO) << " blk     : ./block_fs_tool -d /dev/vdb -b offset:size";
-  LOG(INFO) << " set     : ./block_fs_tool -d /dev/vdb -S 21474836480";
-  LOG(INFO) << " get     : ./block_fs_tool -d /dev/vdb -G";
 }
 
 
@@ -318,14 +265,6 @@ bool BlockFsTool::DoBlockFsTool() {
     } else {
       LOG(INFO) << "format block fs success";
     }
-  } else if (BLOCKFS_GET_SIZE == tool_type_) {
-    // 该命令使用人员希望只返回值, 不要debug信息
-    is_success = FileStore::Instance()->Check(dev_name_, "ERROR");
-    if (unlikely(!is_success)) {
-      LOG(ERROR) << "check load BlockFS failed";
-      return false;
-    }
-    std::cout << FileStore::Instance()->super()->get_available_udisk_size() << std::endl;
   } else {
     is_success = FileStore::Instance()->Check(dev_name_);
     if (unlikely(!is_success)) {
@@ -355,24 +294,6 @@ bool BlockFsTool::DoBlockFsTool() {
         break;
       case BLOCKFS_FILE_META:
         PrintFileMetadata(file_name_);
-        break;
-      case BLOCKFS_DF: {
-        uint64_t dev_size = FileStore::Instance()->dev()->dev_size();
-        uint64_t meta_size = FileStore::Instance()->super()->meta_size();
-        uint64_t curr_block_num = FileStore::Instance()->super()->curr_block_num();
-        uint64_t free_block_num = FileStore::Instance()->block_handle()->GetFreeBlockNum();
-        uint64_t used_block_num = curr_block_num - free_block_num;
-        uint64_t used_size = meta_size + 16 * M * used_block_num;
-        uint64_t avail_size = 16 * M * free_block_num;
-        assert(used_size + avail_size == dev_size);
-        int32_t use_percent = used_size * 100 / dev_size;
-        LOG(INFO) << "\n"
-                  << "Size\tUsed\tAvail\tUse%\n"
-                  << dev_size << "\t" << used_size << "\t"
-                  << avail_size << "\t" << use_percent << "%";
-        } break;
-      case BLOCKFS_SET_SIZE:
-        is_success = FileStore::Instance()->super()->set_available_udisk_size(available_size_);
         break;
       default:
         is_success = false;

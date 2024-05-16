@@ -287,11 +287,3 @@ ssize_t block_fs_sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
 void block_fs_set_errno(int e) { errno = e; }
 
 int block_fs_get_errno() { return errno; }
-
-bool block_fs_set_available_size(uint64_t available_size) {
-  return FileStore::Instance()->super()->set_available_udisk_size(available_size);
-}
-
-uint64_t block_fs_get_available_size() {
-  return FileStore::Instance()->super()->get_available_udisk_size();
-}

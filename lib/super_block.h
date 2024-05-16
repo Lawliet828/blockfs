@@ -32,8 +32,6 @@ class SuperBlock : public MetaHandle {
     meta()->curr_udisk_size_ = curr_udisk_size;
   }
   uint64_t get_curr_udisk_size() noexcept { return meta()->curr_udisk_size_; }
-  bool set_available_udisk_size(uint64_t available_udisk_size);
-  uint64_t get_available_udisk_size() noexcept { return meta()->available_udisk_size_; }
 
   bool set_uxdb_mount_point(const std::string &path);
   std::string uxdb_mount_point() noexcept { return meta()->uxdb_mount_point_; }

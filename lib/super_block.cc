@@ -108,7 +108,6 @@ bool SuperBlock::FormatAllMeta() {
   uint64_t free_udisk_size =
       meta->curr_udisk_size_ - meta->block_data_start_offset_;
   meta->curr_block_num_ = free_udisk_size / kBlockFsBlockSize;
-  meta->available_udisk_size_ = meta->curr_udisk_size_;
 
   // 最大支持12T的block个数
   meta->max_support_block_num_ =
@@ -124,15 +123,6 @@ bool SuperBlock::FormatAllMeta() {
     return false;
   }
   LOG(INFO) << "write all super block success";
-  return true;
-}
-
-bool SuperBlock::set_available_udisk_size(uint64_t available_udisk_size) {
-  meta()->available_udisk_size_ = available_udisk_size;
-  if (!WriteMeta()) {
-    return false;
-  }
-  LOG(INFO) << "set available_udisk_size success";
   return true;
 }
 
@@ -293,7 +283,6 @@ void SuperBlock::Dump() noexcept {
             << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
             << "curr_udisk_size: " << meta()->curr_udisk_size_ << "\n"
             << "curr_block_num_: " << meta()->curr_block_num_ << "\n"
-            << "available_udisk_size: " << meta()->available_udisk_size_ << "\n"
             << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
 }
 
