@@ -61,16 +61,6 @@ inline To implicit_cast(From const &f) {
   return f;
 }
 
-class NonCopyable {
- protected:
-  NonCopyable() = default;
-  ~NonCopyable() = default;
-
- private:
-  NonCopyable(const NonCopyable &) = delete;
-  void operator=(const NonCopyable &) = delete;
-};
-
 class Copyable {
  protected:
   Copyable() = default;

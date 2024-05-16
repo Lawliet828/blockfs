@@ -30,33 +30,6 @@ FileSystem::FileSystem(/* args */) { PrintVersion(); }
 FileSystem::~FileSystem() {}
 
 /**
- * change master attribute
- *
- * \param master
- *
- * \return true or false
- */
-bool FileSystem::set_is_mounted(bool mounted) noexcept {
-  mount_stat_.set_is_mounted(mounted);
-  return true;
-}
-
-/**
- * Wether node has mounted successfully
- *
- * \param void
- *
- * \return true or false
- */
-const bool FileSystem::is_mounted() noexcept {
-  if (unlikely(!mount_stat_.is_mounted())) {
-    LOG(DEBUG) << "mount has not finshed yet";
-    errno = EBUSY;
-  }
-  return mount_stat_.is_mounted();
-}
-
-/**
  * time seconds to update atime, mtime, ctme
  *
  * \param void

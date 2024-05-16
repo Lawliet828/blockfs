@@ -15,15 +15,6 @@ extern "C" {
 #include <sys/stat.h>
 #include <unistd.h>
 
-typedef struct block_fs_mount_stat_t {
-  bool is_mounted_;
-#ifdef __cplusplus
-  block_fs_mount_stat_t() : is_mounted_(false) {}
-  void set_is_mounted(bool is_mounted) noexcept { is_mounted_ = is_mounted; }
-  bool is_mounted() const noexcept { return is_mounted_; }
-#endif
-} block_fs_mount_stat;
-
 /**
  * BlockFS mount use to init block file system, load all meta
  *
@@ -59,21 +50,6 @@ int block_fs_resizefs(uint64_t size);
  * \return version string
  */
 const char *block_fs_get_version();
-
-/**
- * Check blockfs whther is mounted
- * often returns true
- *
- * \return Return blockfs ready state
- */
-bool block_fs_is_mounted();
-
-/**
- * get node master role
- *
- * \return Return true or false
- */
-bool block_fs_is_master();
 
 /**
  * Make a given dir

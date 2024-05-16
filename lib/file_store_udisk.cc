@@ -142,7 +142,6 @@ int32_t FileStore::RemountFileSystem() {
   if (!InitializeMeta(true)) {
     return -1;
   }
-  set_is_mounted(true);
   return MakeMountPoint(super()->uxdb_mount_point());
 }
 
@@ -247,9 +246,6 @@ int32_t FileStore::CloseDirectory(BLOCKFS_DIR* dir) {
 }
 
 int32_t FileStore::ChangeWorkDirectory(const std::string& path) {
-  if (!is_mounted()) {
-    return -1;
-  }
   LOG(WARNING) << "chdir not implemented yet";
   return 0;
 }
@@ -269,9 +265,6 @@ int32_t FileStore::Access(const std::string& path, int32_t mode) {
   if (unlikely(path.empty())) {
     LOG(ERROR) << "stat file path empty";
     errno = EINVAL;
-    return -1;
-  }
-  if (!is_mounted()) {
     return -1;
   }
   FilePtr file = file_handle()->GetCreatedFile(path);
@@ -300,9 +293,6 @@ int32_t FileStore::StatPath(const std::string& path, struct stat* buf) {
   if (unlikely(path.empty())) {
     LOG(ERROR) << "stat path empty";
     errno = EINVAL;
-    return -1;
-  }
-  if (!is_mounted()) {
     return -1;
   }
   LOG(INFO) << "stat path: " << path;
@@ -335,10 +325,6 @@ int32_t FileStore::StatPath(const std::string& path, struct stat* buf) {
 }
 
 int32_t FileStore::StatPath(const int32_t fd, struct stat* fileinfo) {
-  if (!is_mounted()) {
-    errno = EBUSY;
-    return -1;
-  }
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     DirectoryPtr dir = dir_handle()->GetOpenDirectory(fd);
@@ -418,17 +404,11 @@ int32_t FileStore::OpenFile(const std::string& path, int32_t flags,
     return -1;
   }
   LOG(INFO) << "open file: " << path;
-  if (!is_mounted()) {
-    return -1;
-  }
   return file_handle()->open(path, flags, mode);
 }
 
 int32_t FileStore::CloseFile(int32_t fd) {
   LOG(INFO) << "close file fd: " << fd;
-  if (!is_mounted()) {
-    return -1;
-  }
   return file_handle()->close(fd);
 }
 
@@ -464,9 +444,6 @@ int32_t FileStore::RenamePath(const std::string& oldpath,
     LOG(ERROR) << "rename path error, oldpath: " << oldpath
                << " newpath: " << newpath;
     errno = EINVAL;
-    return -1;
-  }
-  if (!is_mounted()) {
     return -1;
   }
 
@@ -512,9 +489,6 @@ int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
 }
 
 int32_t FileStore::TruncateFile(const int32_t fd, int64_t size) {
-  if (!CheckPermission("ftruncate", fd)) {
-    return -1;
-  }
   if (unlikely(size < 0)) {
     block_fs_set_errno(EINVAL);
     return -1;
@@ -530,9 +504,6 @@ int32_t FileStore::TruncateFile(const int32_t fd, int64_t size) {
 }
 
 int32_t FileStore::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
-  if (!CheckPermission("posix_fallocate", fd)) {
-    return -1;
-  }
   LOG(INFO) << "posix fallocate file fd: " << fd << " offset: " << offset
             << " len: " << len;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
@@ -547,10 +518,6 @@ int32_t FileStore::ChmodPath(const std::string& path, int32_t mode) {
   if (unlikely(path.empty())) {
     LOG(ERROR) << "chmod file path empty";
     errno = EINVAL;
-    return -1;
-  }
-  if (!is_mounted()) {
-    errno = EBUSY;
     return -1;
   }
   FilePtr file = file_handle()->GetCreatedFile(path);
@@ -573,9 +540,6 @@ int32_t FileStore::GetFileModificationTime(const std::string& filename,
 
 int64_t FileStore::ReadFile(int32_t fd, void* buf, size_t len) {
   LOG(INFO) << "read file fd: " << fd << " len: " << len;
-  if (!is_mounted()) {
-    return -1;
-  }
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -586,9 +550,6 @@ int64_t FileStore::ReadFile(int32_t fd, void* buf, size_t len) {
 
 int64_t FileStore::WriteFile(int32_t fd, const void* buf, size_t len) {
   LOG(INFO) << "write file fd: " << fd;
-  if (!CheckPermission("write", fd)) {
-    return -1;
-  }
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     errno = ENOENT;
@@ -598,9 +559,6 @@ int64_t FileStore::WriteFile(int32_t fd, const void* buf, size_t len) {
 }
 
 int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
-  if (!is_mounted()) {
-    return -1;
-  }
   OpenFilePtr file = file_handle()->GetOpenFile(fd);
   if (!file) {
     errno = ENOENT;
@@ -611,9 +569,6 @@ int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
 
 int64_t FileStore::PwriteFile(int32_t fd, const void* buf, size_t len,
                               off_t offset) {
-  if (!CheckPermission("pwrite", fd)) {
-    return -1;
-  }
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -633,10 +588,6 @@ off_t FileStore::SeekFile(int32_t fd, off_t offset, int whence) {
 }
 
 int32_t FileStore::FcntlFile(int32_t fd, int32_t set_flag) {
-  if (unlikely(!is_mounted())) {
-    errno = EBUSY;
-    return -1;
-  }
   OpenFilePtr open_file = FileStore::Instance()->file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -647,10 +598,6 @@ int32_t FileStore::FcntlFile(int32_t fd, int32_t set_flag) {
 }
 
 int32_t FileStore::FcntlFile(int32_t fd, int16_t lock_type) {
-  if (unlikely(!is_mounted())) {
-    errno = EBUSY;
-    return -1;
-  }
   OpenFilePtr open_file = FileStore::Instance()->file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -691,17 +638,11 @@ int32_t FileStore::Sync() {
 
 int32_t FileStore::FileSync(const int32_t fd) {
   LOG(INFO) << "fsync file fd: " << fd;
-  if (!CheckPermission("fsync", fd)) {
-    return -1;
-  }
   return file_handle()->fsync(fd);
 }
 
 int32_t FileStore::FileDataSync(const int32_t fd) {
   LOG(INFO) << "fdatasync file fd: " << fd;
-  if (!CheckPermission("fdatasync", fd)) {
-    return -1;
-  }
   return file_handle()->fsync(fd);
 }
 
@@ -721,9 +662,6 @@ int32_t FileStore::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
  */
 int32_t FileStore::RemovePath(const std::string& path) {
   LOG(INFO) << "remove path: " << path;
-  if (!is_mounted()) {
-    return -1;
-  }
   if (unlikely(path.empty())) {
     LOG(ERROR) << "remove file path empty";
     errno = EINVAL;
@@ -783,7 +721,6 @@ bool FileStore::Initialize() {
  */
 void FileStore::Destroy() {
   LOG(DEBUG) << "close file store now";
-  set_is_mounted(false);
   for (auto& handle : handle_vector_) {
     if (handle) {
       delete handle;
@@ -956,7 +893,6 @@ bool FileStore::InitializeMeta(bool dump) {
       return false;
     }
   }
-  set_is_mounted(true);
   return true;
 }
 
@@ -997,36 +933,12 @@ bool FileStore::CheckPermission(const char* op, const char* path) {
     block_fs_set_errno(EINVAL);
     return false;
   }
-  if (unlikely(!is_mounted())) {
-    LOG(ERROR) << "mount has not finshed yet";
-    block_fs_set_errno(EBUSY);
-    return false;
-  }
 
-  return true;
-}
-
-/**
- * remount the blockfs filesystem
- *
- * \param op: posix operation
- * \param path: abosolute path
- *
- * \return success or failed
- */
-bool FileStore::CheckPermission(const char* op, const int32_t handle) {
-  if (unlikely(!is_mounted())) {
-    LOG(ERROR) << "mount has not finshed yet";
-    return false;
-  }
   return true;
 }
 
 void FileStore::DumpFileMeta(const std::string& path) {
   LOG(INFO) << "dump file meta: " << path;
-  if (!is_mounted()) {
-    return;
-  }
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断

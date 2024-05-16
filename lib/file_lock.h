@@ -16,7 +16,10 @@ namespace blockfs {
 static const std::string kLockPathPrefix = "/var/lock/";
 
 // Identifies a locked file.
-class FileLock : NonCopyable {
+class FileLock {
+ private:
+  FileLock(const FileLock &) = delete;
+  FileLock &operator=(const FileLock &) = delete;
  public:
   FileLock() = default;
   FileLock(const std::string &path) : file_name_(path) {}

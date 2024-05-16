@@ -807,8 +807,8 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
 int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
   file_->WriteLockAcquire();
   LOG(INFO) << "file name: " << file_->file_name()
-            << " file size: " << file_->file_size() << " write size: " << size
-            << " offset: " << append_pos;
+            << ", file size: " << file_->file_size() << ", write size: " << size
+            << ", offset: " << append_pos;
   void *buffer = const_cast<void *>(buf);
   if (unlikely(size == 0)) {
     file_->WriteLockRelease();

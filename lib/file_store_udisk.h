@@ -16,8 +16,6 @@
 #include "shm_manager.h"
 #include "super_block.h"
 
-using namespace udisk::blockfs;
-
 namespace udisk {
 namespace blockfs {
 
@@ -193,7 +191,6 @@ class FileStore : public FileSystem {
   bool Check(const std::string &dev_name, const std::string &log_level = "DEBUG");
 
   bool CheckPermission(const char *op, const char *path);
-  bool CheckPermission(const char *op, const int32_t handle);
 };
 }  // namespace blockfs
 }  // namespace udisk

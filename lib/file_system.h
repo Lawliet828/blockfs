@@ -68,19 +68,19 @@ struct FileInfo {
   char link_[1024];
 };
 
-class FileSystem : public NonCopyable {
+class FileSystem {
  protected:
   bfs_config_info mount_config_;
-  block_fs_mount_stat mount_stat_;
+
+ private:
+  FileSystem(const FileSystem&) = delete;
+  FileSystem &operator=(const FileSystem&) = delete;
 
  public:
   explicit FileSystem();
   virtual ~FileSystem();
 
   bfs_config_info* mount_config() { return &mount_config_; }
-
-  virtual bool set_is_mounted(bool mounted) noexcept;
-  virtual const bool is_mounted() noexcept;
 
   virtual const int64_t time_update() noexcept;
 

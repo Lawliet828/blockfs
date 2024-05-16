@@ -33,8 +33,6 @@ const char *block_fs_get_version() {
   return FileStore::Instance()->GetVersion();
 }
 
-bool block_fs_is_mounted() { return FileStore::Instance()->is_mounted(); }
-
 int block_fs_remove(const char *path) {
   return FileStore::Instance()->RemovePath(path);
 }

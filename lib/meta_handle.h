@@ -9,7 +9,11 @@
 namespace udisk {
 namespace blockfs {
 
-class MetaHandle : public NonCopyable {
+class MetaHandle {
+ private:
+  MetaHandle(const MetaHandle &) = delete;
+  MetaHandle &operator=(const MetaHandle &) = delete;
+
  public:
   MetaHandle() = default;
   virtual ~MetaHandle() = default;
