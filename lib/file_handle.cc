@@ -4,14 +4,10 @@
 #include "file_store_udisk.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 const static FilePtr kEmptyFilePtr;
 const static OpenFilePtr kEmptyOpenFilePtr;
-
-FileHandle::FileHandle() {}
-FileHandle::~FileHandle() {}
 
 bool FileHandle::RunInMetaGuard(const FileModifyCallback &cb) {
   META_HANDLE_LOCK();
@@ -851,5 +847,4 @@ void FileHandle::Dump() noexcept {
 
 void FileHandle::Dump(const std::string &file_name) noexcept {}
 
-}  // namespace blockfs
-}  // namespace udisk
+}

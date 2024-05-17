@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_INODE_H_
 #define LIB_INODE_H_
 
@@ -11,8 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 template <typename MetaName, typename MetaItemName>
 class Inode {
@@ -63,6 +61,5 @@ class Inode {
   virtual bool WriteMeta() { return true; }
   virtual void DumpMeta() {}
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

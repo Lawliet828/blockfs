@@ -1,12 +1,9 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_BLOCK_ID_HANDLE_H_
-#define LIB_BLOCK_ID_HANDLE_H_
+#pragma once
 
 #include "block_device.h"
 #include "meta_handle.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 // 主要管理空闲的BlockId资源
 class BlockHandle : public MetaHandle {
@@ -23,7 +20,9 @@ class BlockHandle : public MetaHandle {
 
  public:
   BlockHandle() = default;
-  BlockHandle(const uint32_t max_block_id_num);
+  BlockHandle(const uint32_t max_block_num) {
+    set_max_block_num(max_block_num);
+  }
   ~BlockHandle() {}
 
   const uint32_t max_block_num() const noexcept { return max_block_num_; }
@@ -31,7 +30,10 @@ class BlockHandle : public MetaHandle {
   // 主要是在线扩容需要更新blockid的资源池
   void set_max_block_num(uint32_t max_block_id_num) noexcept;
 
-  const uint64_t GetFreeBlockNum();
+  const uint64_t GetFreeBlockNum() {
+    META_HANDLE_LOCK();
+    return block_id_pool_.size();
+  }
 
   // 主要用于元数据加载,不需要加锁
   bool GetSpecificBlockId(uint32_t block_id);
@@ -43,9 +45,5 @@ class BlockHandle : public MetaHandle {
   bool PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids);
 
   virtual bool InitializeMeta() override;
-  virtual void Dump() noexcept override;
-  virtual void Dump(const std::string &file_name) noexcept override;
 };
-}  // namespace blockfs
-}  // namespace udisk
-#endif
+}

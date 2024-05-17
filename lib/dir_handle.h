@@ -1,6 +1,4 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_DIR_HANDLE_H_
-#define LIB_DIR_HANDLE_H_
+#pragma once
 
 #include <dirent.h>
 
@@ -21,7 +19,7 @@ typedef std::function<bool()> DirectoryCallback;
 
 class DirHandle : public MetaHandle {
  private:
-  std::list<dh_t> free_metas_;  // 目录Meta的空闲链表
+  std::list<dh_t> free_dhs_;  // 目录Meta的空闲链表
 
   DirectoryNameMap created_dirs_;   // 已创建的目录
   DirectoryNameMap deleted_dirs_;   // 待删除的目录
@@ -48,10 +46,10 @@ class DirHandle : public MetaHandle {
   bool RemoveDirectory(const DirectoryPtr &parent, const DirectoryPtr &child);
 
  public:
-  DirHandle();
-  ~DirHandle();
+  DirHandle() = default;
+  ~DirHandle() = default;
 
-  const uint32_t GetFreeMetaSize() const noexcept { return free_metas_.size(); }
+  const uint32_t GetFreeMetaSize() const noexcept { return free_dhs_.size(); }
 
   const DirectoryPtr &GetOpenDirectory(int32_t fd);
   const DirectoryPtr &GetCreatedDirectory(dh_t dh);
@@ -86,4 +84,3 @@ class DirHandle : public MetaHandle {
 
 }  // namespace blockfs
 }  // namespace udisk
-#endif

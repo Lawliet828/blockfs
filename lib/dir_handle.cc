@@ -6,14 +6,9 @@
 #include "file_store_udisk.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 const static DirectoryPtr kEmptyDirectoryPtr;
-
-DirHandle::DirHandle() {}
-
-DirHandle::~DirHandle() {}
 
 bool DirHandle::RunInMetaGuard(const DirectoryCallback &cb) {
   META_HANDLE_LOCK();
@@ -29,7 +24,7 @@ bool DirHandle::InitializeMeta() {
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                          FileStore::Instance()->super_meta()->dir_meta_size_ -
                              sizeof(meta->crc_));
-    if (unlikely(meta->crc_ != crc)) {
+    if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "directory meta " << dh << " " << meta->dir_name_
                  << " crc error, read: " << meta->crc_ << " cal: " << crc;
       return false;
@@ -38,11 +33,11 @@ bool DirHandle::InitializeMeta() {
     if (meta->used_) {
       LOG(DEBUG) << "directory handle: " << dh << " name: " << meta->dir_name_
                    << " seq_no: " << meta->seq_no_ << " crc: " << meta->crc_;
-      if (unlikely(::strnlen(meta->dir_name_, sizeof(meta->dir_name_)) == 0)) {
+      if (::strnlen(meta->dir_name_, sizeof(meta->dir_name_)) == 0) [[unlikely]] {
         LOG(ERROR) << "directory meta " << dh << " used but name empty";
         return false;
       }
-      if (unlikely(meta->dh_ != static_cast<dh_t>(dh))) {
+      if (meta->dh_ != static_cast<dh_t>(dh)) [[unlikely]] {
         LOG(ERROR) << "directory meta " << dh << " used but dh invalid";
         return false;
       }
@@ -206,12 +201,12 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
  * \return strip success or failed
  */
 DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
-  if (unlikely(free_metas_.empty())) {
+  if (unlikely(free_dhs_.empty())) {
     LOG(ERROR) << "directory meta not enough";
     block_fs_set_errno(ENFILE);
     return nullptr;
   }
-  dh_t dh = free_metas_.front();
+  dh_t dh = free_dhs_.front();
   LOG(INFO) << "create new directory handle: " << dh;
 
   DirMeta *meta =
@@ -239,7 +234,7 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
   dir->set_ctime(time);
 
   // 确保最后完成才摘链
-  free_metas_.pop_front();
+  free_dhs_.pop_front();
 
   return dir;
 }
@@ -283,7 +278,7 @@ bool DirHandle::NewDirectory(const std::string &dirname,
 }
 
 void DirHandle::AddDirectory2FreeNolock(dh_t index) {
-  free_metas_.push_back(index);
+  free_dhs_.push_back(index);
 }
 
 void DirHandle::AddDirectory2Free(dh_t index) {
@@ -294,14 +289,11 @@ void DirHandle::AddDirectory2Free(dh_t index) {
 bool DirHandle::AddDirectory2CreateNolock(const DirectoryPtr &child) {
   // 当前文件夹加入内存映射表
   if (created_dirs_.find(child->dir_name()) != created_dirs_.end()) {
-    LOG(ERROR) << "directory name has exist, name: " << child->dir_name();
-    if (child->SuicideNolock()) {
-      LOG(ERROR) << "suicide directory success, name: " << child->dir_name();
-    }
+    LOG(FATAL) << "directory name has exist, name: " << child->dir_name();
     return false;
   }
   if (created_dhs_.find(child->dh()) != created_dhs_.end()) {
-    LOG(ERROR) << "directory dh has exist, name: " << child->dir_name();
+    LOG(FATAL) << "directory dh has exist, name: " << child->dir_name();
     return false;
   }
   created_dirs_[child->dir_name()] = child;
@@ -699,5 +691,4 @@ void DirHandle::Dump(const std::string &path) noexcept {
   dir->DumpMeta();
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

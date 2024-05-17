@@ -63,8 +63,8 @@ class FileHandle : public MetaHandle {
   void RemoveOpenFile(int32_t fd, const OpenFilePtr &file) noexcept;
 
  public:
-  FileHandle();
-  ~FileHandle();
+  FileHandle() = default;
+  ~FileHandle() = default;
 
   bool RunInMetaGuard(const FileModifyCallback &cb);
 

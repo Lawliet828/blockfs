@@ -1,6 +1,4 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_DIR_H_
-#define LIB_DIR_H_
+#pragma once
 
 #include "block_device.h"
 #include "block_fs.h"
@@ -77,4 +75,3 @@ class Directory : public Inode<DirMeta, File>,
 };
 typedef std::shared_ptr<Directory> DirectoryPtr;
 }
-#endif
