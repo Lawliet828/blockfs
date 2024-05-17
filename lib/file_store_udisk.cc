@@ -367,10 +367,9 @@ int32_t FileStore::GetFileSize(const std::string& path, int64_t* file_size) {
   return 0;
 }
 
-// https://www.cnblogs.com/xiaojiang1025/p/5933755.html
 int32_t FileStore::OpenFile(const std::string& path, int32_t flags,
                             int32_t mode) {
-  if (unlikely(path.empty())) {
+  if (path.empty()) [[unlikely]] {
     errno = EINVAL;
     return -1;
   }

@@ -119,10 +119,8 @@ bool FileHandle::FormatAllMeta() {
  * 文件的全路径转换成文件夹路径和文件名字
  *
  * \param filename UXDB-UDISK约定: DB创建的绝对目录
- * \param new_dirname UXDB-UDISK约定: 文件夹的绝对目录
- * \param new_filename UXDB-UDISK约定: 文件的名字
- *
- * \return strip success or failed
+ * \param new_dirname 文件夹的绝对目录
+ * \param new_filename 文件的名字
  */
 bool FileHandle::TransformPath(const std::string &filename,
                                std::string &new_dirname,
@@ -135,9 +133,9 @@ bool FileHandle::TransformPath(const std::string &filename,
   new_filename = GetFileName(file_name);
   LOG(INFO) << "transformPath dirname: " << new_dirname;
   LOG(INFO) << "transformPath filename: " << new_filename;
-  if (new_filename.size() >= kBlockFsMaxFileNameLen) {
+  if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {
     LOG(ERROR) << "file name exceed size: " << new_filename;
-    block_fs_set_errno(ENAMETOOLONG);
+    errno = ENAMETOOLONG;
     return false;
   }
   return true;
@@ -182,9 +180,9 @@ FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
 }
 
 FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
-  if (unlikely(free_metas_.empty())) {
-    LOG(WARNING) << "file meta not enough";
-    block_fs_set_errno(ENFILE);
+  if (free_metas_.empty()) [[unlikely]] {
+    LOG(ERROR) << "file meta not enough";
+    errno = ENFILE;
     return kEmptyFilePtr;
   }
   int32_t fh = free_metas_.front();
@@ -196,14 +194,14 @@ FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
     LOG(ERROR) << "new file meta invalid, used: " << meta->used_
                << " size: " << meta->size_ << " fh: " << meta->fh_
                << " wanted fh: " << fh;
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return kEmptyFilePtr;
   }
 
   FilePtr file = std::make_shared<File>();
   if (!file) {
     LOG(ERROR) << "failed to new file pointer";
-    block_fs_set_errno(ENOMEM);
+    errno = ENOMEM;
     return kEmptyFilePtr;
   }
   file->set_meta(meta);
@@ -262,9 +260,9 @@ bool FileHandle::NewFile(const std::string &dirname,
                          std::pair<DirectoryPtr, FilePtr> *dirs) {
   const DirectoryPtr &dir =
       FileStore::Instance()->dir_handle()->GetCreatedDirectory(dirname);
-  if (unlikely(!dir)) {
+  if (!dir) [[unlikely]] {
     LOG(ERROR) << "parent directory not exist: " << dirname;
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return false;
   }
   // 找到父文件夹
@@ -274,9 +272,9 @@ bool FileHandle::NewFile(const std::string &dirname,
   if (!tmpfile) {
     FileNameKey key = std::make_pair(dir->dh(), filename);
     auto itor = created_files_.find(key);
-    if (unlikely(itor != created_files_.end())) {
+    if (itor != created_files_.end()) [[unlikely]] {
       LOG(WARNING) << "file has already exist: " << dirname << filename;
-      block_fs_set_errno(EEXIST);
+      errno = EEXIST;
       return false;
     }
     FilePtr file = NewFreeFileNolock(dir->dh(), filename);
@@ -441,7 +439,7 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
     LOG(INFO) << "create tmp file in directory: " << new_dirname;
   }
   std::pair<DirectoryPtr, FilePtr> dirs;
-  if (unlikely(!NewFile(new_dirname, new_filename, tmpfile, &dirs))) {
+  if (!NewFile(new_dirname, new_filename, tmpfile, &dirs)) [[unlikely]] {
     return kEmptyFilePtr;
   }
   DirectoryPtr parent_dir = dirs.first;
@@ -460,7 +458,7 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
   AddFileToDirectory(parent_dir, curr_file);
 
   LOG(INFO) << "create file success: " << curr_file->file_name();
-  block_fs_set_errno(0);
+  errno = 0;
   return curr_file;
 }
 
@@ -649,10 +647,6 @@ void FileHandle::RemoveOpenFile(int32_t fd, const OpenFilePtr &file) noexcept {
   open_files_.erase(fd);
 }
 
-// https://man7.org/linux/man-pages/man2/open.2.html
-// https://lwn.net/Articles/619146/
-static bool HasTempFlag(const int32_t flags) { return flags & O_TMPFILE; }
-
 static bool HasWriteFlag(const int32_t flags) {
   if (!(flags & O_RDWR) && !(flags & O_WRONLY)) {
     return false;
@@ -660,16 +654,9 @@ static bool HasWriteFlag(const int32_t flags) {
   return true;
 }
 
-static bool HasCreateFlag(const int32_t flags) { return flags & O_CREAT; }
-
 static bool HasTruncateFlag(const int32_t flags) {
   /* if O_TRUNC is set with RDWR or WRONLY, need to truncate file */
   return ((flags & O_TRUNC) && (flags & (O_RDWR | O_WRONLY)));
-}
-
-static bool HasAppendFlag(const int32_t flags) {
-  /* if O_APPEND is set, we need to place file pointer at end of file */
-  return flags & O_APPEND;
 }
 
 static bool VerifyOpenExistFileFlag(const int32_t flags) {
@@ -688,12 +675,12 @@ static bool VerifyOpenExistFileFlag(const int32_t flags) {
 }
 
 static bool IsNeedCreateTempFile(const int32_t flags) {
-  if (!HasTempFlag(flags)) {
+  if (!(flags & O_TMPFILE)) {
     return false;
   }
   if (!HasWriteFlag(flags)) {
     LOG(ERROR) << "invalid tmp open flag without O_RDWR or O_WRONLY";
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return false;
   }
   return true;
@@ -701,7 +688,7 @@ static bool IsNeedCreateTempFile(const int32_t flags) {
 
 static bool IsNeedCreateNormalFile(const int32_t flags) {
   /* file does not exist, create file if O_CREAT is set */
-  if (!HasCreateFlag(flags)) {
+  if (!(flags & O_CREAT)) {
     LOG(DEBUG) << "open file without create flag";
     return false;
   }
@@ -718,20 +705,19 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
       return -1;
     }
   } else {
-    const DirectoryPtr &dir =
-        FileStore::Instance()->dir_handle()->GetCreatedDirectory(filename);
-    if (dir) {
-      block_fs_set_errno(EISDIR);
+    if (FileStore::Instance()->dir_handle()->GetCreatedDirectory(filename)) {
+      errno = EISDIR;
       return -1;
     }
     file = GetCreatedFile(filename);
-    if (unlikely(!file)) {
+    if (!file) {
       if (IsNeedCreateNormalFile(flags)) {
         file = CreateFile(filename, flags);
         if (!file) {
           return -1;
         }
       } else {
+        errno = ENOENT;
         return -1;
       }
     } else {
@@ -751,7 +737,7 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   /* allocate a file fd for this new file */
   int32_t fd = FileStore::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
-    block_fs_set_errno(ENFILE);
+    errno = ENFILE;
     return -1;
   }
   LOG(INFO) << "open file: " << filename << " fd: " << fd
@@ -760,14 +746,15 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   AddOpenFile(fd, open_file);
   open_file->set_open_fd(fd);
 
-  if (HasAppendFlag(flags)) {
+  if (flags & O_APPEND) {
+    // if O_APPEND is set, we need to place file pointer at end of file
     open_file->set_append_pos(file->file_size());
   } else {
     open_file->set_append_pos(0);
   }
   file->IncLinkCount();
 
-  block_fs_set_errno(0);
+  errno = 0;
   return fd;
 }
 

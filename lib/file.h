@@ -173,7 +173,7 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
     }
     FileOffset(const int64_t offset);
   };
-  // Transdorm info of block read or write
+  // Transform info of block read or write
   struct BlockData {
     uint8_t *extern_buffer_;  // 读或者写buffer的地址,如果超过block会转换
     uint64_t udisk_offset_;  // 写入block的在udisk逻辑盘上的偏移地址

@@ -275,13 +275,10 @@ bool BlockFsTool::DoBlockFsTool() {
           FileStore::Instance()->super()->Dump();
         } else if (dump_arg_.find("uuid") != std::string::npos) {
           LOG(INFO) << "dump uuid: " << FileStore::Instance()->super()->uuid();
-        } else if (dump_arg_.find("dirs") != std::string::npos) {
-          FileStore::Instance()->dir_handle()->Dump();
         } else if (dump_arg_.find("files") != std::string::npos) {
           FileStore::Instance()->file_handle()->Dump();
         } else {
           FileStore::Instance()->super()->Dump();
-          FileStore::Instance()->dir_handle()->Dump();
           FileStore::Instance()->file_handle()->Dump();
         }
         break;
