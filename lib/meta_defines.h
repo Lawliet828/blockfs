@@ -45,15 +45,13 @@ union SuperBlockMeta {
   struct {
     uint32_t crc_;
     char uuid_[kBlockFsMaxUuidSize];  // bfs uuid -> /dev/vdb
-    uint32_t version_;                // bfs version
     uint32_t magic_;                  // bfs magic
     seq_t seq_no_;                 // bfs sequenece
     // bfs consts
-    uint64_t max_support_file_num_;        // max supported dirs or files 10w
+    uint64_t max_file_num;        // max supported dirs or files 10w
     uint64_t max_support_udisk_size_;      // max supported udisk size 128T
-    uint64_t max_support_file_block_num_;  // max supported file block(128T)
+    uint64_t max_file_block_num;  // max supported file block(128T)
     uint64_t max_support_block_num_;       // max supported block num(128T)
-    uint64_t udisk_extend_size_;           // 10G, resize udisk size min unit
     uint64_t block_size_;                  // 16M, bfs min block size
     uint64_t max_dir_name_len_;            // 64B, max dir name length
     uint64_t max_file_name_len_;           // 64B, max file name length
@@ -77,13 +75,6 @@ union SuperBlockMeta {
     // variable according to the udisk device size
     uint64_t curr_udisk_size_;  // current udisk size (device size)
     uint64_t curr_block_num_;   // current udisk supported block number
-
-    // 待定
-    // uint64_t all_dh_bitmap_;        // 所有已创建的文件夹
-    // uint64_t all_fh_bitmap_;        // 所有已创建的文件
-    // uint64_t head_;
-    // uint64_t tail_;
-    // uint64_t applied_seq_no_;
 
     // The mount point opened by each instance of UXDB,
     // the directory is generally /mnt/mysql/data

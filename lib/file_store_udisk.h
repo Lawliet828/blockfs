@@ -58,9 +58,7 @@ class FileStore : public FileSystem {
   static FileStore *Instance();
 
   const uint64_t GetMaxSupportFileNumber() noexcept override;
-  const uint64_t GetMaxSupportDirectoryNumber() noexcept override;
   const uint64_t GetMaxSupportBlockNumer() noexcept override;
-  const uint64_t GetMaxBlockNumber() noexcept override;
   const uint64_t GetFreeBlockNumber() noexcept override;
   const uint64_t GetBlockSize() noexcept override;
   const uint64_t GetFreeFileNumber() noexcept override;
@@ -154,7 +152,6 @@ class FileStore : public FileSystem {
   void DumpFileMeta(const std::string &path) override;
 
   BlockDevice *dev() { return device_; }
-  ShmManager *shm_manager() { return shm_manager_; }
 
   MetaHandle *GetMetaHandle(MetaHandleType type) {
     return handle_vector_[type];

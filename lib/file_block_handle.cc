@@ -13,10 +13,10 @@ FileBlockHandle::~FileBlockHandle() {}
 bool FileBlockHandle::InitializeMeta() {
   LOG(DEBUG)
       << "total file block num: "
-      << FileStore::Instance()->super_meta()->max_support_file_block_num_;
+      << FileStore::Instance()->super_meta()->max_file_block_num;
   FileBlockMeta *meta;
   for (uint32_t index = 0;
-       index < FileStore::Instance()->super_meta()->max_support_file_block_num_;
+       index < FileStore::Instance()->super_meta()->max_file_block_num;
        ++index) {
     meta = reinterpret_cast<FileBlockMeta *>(base_addr() +
         FileStore::Instance()->super_meta()->file_block_meta_size_ * index);
@@ -94,7 +94,7 @@ bool FileBlockHandle::FormatAllMeta() {
 
   FileBlockMeta *meta;
   for (uint32_t i = 0;
-       i < FileStore::Instance()->super_meta()->max_support_file_block_num_;
+       i < FileStore::Instance()->super_meta()->max_file_block_num;
        ++i) {
     meta = reinterpret_cast<FileBlockMeta *>(
         (buffer->data() +

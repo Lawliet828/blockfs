@@ -21,7 +21,7 @@ bool FileHandle::RunInMetaGuard(const FileModifyCallback &cb) {
 bool FileHandle::InitializeMeta() {
   FileMeta *meta;
   for (uint64_t fh = 0;
-       fh < FileStore::Instance()->super_meta()->max_support_file_num_; ++fh) {
+       fh < FileStore::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(base_addr() +
         FileStore::Instance()->super_meta()->file_meta_size_ * fh);
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
@@ -94,7 +94,7 @@ bool FileHandle::FormatAllMeta() {
 
   FileMeta *meta;
   for (uint64_t fh = 0;
-       fh < FileStore::Instance()->super_meta()->max_support_file_num_; ++fh) {
+       fh < FileStore::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(
         buffer->data() +
         FileStore::Instance()->super_meta()->file_meta_size_ * fh);

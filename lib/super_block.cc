@@ -35,9 +35,6 @@ bool SuperBlock::InitializeMeta() {
   return true;
 }
 
-/**
- * format blockfs super metadata
- */
 bool SuperBlock::FormatAllMeta() {
   buffer_ = std::make_shared<AlignBuffer>(
       kSuperBlockSize, FileStore::Instance()->dev()->block_size());
@@ -51,11 +48,9 @@ bool SuperBlock::FormatAllMeta() {
   uuid_t uuid;
   ::uuid_generate(uuid);
   ::uuid_unparse(uuid, meta->uuid_);
-  meta->version_ = kBlockFsVersion;
   meta->magic_ = kBlockFsMagic;
-  meta->max_support_file_num_ = kBlockFsMaxFileNum;
+  meta->max_file_num = kBlockFsMaxFileNum;
   meta->max_support_udisk_size_ = kBlockFsMaxUDiskSize;
-  meta->udisk_extend_size_ = kBlockFsExtendSize;
   meta->block_size_ = kBlockFsBlockSize;
   meta->max_dir_name_len_ = kBlockFsMaxDirNameLen;
   meta->max_file_name_len_ = kBlockFsMaxFileNameLen;
@@ -70,14 +65,14 @@ bool SuperBlock::FormatAllMeta() {
   /* 3. 文件夹区域: 起始位置 4096 - meta->file_meta_offset_ */
   meta->dir_meta_offset_ = kDirMetaOffset;
   meta->dir_meta_total_size_ =
-      meta->dir_meta_size_ * meta->max_support_file_num_;
+      meta->dir_meta_size_ * meta->max_file_num;
   meta->dir_meta_total_size_ =
       ROUND_UP(meta->dir_meta_total_size_, kBlockFsPageSize);
 
   /* 4. 文件区域: 起始位置 dir_meta结尾 - meta->file_block_meta_offset_ */
   meta->file_meta_offset_ = meta->dir_meta_offset_ + meta->dir_meta_total_size_;
   meta->file_meta_total_size_ =
-      meta->file_meta_size_ * meta->max_support_file_num_;
+      meta->file_meta_size_ * meta->max_file_num;
   meta->file_meta_total_size_ =
       ROUND_UP(meta->file_meta_total_size_, kBlockFsPageSize);
 
@@ -86,7 +81,7 @@ bool SuperBlock::FormatAllMeta() {
       meta->file_meta_offset_ + meta->file_meta_total_size_;
 
   // 一个超大文件(无限接近128T),其他都是小文件
-  uint64_t tmpNum1 = meta->max_support_file_num_ - 1;
+  uint64_t tmpNum1 = meta->max_file_num - 1;
   uint64_t tmpSize1 = tmpNum1 * meta->file_block_meta_size_;
   uint64_t tmpNum2 = ALIGN_UP(meta->max_support_udisk_size_ - tmpSize1,
                               (meta->block_size_ * kBlockFsFileBlockCapacity));
@@ -95,7 +90,7 @@ bool SuperBlock::FormatAllMeta() {
   meta->file_block_meta_total_size_ = tmpSize1 + tmpSize2;
   meta->file_block_meta_total_size_ =
       ROUND_UP((tmpSize1 + tmpSize2), kBlockFsPageSize);
-  meta->max_support_file_block_num_ = tmpNum1 + tmpNum2;
+  meta->max_file_block_num = tmpNum1 + tmpNum2;
 
   meta->block_data_start_offset_ =
       meta->file_block_meta_offset_ + meta->file_block_meta_total_size_;
@@ -254,12 +249,10 @@ void SuperBlock::Dump() noexcept {
             << "\n"
             << "crc: " << meta()->crc_ << "\n"
             << "uuid: " << meta()->uuid_ << "\n"
-            << "version: " << meta()->version_ << "\n"
             << "magic: " << meta()->magic_ << "\n"
             << "seq_no: " << meta()->seq_no_ << "\n"
-            << "max_file_num: " << meta()->max_support_file_num_ << "\n"
+            << "max_file_num: " << meta()->max_file_num << "\n"
             << "max_udisk_size: " << meta()->max_support_udisk_size_ << "\n"
-            << "extend_size: " << meta()->udisk_extend_size_ << "\n"
             << "block_size: " << meta()->block_size_ << "\n"
             << "max_support_block_num_: " << meta()->max_support_block_num_
             << "\n"
@@ -271,7 +264,7 @@ void SuperBlock::Dump() noexcept {
             << "super_block_size: " << meta()->super_block_size_ << "\n"
             << "dir_meta_total_size: " << meta()->dir_meta_total_size_ << "\n"
             << "file_meta_total_size: " << meta()->file_meta_total_size_ << "\n"
-            << "file_block_meta_num: " << meta()->max_support_file_block_num_
+            << "file_block_meta_num: " << meta()->max_file_block_num
             << "\n"
             << "file_block_meta_total_size: "
             << meta()->file_block_meta_total_size_ << "\n"

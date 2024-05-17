@@ -23,7 +23,7 @@ bool DirHandle::RunInMetaGuard(const DirectoryCallback &cb) {
 bool DirHandle::InitializeMeta() {
   DirMeta *meta;
   for (uint64_t dh = 0;
-       dh < FileStore::Instance()->super_meta()->max_support_file_num_; ++dh) {
+       dh < FileStore::Instance()->super_meta()->max_file_num; ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         base_addr() + FileStore::Instance()->super_meta()->dir_meta_size_ * dh);
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
@@ -96,7 +96,7 @@ bool DirHandle::FormatAllMeta() {
 
   DirMeta *meta;
   for (uint64_t dh = 0;
-       dh < FileStore::Instance()->super_meta()->max_support_file_num_; ++dh) {
+       dh < FileStore::Instance()->super_meta()->max_file_num; ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         buffer->data() +
         FileStore::Instance()->super_meta()->dir_meta_size_ * dh);

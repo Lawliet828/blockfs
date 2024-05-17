@@ -6,7 +6,7 @@ namespace udisk {
 namespace blockfs {
 
 bool FdHandle::InitializeMeta() {
-  set_max_fd_num(FileStore::Instance()->super_meta()->max_support_file_num_
+  set_max_fd_num(FileStore::Instance()->super_meta()->max_file_num
                  << 1);
   return true;
 }

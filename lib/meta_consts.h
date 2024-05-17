@@ -16,7 +16,6 @@ const uint64_t T = (1024 * G);
 #define MB *(1 << 20)
 #define GB *(1U << 30)
 
-const uint32_t kBlockFsVersion = 0x1;
 const uint32_t kBlockFsMagic = 0xA5201314;
 
 const uint64_t kBlockFsMaxUuidSize = 64;
@@ -32,7 +31,6 @@ const uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
 const uint64_t kBlockFsMaxFileNum = 100000;
 const uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
 const uint64_t kBlockFsMaxUDiskSize = (128 * T);
-const uint64_t kBlockFsExtendSize = (10 * G);
 const uint64_t kBlockFsBlockSize = (16 * M);
 const uint64_t kBlockFsMaxDirNameLen = 768;
 const uint64_t kBlockFsMaxFileNameLen = 64;

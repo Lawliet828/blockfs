@@ -85,9 +85,7 @@ class FileSystem {
   virtual const int64_t time_update() noexcept;
 
   virtual const uint64_t GetMaxSupportFileNumber() noexcept = 0;
-  virtual const uint64_t GetMaxSupportDirectoryNumber() noexcept = 0;
   virtual const uint64_t GetMaxSupportBlockNumer() noexcept = 0;
-  virtual const uint64_t GetMaxBlockNumber() noexcept = 0;
   virtual const uint64_t GetFreeBlockNumber() noexcept = 0;
   virtual const uint64_t GetBlockSize() noexcept = 0;
   virtual const uint64_t GetFreeFileNumber() noexcept = 0;

@@ -56,15 +56,6 @@ class AlignBuffer {
 
 typedef std::shared_ptr<AlignBuffer> AlignBufferPtr;
 
-struct ReadDataBuf {
-  AlignBufferPtr buf;
-  uint32_t start;
-  uint32_t size;
-};
-
-typedef std::shared_ptr<ReadDataBuf> ReadDataBufPtr;
-typedef std::vector<ReadDataBufPtr> ReadDataBufPtrVec;
-
 }  // namespace blockfs
 }  // namespace udisk
 #endif

@@ -23,18 +23,10 @@ FileStore *FileStore::g_instance = new FileStore();
 FileStore *FileStore::Instance() { return g_instance; }
 
 const uint64_t FileStore::GetMaxSupportFileNumber() noexcept {
-  return super_meta()->max_support_file_num_;
-}
-
-const uint64_t FileStore::GetMaxSupportDirectoryNumber() noexcept {
-  return super_meta()->max_support_file_num_;
+  return super_meta()->max_file_num;
 }
 
 const uint64_t FileStore::GetMaxSupportBlockNumer() noexcept {
-  return super_meta()->max_support_block_num_;
-}
-
-const uint64_t FileStore::GetMaxBlockNumber() noexcept {
   return super_meta()->max_support_block_num_;
 }
 
@@ -680,8 +672,6 @@ int32_t FileStore::GetAbsolutePath(const std::string& in_path,
 
 /**
  * Initialize handle in order
- *
- * \param
  *
  * \return success or failed
  */
