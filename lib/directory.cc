@@ -39,9 +39,6 @@ void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
                       FileStore::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta_->crc_));
-  // if (seconds > atime() + FileStore::Instance()->time_update()) {
-  //   UpdateMeta();
-  // }
 }
 
 void Directory::IncLinkCount() noexcept {

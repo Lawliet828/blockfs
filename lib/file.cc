@@ -7,7 +7,6 @@
 #include <functional>
 
 #include "file_store_udisk.h"
-#include "logging.h"
 
 namespace udisk::blockfs {
 
@@ -449,7 +448,7 @@ int File::ExtendFile(uint64_t offset) {
         }
         return true;
       });
-  if (unlikely(!success)) {
+  if (!success) [[unlikely]] {
     return -1;
   }
   return 0;
@@ -702,9 +701,6 @@ void File::UpdateTimeStamp(bool a, bool m, bool c) {
   int64_t microSecondsSinceEpoch = ts.microSecondsSinceEpoch();
   time_t seconds = static_cast<time_t>(microSecondsSinceEpoch /
                                        TimeStamp::kMicroSecondsPerSecond);
-  // if (seconds > atime() + FileStore::Instance()->time_update()) {
-  //   UpdateMeta();
-  // }
   if (a) set_atime(seconds);
   if (m) set_mtime(seconds);
   if (c) set_ctime(seconds);
@@ -763,8 +759,8 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " read size: " << size
             << " offset: " << append_pos;
-  if (unlikely(size == 0 || append_pos >= file_->file_size())) {
-    LOG(WARNING) << file_->file_name() << " read nothing,"
+  if (size == 0 || append_pos >= file_->file_size()) [[unlikely]] {
+    LOG(ERROR) << file_->file_name() << " read nothing,"
                  << " read size: " << size << " read offset: " << append_pos
                  << " file size: " << file_->file_size();
     file_->ReadLockRelease();
@@ -794,7 +790,7 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
             << ", file size: " << file_->file_size() << ", write size: " << size
             << ", offset: " << append_pos;
   void *buffer = const_cast<void *>(buf);
-  if (unlikely(size == 0)) {
+  if (size == 0) [[unlikely]] {
     file_->WriteLockRelease();
     return 0;
   }
@@ -818,27 +814,6 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
   return ret;
 }
 
-// Find the read and write offset information
-// according to the file read and write position
-OpenFile::FileOffset::FileOffset(const int64_t offset) {
-  // 1. Count how many blocks are in front of the file
-  int32_t num_blocks_front = offset / kBlockFsBlockSize;
-
-  // 2. Count in which file cut
-  file_block_index_ = num_blocks_front / kBlockFsFileBlockCapacity;
-
-  // 3. Count in which block index
-  block_index_in_file_block_ = num_blocks_front % kBlockFsFileBlockCapacity;
-
-  // 4. Count block offset in final block
-  block_offset_in_block_ = offset % kBlockFsBlockSize;
-
-  LOG(INFO) << "current offset: " << offset
-            << " file_block_index: " << file_block_index_
-            << " block_index_in_file_block: " << block_index_in_file_block_
-            << " block_offset_in_block: " << block_offset_in_block_;
-}
-
 OpenFile::FileReader::FileReader(OpenFilePtr file, void *buffer, uint64_t size,
                                  uint64_t offset, bool direct)
     : open_file_(file),
@@ -849,8 +824,6 @@ OpenFile::FileReader::FileReader(OpenFilePtr file, void *buffer, uint64_t size,
   Transform2Block();
 }
 
-OpenFile::FileReader::~FileReader() {}
-
 void OpenFile::FileReader::Transform2Block() {
   FileOffset fos = FileOffset(offset_);
 
@@ -859,9 +832,9 @@ void OpenFile::FileReader::Transform2Block() {
   uint32_t block_read_index = 0;   // 读取的是全局block的索引
   uint32_t block_read_offset = 0;  // 读取的block的偏移,初始为偏移为0
   uint64_t block_read_size = 0;    // 读取当前block的大小
-  int32_t file_cut_in_file = fos.file_block_index();
-  int32_t block_index_in_file_block = fos.block_index_in_file_block();
-  uint64_t block_offset_in_block = fos.block_offset_in_block();
+  int32_t file_cut_in_file = fos.file_block_index;
+  int32_t block_index_in_file_block = fos.block_index_in_file_block;
+  uint64_t block_offset_in_block = fos.block_offset_in_block;
 
   const FilePtr &file = open_file_->file();
   FileBlockPtr file_block = file->GetFileBlock(file_cut_in_file);
@@ -966,9 +939,9 @@ OpenFile::FileWriter::~FileWriter() {}
 void OpenFile::FileWriter::Transform2Block() {
   FileOffset fos = FileOffset(offset_);
 
-  int32_t file_cut_in_file = fos.file_block_index();
-  int32_t block_index_in_file_block = fos.block_index_in_file_block();
-  uint64_t block_offset_in_block = fos.block_offset_in_block();
+  int32_t file_cut_in_file = fos.file_block_index;
+  int32_t block_index_in_file_block = fos.block_index_in_file_block;
+  uint64_t block_offset_in_block = fos.block_offset_in_block;
 
   uint64_t curr_write_count = 0;
   uint32_t block_write_index = 0;
@@ -1042,7 +1015,7 @@ int64_t OpenFile::FileWriter::WriteData() {
   uint32_t block_num = write_blocks_.size();
   for (uint32_t i = 0; i < block_num; ++i) {
     block_write = WriteBlockData(&write_blocks_[i]);
-    if (unlikely(block_write <= 0)) {
+    if (block_write <= 0) [[unlikely]] {
       LOG(ERROR) << open_file_->file()->file_name()
                  << " write block data ret: " << block_write
                  << " errno: " << errno;

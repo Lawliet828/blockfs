@@ -6,6 +6,7 @@
 
 #include "block_device.h"
 #include "inode.h"
+#include "logging.h"
 
 namespace udisk::blockfs {
 
@@ -158,20 +159,30 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   uint64_t append_pos_ = 0; /* current open file offset */
  private:
   struct FileOffset {
-    int32_t file_block_index_ = 0;          /* in which file cut */
-    int32_t block_index_in_file_block_ = 0; /* in which block index */
-    uint64_t block_offset_in_block_ = 0;    /* offset located in final block */
+    int32_t file_block_index = 0;          /* in which file cut */
+    int32_t block_index_in_file_block = 0; /* in which block index */
+    uint64_t block_offset_in_block = 0;    /* offset located in final block */
 
-    const int32_t file_block_index() const noexcept {
-      return file_block_index_;
+    // Find the read and write offset information
+    // according to the file read and write position
+    FileOffset(const int64_t offset) {
+      // 1. Count how many blocks are in front of the file
+      int32_t num_blocks_front = offset / kBlockFsBlockSize;
+
+      // 2. Count in which file cut
+      file_block_index = num_blocks_front / kBlockFsFileBlockCapacity;
+
+      // 3. Count in which block index
+      block_index_in_file_block = num_blocks_front % kBlockFsFileBlockCapacity;
+
+      // 4. Count block offset in final block
+      block_offset_in_block = offset % kBlockFsBlockSize;
+
+      LOG(INFO) << "current offset: " << offset
+                << " file_block_index: " << file_block_index
+                << " block_index_in_file_block: " << block_index_in_file_block
+                << " block_offset_in_block: " << block_offset_in_block;
     }
-    const int32_t block_index_in_file_block() const noexcept {
-      return block_index_in_file_block_;
-    }
-    const uint64_t block_offset_in_block() const noexcept {
-      return block_offset_in_block_;
-    }
-    FileOffset(const int64_t offset);
   };
   // Transform info of block read or write
   struct BlockData {
@@ -199,7 +210,7 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
    public:
     FileReader(OpenFilePtr file, void *buffer, uint64_t size, uint64_t offset,
                bool direct = true);
-    ~FileReader();
+    ~FileReader() = default;
     int64_t ReadData();
   };
   class FileWriter {
