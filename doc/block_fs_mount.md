@@ -137,8 +137,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58514 20210202 14:51:40.926099Z][INFO][lib/directory.cc:123] scan file: 1.log
 [58514 20210202 14:51:40.926125Z][INFO][lib/directory.cc:50] 1612248700 2021-02-02 14:51:40
 [58515 20210202 14:51:40.926246Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
-[58514 20210202 14:51:40.926400Z][INFO][lib/block_fs_fuse.cc:742] call bfs_getxattr file: /
-[58515 20210202 14:51:40.926451Z][INFO][lib/block_fs_fuse.cc:742] call bfs_getxattr file: /
 [58514 20210202 14:51:40.926782Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /1.log
 [58514 20210202 14:51:40.926790Z][INFO][lib/file_store_udisk.cc:318] stat path: /mnt/mysql/data/1.log
 [58514 20210202 14:51:40.926793Z][INFO][lib/file_store_udisk.cc:327] stat path: /mnt/mysql/data/1.log
@@ -146,7 +144,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58514 20210202 14:51:40.926802Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/1.log mount point: /mnt/mysql/data/
 [58514 20210202 14:51:40.926811Z][INFO][lib/file_handle.cc:135] transformPath dirname: /mnt/mysql/data/
 [58514 20210202 14:51:40.926815Z][INFO][lib/file_handle.cc:136] transformPath filename: 1.log
-[58515 20210202 14:51:40.926878Z][INFO][lib/block_fs_fuse.cc:742] call bfs_getxattr file: /1.log
 [58515 20210202 14:51:40.926945Z][INFO][lib/block_fs_fuse.cc:872] call bfs_releasedir: /
 [58515 20210202 14:51:40.926952Z][INFO][lib/dir_handle.cc:659] close directory name: /mnt/mysql/data/ fd: 0
 ```

@@ -678,30 +678,6 @@ static int bfs_fsync(const char *path, int datasync,
   return 0;
 }
 
-/** Set extended attributes */
-int bfs_setxattr(const char *path, const char *, const char *, size_t, int) {
-  LOG(INFO) << "call bfs_setxattr file: " << path;
-  return 0;
-}
-
-/** Get extended attributes */
-int bfs_getxattr(const char *path, const char *, char *, size_t) {
-  LOG(INFO) << "call bfs_getxattr file: " << path;
-  return 0;
-}
-
-/** List extended attributes */
-int bfs_listxattr(const char *path, char *, size_t) {
-  LOG(INFO) << "call bfs_listxattr file: " << path;
-  return 0;
-}
-
-/** Remove extended attributes */
-int bfs_removexattr(const char *path, const char *) {
-  LOG(INFO) << "call bfs_removexattr file: " << path;
-  return 0;
-}
-
 /** Open directory
  *
  * Unless the 'default_permissions' mount option is given,
@@ -1322,10 +1298,10 @@ static const struct fuse_operations kBFSOps = {
     .flush = bfs_flush,
     .release = bfs_release,
     .fsync = bfs_fsync,
-    .setxattr = bfs_setxattr,
-    .getxattr = bfs_getxattr,
-    .listxattr = bfs_listxattr,
-    .removexattr = bfs_removexattr,
+    .setxattr = nullptr,
+    .getxattr = nullptr,
+    .listxattr = nullptr,
+    .removexattr = nullptr,
     .opendir = bfs_opendir,
     .readdir = bfs_readdir,
     .releasedir = bfs_releasedir,
