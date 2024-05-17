@@ -16,17 +16,13 @@
 
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 // https://blog.csdn.net/butterfly5211314/article/details/84575883
 // new_dirname = ::dirname(full_path.c_str());
 // new_filename = ::basename(full_path.c_str());
 std::string GetFileName(const std::string &path) {
   char ch = '/';
-#ifdef _WIN32_
-  ch = '\\';
-#endif
   size_t pos = path.rfind(ch);
   if (pos == std::string::npos)
     return path;
@@ -36,9 +32,6 @@ std::string GetFileName(const std::string &path) {
 
 std::string GetDirName(const std::string &path) {
   char ch = '/';
-#ifdef _WIN32_
-  ch = '\\';
-#endif
   size_t pos = path.rfind(ch);
   if (pos == std::string::npos)
     return path;
@@ -99,5 +92,4 @@ bool RunAsAdmin() {
 #endif
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

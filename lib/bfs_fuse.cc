@@ -17,8 +17,7 @@
 #include "comm_utils.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 // #define BFS_USE_READ_WRITE_BUFFER
 
@@ -806,7 +805,17 @@ static int bfs_releasedir(const char *path, struct fuse_file_info *fi) {
   return 0;
 }
 
-static void bfs_capabilities(struct fuse_conn_info *conn) {
+/**
+ * Initialize filesystem
+ *
+ * The return value will passed in the `private_data` field of
+ * `struct fuse_context` to all file operations, and as a
+ * parameter to the destroy() method. It overrides the initial
+ * value provided to fuse_main() / fuse_new().
+ */
+static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
+  LOG(INFO) << "call bfs_init";
+
   LOG(INFO) << "Protocol version: " << conn->proto_major << "."
             << conn->proto_minor;
   LOG(INFO) << "Capabilities: ";
@@ -844,20 +853,7 @@ static void bfs_capabilities(struct fuse_conn_info *conn) {
     LOG(INFO) << "FUSE_CAP_NO_OPENDIR_SUPPORT";
   if (conn->capable & FUSE_CAP_EXPLICIT_INVAL_DATA)
     LOG(INFO) << "FUSE_CAP_EXPLICIT_INVAL_DATA";
-}
 
-/**
- * Initialize filesystem
- *
- * The return value will passed in the `private_data` field of
- * `struct fuse_context` to all file operations, and as a
- * parameter to the destroy() method. It overrides the initial
- * value provided to fuse_main() / fuse_new().
- */
-static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
-  LOG(INFO) << "call bfs_init";
-
-  bfs_capabilities(conn);
   // cfg->kernel_cache = 1;
   // cfg->use_ino = 1;
   // cfg->nullpath_ok = 1;
@@ -1430,5 +1426,4 @@ void block_fs_fuse_mount(bfs_config_info *info) {
   UDiskBFS::Instance()->RunFuse(info);
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

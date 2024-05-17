@@ -275,10 +275,6 @@ char *block_fs_mktemp(char *template_str) {
 
 char *block_fs_tmpnam(char *str) { return FileStore::Instance()->TmpNam(str); }
 
-ssize_t block_fs_sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
-  return FileStore::Instance()->SendFile(out_fd, in_fd, offset, count);
-}
-
 void block_fs_set_errno(int e) { errno = e; }
 
 int block_fs_get_errno() { return errno; }

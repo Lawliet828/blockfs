@@ -698,11 +698,6 @@ int File::posix_fallocate(uint64_t offset, uint64_t size) {
 
 int File::fsync() { return FileStore::Instance()->dev()->Fsync(); }
 
-int64_t File::sendfile(int32_t out_fd, uint64_t *offset, uint64_t count) {
-  LOG(ERROR) << file_name() << " sendfile not supported yet";
-  return -1;
-}
-
 void File::UpdateTimeStamp(bool a, bool m, bool c) {
   TimeStamp ts = TimeStamp::now();
   int64_t microSecondsSinceEpoch = ts.microSecondsSinceEpoch();

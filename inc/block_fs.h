@@ -466,8 +466,6 @@ struct block_fs_flock {
 
 int block_fs_fcntl(int fd, int cmd, ...);
 
-ssize_t block_fs_sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
-
 int block_fs_statvfs(const char *path, struct statvfs *buf);
 int block_fs_fstatvfs(int fd, struct statvfs *buf);
 

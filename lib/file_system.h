@@ -185,8 +185,6 @@ class FileSystem {
 
   virtual void DumpFileMeta(const std::string& path) = 0;
 
-  virtual int64_t SendFile(int32_t out_fd, int32_t in_fd, off_t* offset,
-                           int64_t count);
   virtual BLOCKFS_FILE* FileOpen(const char* filename, const char* mode);
   virtual int32_t FileClose(BLOCKFS_FILE* stream);
   virtual int32_t FileFlush(BLOCKFS_FILE* stream);

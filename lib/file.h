@@ -179,7 +179,6 @@ class File : public Inode<FileMeta, FileBlock>,
   int ftruncate(uint64_t offset);
   int posix_fallocate(uint64_t offset, uint64_t size);
   int fsync();
-  int64_t sendfile(int32_t out_fd, uint64_t *offset, uint64_t count);
 
   template <typename... Args>
   int fcntl(int cmd, Args &&... args);

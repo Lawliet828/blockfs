@@ -46,12 +46,6 @@ int32_t FileSystem::Sync() {
   return -1;
 }
 
-int64_t FileSystem::SendFile(int32_t out_fd, int32_t in_fd, off_t *offset,
-                             int64_t count) {
-  LOG(WARNING) << "sendfile not implemented yet";
-  return -1;
-}
-
 // Create symlink
 int32_t FileSystem::Symlink(const char *oldpath, const char *newpath) {
   LOG(WARNING) << "symlink not implemented yet";
