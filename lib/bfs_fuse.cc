@@ -870,16 +870,6 @@ static void bfs_capabilities(struct fuse_conn_info *conn) {
     LOG(INFO) << "FUSE_CAP_EXPLICIT_INVAL_DATA";
 }
 
-/** Synchronize directory contents
- *
- * If the datasync parameter is non-zero, then only the user data
- * should be flushed, not the meta data
- */
-int bfs_fsyncdir(const char *path, int, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_fsyncdir: " << path;
-  return -1;
-}
-
 /**
  * Initialize filesystem
  *
@@ -1025,66 +1015,6 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
   if (res < 0) return -errno;
 
   return 0;
-}
-
-/**
- * Map block index within file to block index within device
- *
- * Note: This makes sense only for block device backed filesystems
- * mounted with the 'blkdev' option
- */
-static int bfs_bmap(const char *path, size_t blocksize, uint64_t *idx) {
-  LOG(INFO) << "call bfs_bmap: " << path;
-  return -1;
-}
-
-/**
- * Ioctl
- *
- * flags will have FUSE_IOCTL_COMPAT set for 32bit ioctls in
- * 64bit environment.  The size and direction of data is
- * determined by _IOC_*() decoding of cmd.  For _IOC_NONE,
- * data will be nullptr, for _IOC_WRITE data is out area, for
- * _IOC_READ in area and if both are set in/out area.  In all
- * non-nullptr cases, the area is of _IOC_SIZE(cmd) bytes.
- *
- * If flags has FUSE_IOCTL_DIR then the fuse_file_info refers to a
- * directory file handle.
- *
- * Note : the unsigned long request submitted by the application
- * is truncated to 32 bits.
- */
-#if FUSE_USE_VERSION < 35
-static int bfs_ioctl(const char *path, int cmd, void *arg,
-                     struct fuse_file_info *, unsigned int flags, void *data)
-#else
-static int bfs_ioctl(const char *path, unsigned int cmd, void *arg,
-                     struct fuse_file_info *, unsigned int flags, void *data)
-#endif
-{
-  LOG(INFO) << "call bfs_ioctl: " << path;
-  return -1;
-}
-
-/**
- * Poll for IO readiness events
- *
- * Note: If ph is non-nullptr, the client should notify
- * when IO readiness events occur by calling
- * fuse_notify_poll() with the specified ph.
- *
- * Regardless of the number of times poll with a non-nullptr ph
- * is received, single notification is enough to clear all.
- * Notifying more times incurs overhead but doesn't harm
- * correctness.
- *
- * The callee is responsible for destroying ph with
- * fuse_pollhandle_destroy() when no longer in use.
- */
-static int bfs_poll(const char *path, struct fuse_file_info *fi,
-                    struct fuse_pollhandle *ph, unsigned *reventsp) {
-  LOG(INFO) << "call bfs_poll: " << path;
-  return -1;
 }
 
 #ifdef BFS_USE_READ_WRITE_BUFFER
@@ -1399,16 +1329,11 @@ static const struct fuse_operations kBFSOps = {
     .opendir = bfs_opendir,
     .readdir = bfs_readdir,
     .releasedir = bfs_releasedir,
-    .fsyncdir = bfs_fsyncdir,
     .init = bfs_init,
     .destroy = bfs_destroy,
     .access = bfs_access,
     .create = bfs_create,
     .lock = bfs_lock,
-    .utimens = nullptr,
-    .bmap = bfs_bmap,
-    .ioctl = bfs_ioctl,
-    .poll = bfs_poll,
 #ifdef BFS_USE_READ_WRITE_BUFFER
     .write_buf = bfs_write_buf,
     .read_buf = bfs_read_buf,
