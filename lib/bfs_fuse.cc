@@ -1028,35 +1028,6 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
 }
 
 /**
- * Change the access and modification times of a file with
- * nanosecond resolution
- *
- * This supersedes the old utime() interface.  New applications
- * should use this.
- *
- * `fi` will always be nullptr if the file is not currenlty open, but
- * may also be nullptr if the file is open.
- *
- * See the utimensat(2) man page for details.
- */
-static int bfs_utimens(const char *path, const struct timespec ts[2],
-                       struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_utimens: " << path;
-
-#ifdef HAVE_UTIMENSAT
-  int res;
-  /* don't use utime/utimes since they follow symlinks */
-  if (fi)
-    res = ::futimens(fi->fh, ts);
-  else
-    res = ::utimensat(0, path, ts, AT_SYMLINK_NOFOLLOW);
-  if (res < 0) return -errno;
-#endif
-
-  return 0;
-}
-
-/**
  * Map block index within file to block index within device
  *
  * Note: This makes sense only for block device backed filesystems
@@ -1434,7 +1405,7 @@ static const struct fuse_operations kBFSOps = {
     .access = bfs_access,
     .create = bfs_create,
     .lock = bfs_lock,
-    .utimens = bfs_utimens,
+    .utimens = nullptr,
     .bmap = bfs_bmap,
     .ioctl = bfs_ioctl,
     .poll = bfs_poll,

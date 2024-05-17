@@ -15,19 +15,6 @@ class BlockDevice {
   uint64_t dev_size_ = 0;
   uint32_t sector_size_ = 0;
 
- private:
-  int64_t GetStringProperty(const char *property, char *val,
-                            size_t maxlen) const;
-  int64_t GetIntProperty(const char *property) const;
-  bool SupportDiscard() const;
-  bool IsRotational() const;
-  int GetDev(char *dev, size_t max) const;
-  int GetVendor(char *vendor, size_t max) const;
-  int GetModel(char *model, size_t max) const;
-  int GetSerial(char *serial, size_t max) const;
-  int WholeDisk(char *device, size_t max) const;
-  int WholeDisk(std::string *s) const;
-
  public:
   BlockDevice() {}
   virtual ~BlockDevice();
@@ -35,19 +22,13 @@ class BlockDevice {
   uint64_t dev_size() const { return dev_size_; }
   uint32_t block_size() const { return sector_size_; }
 
-  const char *sysfsdir() const;
   bool IsBlkDev();
-  dev_t BlkDevId() const;
   bool BlkDevGetSize();
   bool BlkDevGetSectorSize();
-  bool BlkDevIsMisaligned();
   bool Open(const std::string &dev_name);
-  int ReOpen(const std::string &dev_name);
   void Close();
   void Sync();
   int Fsync();
-  int Fdatasync();
-  int SyncFS();
 
   int64_t ReadCache(void *buf, uint64_t len);
   int64_t PreadCache(void *buf, uint64_t len, off_t offset);

@@ -55,10 +55,6 @@ class Inode {
   virtual int chown(uid_t uid, gid_t gid) { return 0; }
   virtual int access(int mask) const { return 0; }
   virtual int rename(const std::string &to) { return 0; }
-  virtual int utimens(const timespec lastAccessTime,
-                      const timespec lastModificationTime) {
-    return 0;
-  }
   virtual int remove() { return 0; }
 
   virtual void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) {

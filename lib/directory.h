@@ -7,13 +7,7 @@
 #include "file_handle.h"
 #include "inode.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
-
-class Directory;
-typedef std::shared_ptr<Directory> DirectoryPtr;
+namespace udisk::blockfs {
 
 class Directory : public Inode<DirMeta, File>,
                   public std::enable_shared_from_this<Directory> {
@@ -73,10 +67,6 @@ class Directory : public Inode<DirMeta, File>,
   int chown(uid_t uid, gid_t gid) override { return 0; }
   int access(int mask) const override { return 0; }
   int rename(const std::string &to) override;
-  int utimens(const timespec lastAccessTime,
-              const timespec lastModificationTime) override {
-    return 0;
-  }
   int remove() override { return 0; }
 
   void DumpMeta() override;
@@ -85,6 +75,6 @@ class Directory : public Inode<DirMeta, File>,
   static bool WriteMeta(dh_t dh);
   void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) override;
 };
-}  // namespace blockfs
-}  // namespace udisk
+typedef std::shared_ptr<Directory> DirectoryPtr;
+}
 #endif

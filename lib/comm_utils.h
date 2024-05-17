@@ -73,8 +73,6 @@ std::string GetParentDirName(const std::string &path);
 
 bool SetCoreDump(bool on = true);
 
-void DebugHexBuffer(void *buffer, uint32_t len);
-
 bool RunAsAdmin();
 
 }  // namespace blockfs

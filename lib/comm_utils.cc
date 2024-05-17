@@ -91,41 +91,6 @@ bool SetCoreDump(bool on) {
   return true;
 }
 
-void DebugHexBuffer(void *buffer, uint32_t len) {
-  if (!buffer || 0 == len) {
-    LOG(INFO) << "????";
-    return;
-  }
-
-  const uint32_t bytes_per_line = 16;
-  uint8_t *p = (uint8_t *)buffer;
-  char hex_str[3 * bytes_per_line + 1] = {0};
-
-  LOG(INFO) << "-----------------begin-------------------\n";
-  for (uint32_t i = 0; i < len; ++i) {
-    int idx = 3 * (i % bytes_per_line);
-    if (0 == idx) {
-      ::memset(hex_str, 0, sizeof(hex_str));
-    }
-#ifdef WIN32
-    sprintf_s(&hex_str[idx], 4, "%02x ", p[i]);  // buff长度要多传入1个字节
-#else
-    snprintf(&hex_str[idx], 4, "%02x ", p[i]);  // buff长度要多传入1个字节
-#endif
-
-    // 以16个字节为一行，进行打印
-    if (0 == ((i + 1) % bytes_per_line)) {
-      LOG(INFO) << hex_str;
-    }
-  }
-
-  // 打印最后一行未满16个字节的内容
-  if (0 != (len % bytes_per_line)) {
-    LOG(INFO) << hex_str;
-  }
-  LOG(INFO) << "-----------------end-------------------\n";
-}
-
 bool RunAsAdmin() {
 #ifdef WIN32
   return IsUserAnAdmin();  // true, is admin

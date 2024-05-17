@@ -170,10 +170,6 @@ class File : public Inode<FileMeta, FileBlock>,
   int chown(uid_t uid, gid_t gid) override { return 0; }
   int access(int mask) const override { return 0; }
   int rename(const std::string &to) override;
-  int utimens(const timespec lastAccessTime,
-              const timespec lastModificationTime) override {
-    return 0;
-  }
   int remove() override { return 0; }
 
   void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) override;
@@ -183,7 +179,6 @@ class File : public Inode<FileMeta, FileBlock>,
   int ftruncate(uint64_t offset);
   int posix_fallocate(uint64_t offset, uint64_t size);
   int fsync();
-  int fdatasync();
   int64_t sendfile(int32_t out_fd, uint64_t *offset, uint64_t count);
 
   template <typename... Args>

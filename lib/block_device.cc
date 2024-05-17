@@ -5,14 +5,10 @@
 #include <sys/ioctl.h>
 #include <sys/uio.h>
 #include <linux/fs.h>
-// #include <blkid/blkid.h>
 
 #include "logging.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 static const std::string kBlockDeviceSda = "/dev/sda";
 static const std::string kBlockDeviceVda = "/dev/vda";
@@ -147,8 +143,6 @@ int64_t PwritevFull(int fd, iovec *iov, uint64_t size, off_t offset) {
 
 BlockDevice::~BlockDevice() { Close(); }
 
-const char *BlockDevice::sysfsdir() const { return "/sys"; }
-
 bool BlockDevice::IsBlkDev() {
   struct stat file_stat;
   if (::stat(dev_name_.c_str(), &file_stat)) {
@@ -156,23 +150,6 @@ bool BlockDevice::IsBlkDev() {
     return false;
   }
   return S_ISBLK(file_stat.st_mode);
-}
-
-dev_t BlockDevice::BlkDevId() const {
-  struct stat st;
-  int r;
-  if (dev_fd_direct_ >= 0) {
-    r = ::fstat(dev_fd_direct_, &st);
-  } else {
-    char path[PATH_MAX] = {0};
-    ::snprintf(path, sizeof(path), "/dev/%s", dev_name_.c_str());
-    r = ::stat(path, &st);
-  }
-  if (r < 0) {
-    return -errno;
-  }
-  dev_t id = S_ISBLK(st.st_mode) ? st.st_rdev : st.st_dev;
-  return id;
 }
 
 bool BlockDevice::BlkDevGetSize() {
@@ -215,133 +192,6 @@ bool BlockDevice::BlkDevGetSectorSize() {
   return true;
 }
 
-/*
- * Return the alignment status of a device
- */
-bool BlockDevice::BlkDevIsMisaligned() {
-#ifdef BLKALIGNOFF
-  int32_t aligned = 0;
-  if (::ioctl(dev_fd_direct_, BLKALIGNOFF, &aligned) < 0)
-    return false; /* probably kernel < 2.6.32 */
-  /* Note that kernel returns -1 as alignment offset if no compatible
-   * sizes and alignments exist for stacked devices */
-  return aligned != 0 ? true : false;
-#else
-  return false;
-#endif
-}
-
-/**
- * get a block device property as a string
- *
- * store property in *val, up to maxlen chars
- * return 0 on success
- * return negative error on error
- */
-int64_t BlockDevice::GetStringProperty(const char *property, char *val,
-                                       size_t maxlen) const {
-  char filename[PATH_MAX], wd[PATH_MAX];
-  const char *dev = nullptr;
-
-  if (dev_fd_direct_ >= 0) {
-    // sysfs isn't fully populated for partitions, so we need to lookup the
-    // sysfs entry for the underlying whole disk.
-    if (int r = WholeDisk(wd, sizeof(wd)); r < 0) return r;
-    dev = wd;
-  } else {
-    dev = dev_name_.c_str();
-  }
-  if (::snprintf(filename, sizeof(filename), "%s/block/%s/%s", sysfsdir(), dev,
-                 property) >= static_cast<int>(sizeof(filename))) {
-    return -ERANGE;
-  }
-
-  FILE *fp = ::fopen(filename, "r");
-  if (fp == NULL) {
-    return -errno;
-  }
-
-  int r = 0;
-  if (::fgets(val, maxlen - 1, fp)) {
-    // truncate at newline
-    char *p = val;
-    while (*p && *p != '\n') ++p;
-    *p = 0;
-  } else {
-    r = -EINVAL;
-  }
-  ::fclose(fp);
-  return r;
-}
-
-/**
- * get a block device property
- *
- * return the value (we assume it is positive)
- * return negative error on error
- */
-int64_t BlockDevice::GetIntProperty(const char *property) const {
-  char buff[256] = {0};
-  int r = GetStringProperty(property, buff, sizeof(buff));
-  if (r < 0) return r;
-  // take only digits
-  for (char *p = buff; *p; ++p) {
-    if (!::isdigit(*p)) {
-      *p = 0;
-      break;
-    }
-  }
-  char *endptr = 0;
-  r = ::strtoll(buff, &endptr, 10);
-  if (endptr != buff + ::strlen(buff)) r = -EINVAL;
-  return r;
-}
-
-bool BlockDevice::SupportDiscard() const {
-  return GetIntProperty("queue/discard_granularity") > 0;
-}
-
-bool BlockDevice::IsRotational() const {
-  return GetIntProperty("queue/rotational") > 0;
-}
-
-int BlockDevice::GetDev(char *dev, size_t max) const {
-  return GetStringProperty("dev", dev, max);
-}
-
-int BlockDevice::GetVendor(char *vendor, size_t max) const {
-  return GetStringProperty("device/device/vendor", vendor, max);
-}
-
-int BlockDevice::GetModel(char *model, size_t max) const {
-  return GetStringProperty("device/model", model, max);
-}
-
-int BlockDevice::GetSerial(char *serial, size_t max) const {
-  return GetStringProperty("device/serial", serial, max);
-}
-
-int BlockDevice::WholeDisk(char *device, size_t max) const {
-  dev_t id = BlkDevId();
-  if (id < 0) return -EINVAL;  // hrm.
-
-  // int r = blkid_devno_to_wholedisk(id, device, max, nullptr);
-  // if (r < 0) {
-  //   return -EINVAL;
-  // }
-  return 0;
-}
-
-int BlockDevice::WholeDisk(std::string *s) const {
-  char out[PATH_MAX] = {0};
-  int r = WholeDisk(out, sizeof(out));
-  if (r < 0) {
-    return r;
-  }
-  *s = out;
-  return r;
-}
-
 bool BlockDevice::Open(const std::string &dev_name) {
   if (dev_name.empty() || dev_name == kBlockDeviceSda ||
       dev_name == kBlockDeviceVda || dev_name == kBlockDeviceCurrent ||
@@ -381,11 +231,6 @@ bool BlockDevice::Open(const std::string &dev_name) {
   return true;
 }
 
-int BlockDevice::ReOpen(const std::string &dev_name) {
-  Close();
-  return Open(dev_name);
-}
-
 void BlockDevice::Close() {
   if (dev_fd_cache_ > 0) {
     Fsync();
@@ -419,42 +264,6 @@ int BlockDevice::Fsync() {
     }
   }
   return 0;
-}
-
-int BlockDevice::Fdatasync() {
-  // indicate 'Force Unit Access'
-  return Fsync();
-}
-
-int BlockDevice::SyncFS() { return Fsync(); }
-
-enum TRIM_ACT {
-  ACT_DISCARD = 0, /* default */
-  ACT_ZEROOUT,
-  ACT_SECURE
-};
-
-#ifdef CLOCK_MONOTONIC_RAW
-#define UL_CLOCK_MONOTONIC CLOCK_MONOTONIC_RAW
-#else
-#define UL_CLOCK_MONOTONIC CLOCK_MONOTONIC
-#endif
-
-int gettime_monotonic(struct timeval *tv) {
-#ifdef CLOCK_MONOTONIC
-  /* Can slew only by ntp and adjtime */
-  int ret;
-  struct timespec ts;
-
-  /* Linux specific, can't slew */
-  if (!(ret = ::clock_gettime(UL_CLOCK_MONOTONIC, &ts))) {
-    tv->tv_sec = ts.tv_sec;
-    tv->tv_usec = ts.tv_nsec / 1000;
-  }
-  return ret;
-#else
-  return ::gettimeofday(tv, NULL);
-#endif
 }
 
 int64_t BlockDevice::ReadCache(void *buf, uint64_t len) {
@@ -512,5 +321,4 @@ int64_t BlockDevice::PwriteDirect(void *buf, uint64_t len, off_t offset) {
   }
   return PwriteFull(dev_fd_direct_, buf, len, offset);
 }
-}  // namespace blockfs
-}  // namespace udisk
+}
