@@ -16,11 +16,10 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   FileBlockMeta *meta_;
 
  public:
-  FileBlock();
+  FileBlock() {}
   FileBlock(int32_t index, FileBlockMeta *meta) : index_(index), meta_(meta) {}
-  ~FileBlock();
+  ~FileBlock() {}
 
-  bool Create();
   bool ReleaseAll();
   bool ReleaseMyself();
 

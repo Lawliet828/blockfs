@@ -42,8 +42,7 @@ bool FileBlock::WriteMeta(int32_t index) {
 }
 
 void FileBlock::DumpMeta() {
-  LOG(INFO) << "dump file block meta: "
-            << "\n"
+  LOG(INFO) << "dump file block meta:\n"
             << " crc: " << meta_->crc_ << "\n"
             << " used: " << meta_->used_ << "\n"
             << " seq_no: " << meta_->seq_no_ << "\n"
@@ -56,13 +55,7 @@ void FileBlock::DumpMeta() {
   }
 }
 
-FileBlock::~FileBlock() {}
-
 bool FileBlock::WriteMeta() { return FileBlock::WriteMeta(index_); }
-
-FileBlock::FileBlock() {}
-
-bool FileBlock::Create() { return true; }
 
 bool FileBlock::ReleaseAll() {
   std::vector<uint32_t> block_list;

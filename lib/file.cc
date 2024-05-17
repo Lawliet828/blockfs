@@ -9,8 +9,7 @@
 #include "file_store_udisk.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 bool File::WriteMeta(int32_t fh) {
   FileMeta *meta = reinterpret_cast<FileMeta *>(
@@ -1106,14 +1105,14 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
             << " file size: " << file_->file_size() << " pwrite size: " << size
             << " offset: " << offset;
   void *buffer = const_cast<void *>(buf);
-  if (unlikely(!CheckIOParam(buffer, size, offset))) {
+  if (!CheckIOParam(buffer, size, offset)) [[unlikely]] {
     return -1;
   }
-  if (unlikely(size == 0)) {
+  if (size == 0) [[unlikely]] {
     return 0;
   }
 
-  if (unlikely((offset + size) > file_->file_size())) {
+  if ((offset + size) > file_->file_size()) [[unlikely]] {
     LOG(WARNING) << file_->file_name() << " pwrite exceed file size,"
                  << " file size: " << file_->file_size()
                  << " write offset: " << offset << " write size: " << size;
@@ -1125,5 +1124,4 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
   return writer.WriteData();
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

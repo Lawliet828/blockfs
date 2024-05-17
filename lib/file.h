@@ -52,40 +52,6 @@ class File : public Inode<FileMeta, FileBlock>,
   std::shared_mutex io_lock_;
 
  private:
-  enum FileType {
-    FILE_TYPE_NONE,       // None (file not found)
-    FILE_TYPE_REGULAR,    // Regular file
-    FILE_TYPE_DIRECTORY,  // Directory
-    FILE_TYPE_SYMLINK,    // Symbolic link
-    FILE_TYPE_BLOCK,      // Block device
-    FILE_TYPE_CHARACTER,  // Character device
-    FILE_TYPE_FIFO,       // FIFO (named pipe)
-    FILE_TYPE_SOCKET,     // Socket
-    FILE_TYPE_UNKNOWN     // Unknown
-  };
-  // File permissions (Unix specific)
-  enum FilePermissions {
-    NONE = 00000,   //!< None
-    IRUSR = 00400,  //!< Read permission bit for the owner of the file
-    IWUSR = 00200,  //!< Write permission bit for the owner of the file
-    IXUSR = 00100,  //!< Execute (for ordinary files) or search (for
-                    //!< directories) permission bit for the owner of the file
-    IRWXU = 00700,  //!< This is equivalent to IRUSR | IWUSR | IXUSR
-    IRGRP = 00040,  //!< Read permission bit for the group owner of the file
-    IWGRP = 00020,  //!< Write permission bit for the group owner of the file
-    IXGRP = 00010,  //!< Execute or search permission bit for the group owner of
-                    //!< the file
-    IRWXG = 00070,  //!< This is equivalent to IRGRP | IWGRP | IXGRP
-    IROTH = 00004,  //!< Read permission bit for other users
-    IWOTH = 00002,  //!< Write permission bit for other users
-    IXOTH = 00001,  //!< Execute or search permission bit for other users
-    IRWXO = 00007,  //!< This is equivalent to IROTH | IWOTH | IXOTH
-    ISUID = 04000,  //!< This is the set-user-ID on execute bit
-    ISGID = 02000,  //!< This is the set-group-ID on execute bit
-    ISVTX = 01000   //!< This is the sticky bit
-  };
-
- private:
   uint32_t GetNextFileCut() noexcept;
   int ExtendFile(uint64_t offset);
   bool CopyData(uint32_t src_block_id, uint32_t dst_block_id, uint64_t offset,
@@ -98,7 +64,6 @@ class File : public Inode<FileMeta, FileBlock>,
   File();
   File(FileMeta *meta);
   virtual ~File();
-  bool Create(int32_t dh, const std::string &filename);
   bool Release();
   bool ReleaseNolock();
 

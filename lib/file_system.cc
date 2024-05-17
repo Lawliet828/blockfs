@@ -46,7 +46,6 @@ int32_t FileSystem::Sync() {
   return -1;
 }
 
-// Create symlink
 int32_t FileSystem::Symlink(const char *oldpath, const char *newpath) {
   LOG(WARNING) << "symlink not implemented yet";
   return -1;
