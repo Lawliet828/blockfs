@@ -46,8 +46,7 @@ class FileStore : public FileSystem {
   void Destroy();
 
   bool OpenTarget(const std::string &uuid);
-  bool InitializeMeta(bool dump);
-  bool Upgrade();
+  bool InitializeMeta();
   int MakeMountPoint(const char *mount_point);
   int MakeMountPoint(const std::string &mount_point);
 
@@ -180,8 +179,6 @@ class FileStore : public FileSystem {
 
   bool Format(const std::string &dev_name);
   bool Check(const std::string &dev_name, const std::string &log_level = "DEBUG");
-
-  bool CheckPermission(const char *op, const char *path);
 };
 }  // namespace blockfs
 }  // namespace udisk

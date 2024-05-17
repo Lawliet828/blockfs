@@ -457,20 +457,6 @@ int gettime_monotonic(struct timeval *tv) {
 #endif
 }
 
-static void DebugDiscardStats(int act, uint64_t stats[]) {
-  switch (act) {
-    case ACT_ZEROOUT:
-      LOG(DEBUG) << "zero-filled " << stats[1] << " bytes from the offset "
-                 << stats[0];
-      break;
-    case ACT_SECURE:
-    case ACT_DISCARD:
-      LOG(DEBUG) << "discarded " << stats[1] << " bytes from the offset "
-                 << stats[0];
-      break;
-  }
-}
-
 int64_t BlockDevice::ReadCache(void *buf, uint64_t len) {
   return ReadFull(dev_fd_cache_, buf, len);
 }

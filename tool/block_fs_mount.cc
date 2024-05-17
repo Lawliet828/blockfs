@@ -199,9 +199,6 @@ int main(int argc, char *argv[]) {
     HelpInfo();
     std::exit(1);
   }
-  if (!KillAll("block_fs_mount")) {
-    return -1;
-  }
 
   if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
     return -1;

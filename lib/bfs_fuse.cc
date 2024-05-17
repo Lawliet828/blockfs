@@ -1555,15 +1555,6 @@ void block_fs_fuse_mount(bfs_config_info *info) {
     LOG(ERROR) << "fuse mount requires root privileges";
     return;
   }
-#if 0
-  // 清理之前fuse挂载
-  if (!KillAll("fusermount3")) {
-    return;
-  }
-  if (!UnmountPath(info->fuse_mount_point)) {
-    return;
-  }
-#endif
   UDiskBFS::Instance()->RunFuse(info);
 }
 

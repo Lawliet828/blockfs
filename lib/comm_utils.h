@@ -77,10 +77,6 @@ void DebugHexBuffer(void *buffer, uint32_t len);
 
 bool RunAsAdmin();
 
-bool KillAll(const std::string &name);
-
-bool UnmountPath(const std::string &path);
-
 }  // namespace blockfs
 }  // namespace udisk
 #endif

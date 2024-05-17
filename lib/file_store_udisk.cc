@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include <filesystem>
 #include <functional>
 
 #include "config_load.h"
@@ -58,7 +59,7 @@ const uint64_t FileStore::GetMaxFileNameLength() noexcept {
  * \return 0 on success, -1 on error
  */
 int32_t FileStore::MountFileSystem(const std::string& config_path) {
-  if (unlikely(config_path.empty())) {
+  if (config_path.empty()) [[unlikely]] {
     LOG(ERROR) << "config path is empty";
     return -1;
   }
@@ -78,7 +79,7 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
   if (!shm_manager_->Initialize(true)) {
     return -1;
   }
-  if (!InitializeMeta(true)) {
+  if (!InitializeMeta()) {
     return -1;
   }
   super()->set_uxdb_mount_point(mount_config_.uxdb_mount_point_);
@@ -120,7 +121,7 @@ int32_t FileStore::RemountFileSystem() {
   if (!shm_manager_->Initialize(false)) {
     return -1;
   }
-  if (!InitializeMeta(true)) {
+  if (!InitializeMeta()) {
     return -1;
   }
   return MakeMountPoint(super()->uxdb_mount_point());
@@ -148,9 +149,6 @@ int32_t FileStore::UnmountFileSystem() {
  */
 int32_t FileStore::CreateDirectory(const std::string& path) {
   LOG(INFO) << "make directory: " << path;
-  if (!CheckPermission("mkdir", path.c_str())) {
-    return -1;
-  }
   return dir_handle()->CreateDirectory(path);
 }
 
@@ -174,9 +172,6 @@ int32_t FileStore::ListDirectory(const std::string& path, FileInfo** filelist,
  */
 int32_t FileStore::DeleteDirectory(const std::string& path, bool recursive) {
   LOG(INFO) << "remove directory: " << path;
-  if (!CheckPermission("rmdir", path.c_str())) {
-    return -1;
-  }
   return dir_handle()->DeleteDirectory(path, recursive);
 }
 
@@ -395,17 +390,11 @@ int32_t FileStore::CloseFile(int32_t fd) {
 int32_t FileStore::FileExists(const std::string& path) { return 0; }
 
 int32_t FileStore::CreateFile(const std::string& path, mode_t mode) {
-  if (!CheckPermission("create", path.c_str())) {
-    return -1;
-  }
   // O_TMPFILE
   return file_handle()->CreateFile(path, mode) ? 0 : -1;
 }
 
 int32_t FileStore::DeleteFile(const std::string& path) {
-  if (!CheckPermission("unlink", path.c_str())) {
-    return -1;
-  }
   return file_handle()->unlink(path);
 }
 
@@ -452,9 +441,6 @@ int32_t FileStore::CopyFile(const std::string& from, const std::string& to) {
 }
 
 int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
-  if (!CheckPermission("truncate", filename.c_str())) {
-    return -1;
-  }
   if (unlikely(size < 0)) {
     block_fs_set_errno(EINVAL);
     return -1;
@@ -805,7 +791,7 @@ bool FileStore::Check(const std::string& dev_name, const std::string &log_level)
   if (!shm_manager_->Initialize()) {
     return false;
   }
-  return InitializeMeta(true);
+  return InitializeMeta();
 }
 
 /*
@@ -831,37 +817,30 @@ int EasyReaddir(const std::string& dir, std::set<std::string>* out) {
 }
 
 bool FileStore::OpenTarget(const std::string& uuid) {
-  DIR* sys_block_dir = nullptr;
-  struct dirent* entry = nullptr;
-
-  sys_block_dir = ::opendir(kBlockDevivePath.c_str());
-  if (!sys_block_dir) {
+  try {
+    for (const auto& entry : std::filesystem::directory_iterator(kBlockDevivePath)) {
+      if (!device_->Open("/dev/" + entry.path().filename().string())) {
+        continue;
+      }
+      SuperBlockMeta meta;
+      bool success = ShmManager::PrefetchSuperMeta(meta);
+      std::string meta_uuid = meta.uuid_;
+      if (!success || meta_uuid != uuid) {
+        LOG(DEBUG) << "read meta error or uuid mismatch,"
+                   << " read uuid: " << meta_uuid << " wanted uuid: " << uuid;
+        device_->Close();
+        continue;
+      }
+      return true;
+    }
+  } catch (std::filesystem::filesystem_error& e) {
     LOG(ERROR) << "failed to open dir:" << kBlockDevivePath
-               << ", errno: " << errno;
-    return false;
+               << ", error: " << e.what();
   }
-
-  while ((entry = ::readdir(sys_block_dir))) {
-    if (!device_->Open("/dev/" + std::string(entry->d_name))) {
-      continue;
-    }
-    SuperBlockMeta meta;
-    bool success = ShmManager::PrefetchSuperMeta(meta);
-    std::string meta_uuid = meta.uuid_;
-    if (!success || meta_uuid != uuid) {
-      LOG(DEBUG) << "read meta error or uuid mismatch,"
-                 << " read uuid: " << meta_uuid << " wanted uuid: " << uuid;
-      device_->Close();
-      continue;
-    }
-    ::closedir(sys_block_dir);
-    return true;
-  }
-  ::closedir(sys_block_dir);
   return false;
 }
 
-bool FileStore::InitializeMeta(bool dump) {
+bool FileStore::InitializeMeta() {
   for (auto& handle : handle_vector_) {
     if (!handle->InitializeMeta()) {
       return false;
@@ -891,24 +870,6 @@ int FileStore::MakeMountPoint(const std::string& mount_point) {
     return CreateDirectory(mount_point);
   }
   return 0;
-}
-
-/**
- * remount the blockfs filesystem
- *
- * \param op: posix operation
- * \param path: abosolute path
- *
- * \return success or failed
- */
-bool FileStore::CheckPermission(const char* op, const char* path) {
-  if (unlikely(!path)) {
-    LOG(ERROR) << op << " file path empty";
-    block_fs_set_errno(EINVAL);
-    return false;
-  }
-
-  return true;
 }
 
 void FileStore::DumpFileMeta(const std::string& path) {

@@ -13,7 +13,7 @@ namespace udisk::blockfs {
 // https://blog.csdn.net/ababab12345/article/details/102931841
 
 // blockfs_shm_xxx (uuid)
-static const std::string kMetaShmNamePrefix = "blockfs_shm_";
+static const std::string kMetaShmNamePrefix = "bfs_shm_";
 
 ShmManager::ShmManager() { shm_addr_ = static_cast<char *>(MAP_FAILED); }
 
@@ -45,12 +45,12 @@ bool ShmManager::PrefetchSuperMeta() {
   uint32_t crc =
       Crc32(reinterpret_cast<uint8_t *>(&super_) + sizeof(super_.crc_),
             kSuperBlockSize - sizeof(super_.crc_));
-  if (unlikely(super_.crc_ != crc)) {
+  if (super_.crc_ != crc) [[unlikely]] {
     LOG(ERROR) << "super block crc error, read:" << super_.crc_
                << " cal: " << crc;
     return false;
   }
-  if (unlikely(super_.magic_ != kBlockFsMagic)) {
+  if (super_.magic_ != kBlockFsMagic) [[unlikely]] {
     LOG(ERROR) << "super block magic error, read:" << super_.magic_
                << " wanted: " << kBlockFsMagic;
     return false;
@@ -67,12 +67,11 @@ bool ShmManager::PrefetchSuperMeta() {
 
   struct sysinfo si;
   ::sysinfo(&si);
-
-  LOG(DEBUG) << "let's look mem usage:";
-  LOG(DEBUG) << "totalram: " << si.totalram;
-  LOG(DEBUG) << "freeram: " << si.freeram;
-  LOG(DEBUG) << "sharedram: " << si.sharedram;
-  LOG(DEBUG) << "need shm: " << shm_size_;
+  LOG(DEBUG) << "Memory usage:"
+             << "\n\t Total RAM: " << si.totalram
+             << "\n\t Free RAM: " << si.freeram
+             << "\n\t Shared RAM: " << si.sharedram
+             << "\n\t Needed shared memory: " << shm_size_;
 
   return true;
 }
@@ -85,19 +84,13 @@ bool ShmManager::PrefetchSuperMeta() {
  * \return success or failed
  */
 bool ShmManager::ShmOpen() {
-  if (shm_size_ == 0) {
+  if (shm_size_ == 0) [[unlikely]] {
     LOG(ERROR) << "shm size cannot be zero";
     return false;
   }
 
-  // O_CREAT | O_EXCL
-  // The check for the existence of the object,
-  // and its creation if it does not exist, are performed atomically.
-  // O_CREAT
-  // Create the shared memory object if it does not exist.
-  // 0666 / S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH
   shm_fd_ = ::shm_open(shm_name_.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0666);
-  if (shm_fd_ < 0) {
+  if (shm_fd_ < 0) [[unlikely]] {
     LOG(ERROR) << "posix shm open failed, errno: " << errno;
     return false;
   }
