@@ -4,11 +4,7 @@
 #include "file_store_udisk.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
-
-FileBlockHandle::FileBlockHandle() {}
-FileBlockHandle::~FileBlockHandle() {}
+namespace udisk::blockfs {
 
 bool FileBlockHandle::InitializeMeta() {
   LOG(DEBUG)
@@ -24,7 +20,7 @@ bool FileBlockHandle::InitializeMeta() {
         Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
               FileStore::Instance()->super_meta()->file_block_meta_size_ -
                   sizeof(meta->crc_));
-    if (unlikely(meta->crc_ != crc)) {
+    if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "debug file block meta: \n"
                  << " file block index: " << index << "\n"
                  << " crc error\n"
@@ -55,7 +51,7 @@ bool FileBlockHandle::InitializeMeta() {
       }
       const FilePtr &file =
           FileStore::Instance()->file_handle()->GetCreatedFileNoLock(meta->fh_);
-      if (unlikely(!file)) {
+      if (!file) [[unlikely]] {
         LOG(ERROR) << "file block meta: " << index
                    << " invalid for fh: " << meta->fh_
                    << " file_cut: " << meta->file_cut_
@@ -124,7 +120,7 @@ bool FileBlockHandle::FormatAllMeta() {
 bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
                                        std::vector<FileBlockPtr> *file_blocks) {
   META_HANDLE_LOCK();
-  if (unlikely(free_metas_.empty() || free_metas_.size() < file_block_num)) {
+  if (unlikely(free_fbhs_.empty() || free_fbhs_.size() < file_block_num)) {
     LOG(ERROR) << "file block meta not enough";
     return false;
   }
@@ -132,8 +128,8 @@ bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
 
   FileBlockMeta *meta = nullptr;
   for (uint32_t i = 0; i < file_block_num; ++i) {
-    uint32_t index = free_metas_.front();
-    free_metas_.pop_front();
+    uint32_t index = free_fbhs_.front();
+    free_fbhs_.pop_front();
     meta = reinterpret_cast<FileBlockMeta *>(
         base_addr() +
         FileStore::Instance()->super_meta()->file_block_meta_size_ * index);
@@ -150,7 +146,7 @@ void FileBlockHandle::PutFileBlockLock(uint32_t index) {
 }
 
 void FileBlockHandle::PutFileBlockNoLock(uint32_t index) {
-  free_metas_.push_back(index);
+  free_fbhs_.push_back(index);
 }
 
 bool FileBlockHandle::PutFileBlockLock(
@@ -165,18 +161,14 @@ bool FileBlockHandle::PutFileBlockNoLock(
     LOG(ERROR) << "file block list empty";
     return false;
   }
-  LOG(INFO) << "current file block size: " << free_metas_.size();
+  LOG(INFO) << "current file block size: " << free_fbhs_.size();
   for (uint32_t i = 0; i < file_blocks.size(); ++i) {
-    free_metas_.push_back(file_blocks[i]->index());
+    free_fbhs_.push_back(file_blocks[i]->index());
     LOG(INFO) << "put file block index: " << file_blocks[i]->index()
               << " to free meta done";
   }
-  LOG(INFO) << "current file block size: " << free_metas_.size();
+  LOG(INFO) << "current file block size: " << free_fbhs_.size();
   return true;
 }
 
-void FileBlockHandle::Dump() noexcept {}
-
-void FileBlockHandle::Dump(const std::string &file_name) noexcept {}
-}  // namespace blockfs
-}  // namespace udisk
+}

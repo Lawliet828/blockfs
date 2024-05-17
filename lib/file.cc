@@ -243,7 +243,7 @@ bool File::AddFileBlockLock(const FileBlockPtr &fb) noexcept {
 
 bool File::AddFileBlockNoLock(const FileBlockPtr &fb) noexcept {
   auto it = item_maps_.find(fb->file_cut());
-  if (unlikely(it != item_maps_.end())) {
+  if (it != item_maps_.end()) [[unlikely]] {
     LOG(INFO) << file_name()
               << " failed to add fb because already exist: " << fb->index();
     return false;

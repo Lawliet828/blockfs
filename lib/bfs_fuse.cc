@@ -222,9 +222,7 @@ static int bfs_mkdir(const char *path, mode_t mode) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int res;
-
-  res = block_fs_mkdir(in_path.c_str(), mode);
+  int res = block_fs_mkdir(in_path.c_str(), mode);
   if (res < 0) return -errno;
 
   return 0;

@@ -65,7 +65,6 @@ class DirHandle : public MetaHandle {
 
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
-  virtual void Dump() noexcept override;
   virtual void Dump(const std::string &path) noexcept override;
 
  public:

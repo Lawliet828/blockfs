@@ -6,8 +6,7 @@
 
 #include "block_device.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class FileBlock : public std::enable_shared_from_this<FileBlock> {
  private:
@@ -16,15 +15,14 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   FileBlockMeta *meta_;
 
  public:
-  FileBlock() {}
+  FileBlock() = default;
   FileBlock(int32_t index, FileBlockMeta *meta) : index_(index), meta_(meta) {}
-  ~FileBlock() {}
+  ~FileBlock() = default;
 
   bool ReleaseAll();
   bool ReleaseMyself();
 
   const int32_t index() const noexcept { return index_; }
-  void set_index(int32_t index) noexcept { index_ = index; }
   FileBlockMeta *meta() const noexcept { return meta_; }
 
   void set_file_cut(uint32_t file_cut) noexcept { meta_->file_cut_ = file_cut; }
@@ -73,6 +71,8 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   static bool WriteMeta(int32_t fb_index);
   static void ClearMeta(FileBlockMeta *meta);
 };
-}  // namespace blockfs
-}  // namespace udisk
+
+typedef std::shared_ptr<FileBlock> FileBlockPtr;
+
+}
 #endif

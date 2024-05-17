@@ -141,11 +141,7 @@ int32_t FileStore::UnmountFileSystem() {
 }
 
 /**
- * Create directory
- *
  * \param dirname: abosolute dirname
- *
- * \return success or failed
  */
 int32_t FileStore::CreateDirectory(const std::string& path) {
   LOG(INFO) << "make directory: " << path;

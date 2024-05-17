@@ -12,6 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <filesystem>
 #include <vector>
 
 #include "logging.h"
@@ -31,12 +32,7 @@ std::string GetFileName(const std::string &path) {
 }
 
 std::string GetDirName(const std::string &path) {
-  char ch = '/';
-  size_t pos = path.rfind(ch);
-  if (pos == std::string::npos)
-    return path;
-  else
-    return path.substr(0, pos + 1);
+  return std::filesystem::path(path).parent_path().string();
 }
 
 std::string GetParentDirName(const std::string &path) {

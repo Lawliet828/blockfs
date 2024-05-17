@@ -8,23 +8,18 @@
 #include "file_block.h"
 #include "meta_handle.h"
 
-namespace udisk {
-namespace blockfs {
-
-typedef std::shared_ptr<FileBlock> FileBlockPtr;
+namespace udisk::blockfs {
 
 class FileBlockHandle : public MetaHandle {
  private:
-  std::list<int32_t> free_metas_;  // 文件块Meta的空闲链表
+  std::list<int32_t> free_fbhs_;  // 文件块Meta的空闲链表
 
  public:
-  FileBlockHandle();
-  ~FileBlockHandle();
+  FileBlockHandle() = default;
+  ~FileBlockHandle() = default;
 
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
-  virtual void Dump() noexcept override;
-  virtual void Dump(const std::string &file_name) noexcept override;
 
   bool GetFileBlockLock(uint32_t file_block_num,
                         std::vector<FileBlockPtr> *file_blocks);
@@ -33,8 +28,7 @@ class FileBlockHandle : public MetaHandle {
   bool PutFileBlockLock(const std::vector<FileBlockPtr> &file_blocks);
   bool PutFileBlockNoLock(const std::vector<FileBlockPtr> &file_blocks);
 
-  const uint32_t GetFreeMetaNum() const { return free_metas_.size(); }
+  const uint32_t GetFreeMetaNum() const { return free_fbhs_.size(); }
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

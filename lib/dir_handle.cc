@@ -122,7 +122,7 @@ bool DirHandle::AddSeparator(std::string &dirname) const noexcept {
     LOG(ERROR) << "directory path: " << dirname
                << " too long, size: " << dirname.size()
                << " max limit: " << kBlockFsMaxDirNameLen;
-    block_fs_set_errno(ENAMETOOLONG);
+    errno = ENAMETOOLONG;
     return false;
   }
   return true;
@@ -170,9 +170,9 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
     if (FileStore::Instance()->file_handle()->GetCreatedFile(path)) {
       LOG(ERROR) << "the same file path exist: " << dirname;
       if (check_parent) {
-        block_fs_set_errno(EEXIST);
+        errno = EEXIST;
       } else {
-        block_fs_set_errno(ENOTDIR);
+        errno = ENOTDIR;
       }
       return false;
     }
@@ -201,9 +201,9 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
  * \return strip success or failed
  */
 DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
-  if (unlikely(free_dhs_.empty())) {
+  if (free_dhs_.empty()) [[unlikely]] {
     LOG(ERROR) << "directory meta not enough";
-    block_fs_set_errno(ENFILE);
+    errno = ENFILE;
     return nullptr;
   }
   dh_t dh = free_dhs_.front();
@@ -211,10 +211,10 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
 
   DirMeta *meta =
       reinterpret_cast<DirMeta *>(base_addr() + sizeof(DirMeta) * dh);
-  if (unlikely(meta->used_ || meta->dh_ != dh)) {
-    LOG(ERROR) << "new directory meta invalid, used: " << meta->used_
+  if (meta->used_ || meta->dh_ != dh) [[unlikely]] {
+    LOG(FATAL) << "new directory meta invalid, used: " << meta->used_
                << " dh: " << meta->dh_ << " wanted dh: " << dh;
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return nullptr;
   }
 
@@ -235,7 +235,6 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
 
   // 确保最后完成才摘链
   free_dhs_.pop_front();
-
   return dir;
 }
 
@@ -251,17 +250,17 @@ bool DirHandle::NewDirectory(const std::string &dirname,
                              std::pair<DirectoryPtr, DirectoryPtr> *dirs) {
   META_HANDLE_LOCK();
   auto itor = created_dirs_.find(dirname);
-  if (unlikely(itor != created_dirs_.end())) {
+  if (itor != created_dirs_.end()) [[unlikely]] {
     LOG(ERROR) << "directory has already exist: " << dirname;
-    block_fs_set_errno(EEXIST);
+    errno = EEXIST;
     return false;
   }
   if (!IsMountPoint(dirname)) {
     std::string parent_dir_name = GetParentDirName(dirname);
     itor = created_dirs_.find(parent_dir_name);
-    if (unlikely(itor == created_dirs_.end())) {
+    if (itor == created_dirs_.end()) [[unlikely]] {
       LOG(ERROR) << "parent directory not exist: " << parent_dir_name;
-      block_fs_set_errno(ENOENT);
+      errno = ENOENT;
       return false;
     }
     // 找到父文件夹
@@ -497,9 +496,14 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
   {
     META_HANDLE_LOCK();
     // 持久化文件夹元数据
-    if (!curr_dir->WriteMeta()) {
-      // 失败处理
-      return -1;
+    int retry_count = 0;
+    while (!curr_dir->WriteMeta()) {
+      if (++retry_count >= 3) {
+        // 重试3次后仍失败，返回错误
+        return -1;
+      }
+      // 可以在这里添加一些延时，避免立即重试
+      // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
 
@@ -508,11 +512,9 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
     return -1;
   }
 
-  // 5. 同步从节点
   LOG(INFO) << "make directory success: " << path;
 
-  block_fs_set_errno(0);
-
+  errno = 0;
   return 0;
 }
 
@@ -683,8 +685,6 @@ int32_t DirHandle::CloseDirectory(BLOCKFS_DIR *d) {
   delete d;
   return 0;
 }
-
-void DirHandle::Dump() noexcept {}
 
 void DirHandle::Dump(const std::string &path) noexcept {
   const DirectoryPtr &dir = GetCreatedDirectory(path);
