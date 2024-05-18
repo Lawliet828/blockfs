@@ -1,13 +1,10 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_ALIGNED_BUFFER_H_
 #define LIB_ALIGNED_BUFFER_H_
 
 #include "comm_utils.h"
 #include "meta_defines.h"
 
-// https://github.com/OpenMPDK/KVRocks/tree/master/kvdb/util
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -22,40 +19,29 @@ class AlignBuffer {
   static const bool kFillZero = true;
 
  public:
-  AlignBuffer(uint64_t sz, uint32_t alignment = 512, bool fill_zero = kFillZero)
-      : size_(sz), alignment_(alignment), data_(nullptr) {
-    // the alignment must be a power of 2 and a multiple of sizeof(void *)
-    // see man(3) posix_memalign
-    if ((alignment_ & (alignment_ - 1)) != 0 ||
-        alignment_ % sizeof(void *) != 0) {
-      throw std::bad_alloc();
-    }
+  AlignBuffer(size_t size, uint32_t alignment = 512, bool fill_zero = kFillZero)
+      : size_(size), alignment_(alignment), data_(nullptr) {
     int ret =
         ::posix_memalign(reinterpret_cast<void **>(&data_), alignment_, size_);
     if (ret != 0 || data_ == nullptr) {
       throw std::bad_alloc();
     }
-    if (fill_zero) zero();
-  }
-  virtual ~AlignBuffer() { ::free(data_); }
-
- public:
-  void zero() {
-    if (data_) {
+    if (fill_zero) {
       ::memset(data_, 0, size_);
     }
   }
-  virtual char *data() { return data_; }
-  virtual uint32_t size() { return size_; }
+  virtual ~AlignBuffer() { ::free(data_); }
+
+  char *data() { return data_; }
+  size_t size() { return size_; }
 
  private:
-  uint64_t size_;
+  size_t size_;
   uint32_t alignment_;
   char *data_;
 };
 
 typedef std::shared_ptr<AlignBuffer> AlignBufferPtr;
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

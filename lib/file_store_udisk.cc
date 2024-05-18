@@ -713,10 +713,6 @@ bool FileStore::FormatFSMeta() {
 
 /**
  * zero fs data
- *
- * \param
- *
- * \return success or failed
  */
 bool FileStore::FormatFSData() {
   int64_t ret;
@@ -764,8 +760,10 @@ bool FileStore::Format(const std::string& dev_name) {
   }
   ShmManager::CleanupDirtyShareMemory();
 
-  return FormatFSMeta();
-  // return FormatFSData();
+  if (!FormatFSMeta()) {
+    return false;
+  }
+  return FormatFSData();
 }
 
 /**

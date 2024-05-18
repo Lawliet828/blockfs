@@ -280,7 +280,7 @@ FileBlockPtr File::GetFileBlock(int32_t file_cut) {
   LOG(INFO) << file_name() << " get file block cut: " << file_cut
             << " file block size: " << item_maps_.size();
   auto iter = item_maps_.find(file_cut);
-  if (unlikely(iter == item_maps_.end())) {
+  if (iter == item_maps_.end()) [[unlikely]] {
     LOG(ERROR) << "cannot find file cut: " << file_cut;
     return nullptr;
   }
@@ -814,16 +814,6 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
   return ret;
 }
 
-OpenFile::FileReader::FileReader(OpenFilePtr file, void *buffer, uint64_t size,
-                                 uint64_t offset, bool direct)
-    : open_file_(file),
-      read_buffer_(static_cast<uint8_t *>(buffer)),
-      size_(size),
-      offset_(offset),
-      direct_(direct) {
-  Transform2Block();
-}
-
 void OpenFile::FileReader::Transform2Block() {
   FileOffset fos = FileOffset(offset_);
 
@@ -839,12 +829,12 @@ void OpenFile::FileReader::Transform2Block() {
   const FilePtr &file = open_file_->file();
   FileBlockPtr file_block = file->GetFileBlock(file_cut_in_file);
   // 删除文件发生故障, 只删除了fileblock的情形
-  if (unlikely(nullptr == file_block)) {
+  if (nullptr == file_block) [[unlikely]] {
     return;
   }
   do {
     block_read_index = file_block->get_block_id(block_index_in_file_block);
-    //  第一次填充的可能是在某个block中间的偏移
+    // 第一次填充的可能是在某个block中间的偏移
     if (block_offset_in_block > 0) {
       block_read_offset = block_offset_in_block;
       block_read_size = std::min(
@@ -856,8 +846,6 @@ void OpenFile::FileReader::Transform2Block() {
           std::min(size_ - curr_read_count, (uint64_t)kBlockFsBlockSize);
     }
     // 计算当前block在udisk分区上的偏移
-    // 注意: 小心相乘的数据范围变化
-    // https://www.zhihu.com/question/39577123/answer/82106388
     uint64_t udisk_offset =
         FileStore::Instance()->super_meta()->block_data_start_offset_ +
         FileStore::Instance()->super_meta()->block_size_ * block_read_index +
@@ -874,7 +862,7 @@ void OpenFile::FileReader::Transform2Block() {
     block.extern_buffer_ = read_buffer_ + curr_read_count;
     block.udisk_offset_ = udisk_offset;
     block.read_size_ = block_read_size;
-    read_blocks_.push_back(std::move(block));
+    read_blocks_.emplace_back(block);
     curr_read_count += block_read_size;
     if (curr_read_count >= size_) {
       LOG(DEBUG) << "finshed fill read block";
@@ -910,7 +898,7 @@ int64_t OpenFile::FileReader::ReadData() {
   uint32_t block_num = read_blocks_.size();
   for (uint32_t i = 0; i < block_num; ++i) {
     block_read = ReadBlockData(&read_blocks_[i]);
-    if (unlikely(block_read <= 0)) {
+    if (block_read <= 0) [[unlikely]] {
       LOG(ERROR) << open_file_->file()->file_name()
                  << " read block data ret: " << block_read
                  << " errno: " << errno;

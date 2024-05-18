@@ -209,7 +209,14 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
 
    public:
     FileReader(OpenFilePtr file, void *buffer, uint64_t size, uint64_t offset,
-               bool direct = true);
+               bool direct = true)
+        : open_file_(file),
+          read_buffer_(static_cast<uint8_t *>(buffer)),
+          size_(size),
+          offset_(offset),
+          direct_(direct) {
+      Transform2Block();
+    }
     ~FileReader() = default;
     int64_t ReadData();
   };
@@ -234,21 +241,13 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
     int64_t WriteData();
   };
   bool CheckIOParam(void *buffer, uint64_t size, uint64_t offset);
-  class ExtendFileOffset {
-   public:
-    ExtendFileOffset() = default;
-    ~ExtendFileOffset() = default;
-
-   private:
-  };
 
  public:
   OpenFile(const FilePtr &file) : file_(file) {}
-  ~OpenFile() {}
+  ~OpenFile() = default;
   void set_open_flags(int32_t flag) noexcept { open_flags_ |= flag; }
   int32_t open_flags() const noexcept { return open_flags_; }
   uint64_t append_pos() const noexcept { return append_pos_; }
-  void set_append_pos() noexcept { append_pos_ = file_->file_size(); }
   void set_append_pos(uint64_t offset) noexcept { append_pos_ = offset; }
   int32_t open_fd() const noexcept { return open_fd_; }
   void set_open_fd(int32_t fd) noexcept { open_fd_ = fd; }
