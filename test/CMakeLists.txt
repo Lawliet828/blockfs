@@ -28,3 +28,6 @@ add_library(test_mkdir_objs OBJECT
 
 add_executable(test_mkdir $<TARGET_OBJECTS:test_mkdir_objs>)
 target_link_libraries(test_mkdir ${COMMLIBS})
+
+add_executable(io_test io_test.cc)
+target_link_libraries(io_test aio event)
