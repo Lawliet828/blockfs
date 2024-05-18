@@ -733,8 +733,6 @@ bool FileStore::FormatFSData() {
       return false;
     }
     zero_data_offset += zero_data_len;
-    // std::cout << "@@@@ Format zero_data_len: " << zero_data_len
-    //           << " zero_data_offset: " << zero_data_offset;
     if (unlikely(zero_data_offset == super_meta()->curr_udisk_size_)) {
       break;
     }

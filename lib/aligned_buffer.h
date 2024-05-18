@@ -12,7 +12,6 @@ namespace udisk::blockfs {
 
 #include <memory>
 #include <new>
-#include <string>
 
 class AlignBuffer {
  public:
