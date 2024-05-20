@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #include "bfs_fuse.h"
 
 #include <fuse3/fuse.h>

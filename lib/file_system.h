@@ -82,8 +82,6 @@ class FileSystem {
 
   bfs_config_info* mount_config() { return &mount_config_; }
 
-  virtual const int64_t time_update() noexcept;
-
   virtual const uint64_t GetMaxSupportFileNumber() noexcept = 0;
   virtual const uint64_t GetMaxSupportBlockNumer() noexcept = 0;
   virtual const uint64_t GetFreeBlockNumber() noexcept = 0;
@@ -169,7 +167,6 @@ class FileSystem {
   virtual int32_t ReadLink(const char* path, char* buf, size_t size);
   // Hard Link file src to target.
   virtual int32_t LinkFile(const std::string& src, const std::string& target);
-  virtual int32_t NumFileLinks(const std::string& fname, uint64_t* count);
   // Show system status
   virtual int32_t SysStat(const std::string& stat_name,
                           std::string* result) = 0;
@@ -181,27 +178,6 @@ class FileSystem {
                                   std::string* output_path) = 0;
 
   virtual void DumpFileMeta(const std::string& path) = 0;
-
-  virtual BLOCKFS_FILE* FileOpen(const char* filename, const char* mode);
-  virtual int32_t FileClose(BLOCKFS_FILE* stream);
-  virtual int32_t FileFlush(BLOCKFS_FILE* stream);
-  virtual int32_t FilePutc(int c, BLOCKFS_FILE* stream);
-  virtual int32_t FileGetc(BLOCKFS_FILE* stream);
-  virtual int32_t FilePuts(const char* str, BLOCKFS_FILE* stream);
-  virtual char* FileGets(char* str, int32_t n, BLOCKFS_FILE* stream);
-  virtual int32_t FileSeek(BLOCKFS_FILE* stream, int64_t offset, int whence);
-  virtual int32_t FilePrintf(BLOCKFS_FILE* stream, const char* format, ...);
-  virtual int32_t FileScanf(BLOCKFS_FILE* stream, const char* format, ...);
-  virtual int32_t FileEof(BLOCKFS_FILE* stream);
-  virtual int32_t FileError(BLOCKFS_FILE* stream);
-  virtual int32_t FileRewind(BLOCKFS_FILE* stream);
-  virtual int32_t FileRead(void* ptr, size_t size, size_t nmemb,
-                           BLOCKFS_FILE* stream);
-  virtual int32_t FileWrite(const void* ptr, size_t size, size_t nmemb,
-                            BLOCKFS_FILE* stream);
-  virtual int32_t MksTemp(char* template_str);
-  virtual BLOCKFS_FILE* TmpFile(void);
-  virtual char* MkTemp(char* template_str);
 };
 
 }  // namespace blockfs

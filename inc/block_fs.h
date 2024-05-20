@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef INC_BLOCK_FS_H_
 #define INC_BLOCK_FS_H_
 
@@ -351,16 +350,6 @@ int block_fs_fstat(int fd, struct stat *buf);
 int block_fs_access(const char *valpath, int amode);
 
 /**
- * Symlink dir or file to another path
- *
- * \param from Source dir or file path
- * \param to Target dir or file path
- *
- * \return symlink retcode
- */
-int block_fs_link(const char *from, const char *to);
-
-/**
  * Link dir or file to another path
  *
  * \param from Source dir or file path
@@ -415,68 +404,11 @@ typedef struct {
   int64_t offset_;
 } BLOCKFS_FILE;
 
-BLOCKFS_FILE *block_fs_fopen(const char *filename, const char *mode);
-int block_fs_fflush(BLOCKFS_FILE *stream);
-int block_fs_fclose(BLOCKFS_FILE *stream);
-int block_fs_fputc(int c, BLOCKFS_FILE *stream);
-int block_fs_fgetc(BLOCKFS_FILE *stream);
-int block_fs_fputs(const char *str, BLOCKFS_FILE *stream);
-char *block_fs_fgets(char *str, int n, BLOCKFS_FILE *stream);
-int block_fs_fseek(BLOCKFS_FILE *stream, off_t offset, int whence);
-int block_fs_fprintf(BLOCKFS_FILE *stream, const char *format, ...);
-int block_fs_fscanf(BLOCKFS_FILE *stream, const char *format, ...);
-int block_fs_feof(BLOCKFS_FILE *stream);
-int block_fs_ferror(BLOCKFS_FILE *stream);
-int block_fs_rewind(BLOCKFS_FILE *stream);
-size_t block_fs_fread(void *ptr, size_t size, size_t nmemb,
-                      BLOCKFS_FILE *stream);
-size_t block_fs_fwrite(const void *ptr, size_t size, size_t nmemb,
-                       BLOCKFS_FILE *stream);
-char *block_fs_mktemp(char *template_str);
-int block_fs_mkstemp(char *template_str);
-BLOCKFS_FILE *block_fs_tmpfile(void);
-
-// https://www.cnblogs.com/xuyh/p/3273082.htmlstruct flcok
-
-struct block_fs_flock {
-  short int l_type; /* 锁定的状态*/
-  //这三个参数用于分段对文件加锁，若对整个文件加锁，则：l_whence=SEEK_SET,l_start=0,l_len=0;
-  short int l_whence; /*决定l_start位置*/
-  off_t l_start;      /*锁定区域的开头位置*/
-  off_t l_len;        /*锁定区域的大小*/
-  pid_t l_pid;        /*锁定动作的进程*/
-};
-
 int block_fs_fcntl(int fd, int cmd, ...);
 
 int block_fs_statvfs(const char *path, struct statvfs *buf);
 int block_fs_fstatvfs(int fd, struct statvfs *buf);
 
-#if 0
-void clearerr(BLOCKFS_FILE *stream);
-int fflush(BLOCKFS_FILE *stream);
-int fgetpos(BLOCKFS_FILE *stream, fpos_t *pos);
-BLOCKFS_FILE *freopen(const char *filename, const char *mode, BLOCKFS_FILE *stream);
-int fsetpos(BLOCKFS_FILE *stream, const fpos_t *pos);
-long int ftell(BLOCKFS_FILE *stream);
-void setbuf(BLOCKFS_FILE *stream, char *buffer);
-
-int block_fs_io_setup(int maxevents, io_context_t *ctxp);
-int block_fs_io_destroy(io_context_t ctx);
-long block_fs_io_submit(aio_context_t ctx_id, long nr, struct iocb **iocbpp);
-long block_fs_io_cancel(aio_context_t ctx_id, struct iocb *iocb,
-                        struct io_event *result);
-long block_fs_io_getevents(aio_context_t ctx_id, long min_nr, long nr,
-                           struct io_event *events, struct timespec *timeout)
-#endif
-
-/**
- * BlockFS set errno
- *
- * \param e errno
- *
- * \return void
- */
 void block_fs_set_errno(int e);
 
 #ifdef __cplusplus
