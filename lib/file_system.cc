@@ -12,20 +12,7 @@ namespace blockfs {
 #define _BFS_MACROSTR(a) (#a)
 #define BFS_MACROSTR(a) (_BFS_MACROSTR(a))
 
-/* 用于标识版本号 可以用nm -C查看 */
-#ifdef VERSION_TAG
-const char *kBFSVersionTag = BFS_MACROSTR(VERSION_TAG);
-#else
-const char *kBFSVersionTag = "unknown";
-#endif
-
-void FileSystem::PrintVersion() noexcept {
-  LOG(DEBUG) << "bfs version: " << kBFSVersionTag;
-}
-
-const char *FileSystem::GetVersion() const noexcept { return kBFSVersionTag; }
-
-FileSystem::FileSystem(/* args */) { PrintVersion(); }
+FileSystem::FileSystem(/* args */) {}
 
 FileSystem::~FileSystem() {}
 
@@ -193,12 +180,6 @@ BLOCKFS_FILE *FileSystem::TmpFile(void) {
 // 返回一个临时文件的路径，但并不创建该临时文件
 char *FileSystem::MkTemp(char *template_str) {
   LOG(WARNING) << "mktemp not implemented yet";
-  return nullptr;
-}
-
-// https://segmentfault.com/q/1010000003833979/a-1020000003834795
-char *FileSystem::TmpNam(char *str) {
-  LOG(WARNING) << "tmpnam not implemented yet";
   return nullptr;
 }
 

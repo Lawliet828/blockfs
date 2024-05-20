@@ -36,13 +36,6 @@ int block_fs_mount(const char *config_path, bool is_master);
 int block_fs_unmount(const char *uuid);
 
 /**
- * BlockFs use to get git and build version
- *
- * \return version string
- */
-const char *block_fs_get_version();
-
-/**
  * Make a given dir
  * Support for directories is very limited at this time
  * mkdir simply puts an entry into the filelist for the
@@ -442,7 +435,6 @@ size_t block_fs_fwrite(const void *ptr, size_t size, size_t nmemb,
 char *block_fs_mktemp(char *template_str);
 int block_fs_mkstemp(char *template_str);
 BLOCKFS_FILE *block_fs_tmpfile(void);
-char *block_fs_tmpnam(char *str);
 
 // https://www.cnblogs.com/xuyh/p/3273082.htmlstruct flcok
 
@@ -486,20 +478,6 @@ long block_fs_io_getevents(aio_context_t ctx_id, long min_nr, long nr,
  * \return void
  */
 void block_fs_set_errno(int e);
-
-/**
- * BlockFS get errno
- *
- * \param voids
- *
- * \return errno
- */
-int block_fs_get_errno();
-
-// 设置blockfs的可用空间
-bool block_fs_set_available_size(uint64_t available_size);
-// 返回blockfs的可用空间大小
-uint64_t block_fs_get_available_size();
 
 #ifdef __cplusplus
 }

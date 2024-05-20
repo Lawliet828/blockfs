@@ -26,10 +26,6 @@ int block_fs_unmount(const char *uuid) {
   return FileStore::Instance()->UnmountFileSystem();
 }
 
-const char *block_fs_get_version() {
-  return FileStore::Instance()->GetVersion();
-}
-
 int block_fs_remove(const char *path) {
   return FileStore::Instance()->RemovePath(path);
 }
@@ -273,8 +269,4 @@ char *block_fs_mktemp(char *template_str) {
   return FileStore::Instance()->MkTemp(template_str);
 }
 
-char *block_fs_tmpnam(char *str) { return FileStore::Instance()->TmpNam(str); }
-
 void block_fs_set_errno(int e) { errno = e; }
-
-int block_fs_get_errno() { return errno; }

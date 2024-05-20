@@ -11,7 +11,6 @@
 
 static void HelpInfo() {
   LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
-  LOG(INFO) << "Build version : " << block_fs_get_version();
   LOG(INFO) << "Run options:";
   LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
   LOG(INFO) << " -d, --device   /dev/vdc";

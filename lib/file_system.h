@@ -92,8 +92,6 @@ class FileSystem {
   virtual const uint64_t GetMaxFileMetaSize() noexcept = 0;
   virtual const uint64_t GetMaxFileNameLength() noexcept = 0;
 
-  virtual void PrintVersion() noexcept;
-  virtual const char* GetVersion() const noexcept;
   virtual int32_t MountFileSystem(const std::string& config_path) = 0;
   virtual int32_t RemountFileSystem() = 0;
   virtual int32_t UnmountFileSystem() = 0;
@@ -204,7 +202,6 @@ class FileSystem {
   virtual int32_t MksTemp(char* template_str);
   virtual BLOCKFS_FILE* TmpFile(void);
   virtual char* MkTemp(char* template_str);
-  virtual char* TmpNam(char* str);
 };
 
 }  // namespace blockfs
