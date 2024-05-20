@@ -1,6 +1,4 @@
 #include <gtest/gtest.h>
-// https://blog.csdn.net/W_Y2010/article/details/92437013
-// https://www.cnblogs.com/coderzh/archive/2009/04/08/1432043.html
 
 #include "file_store_udisk.h"
 #include "file_system.h"
@@ -17,7 +15,7 @@ private:
 
 public:
     void SetUp() override {
-        int ret = block_fs_mount("/root/blockfs/conf/bfs.cnf", master_);
+        int ret = block_fs_mount("/data/blockfs/conf/bfs.cnf", master_);
         ASSERT_EQ(ret, 0);
         uuid_ = FileStore::Instance()->mount_config()->device_uuid_.c_str();
         // 设置测试文件中的日志等级

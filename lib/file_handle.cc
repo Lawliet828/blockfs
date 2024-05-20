@@ -607,7 +607,7 @@ const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
   }
   const DirectoryPtr &dir =
       FileStore::Instance()->dir_handle()->GetCreatedDirectory(new_dirname);
-  if (unlikely(!dir)) {
+  if (!dir) [[unlikely]] {
     // block_fs_set_errno(ENOTDIR);
     return kEmptyFilePtr;
   }

@@ -21,18 +21,16 @@ else
     echo "cmake version: $cmake_version"
 fi
 
-if grep -q 'ID=centos' /etc/os-release; then
-    echo "Redhat/Centos detected."
+if grep -q 'ID=centos' /etc/os-release || grep -q 'ID=debian' /etc/os-release; then
+    echo "Redhat/Centos or Debian Linux detected."
     yum -y install python3
-elif grep -q 'ID=debian' /etc/os-release; then
-    echo "Debian Linux detected."
-    apt install python3 -y
+    yum -y install libevent-devel
 elif grep -q 'ID=ubuntu' /etc/os-release; then
     echo "Ubuntu Linux detected."
     sudo apt update
     sudo apt install autoconf automake make pkg-config -y
     sudo apt install libtool cmake curl gcc g++ unzip -y
-    sudo apt install libaio-dev uuid-dev libc6-dev -y
+    sudo apt install libaio-dev uuid-dev libc6-dev libevent-dev -y
     sudo apt install ninja-build meson -y
     sudo apt install python3 -y
     sudo apt install python3-pip -y

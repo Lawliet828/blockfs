@@ -14,16 +14,16 @@ int block_fs_mount(const char *config_path, bool is_master) {
   if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
+
+  bfs_config_info *conf = FileStore::Instance()->mount_config();
+  conf->fuse_mount_point = "/data/mysql/bfs";
+
   block_fs_fuse_mount(FileStore::Instance()->mount_config());
   return 0;
 }
 
 int block_fs_unmount(const char *uuid) {
   return FileStore::Instance()->UnmountFileSystem();
-}
-
-int block_fs_resizefs(uint64_t size) {
-  return FileStore::Instance()->MountGrowfs(size);
 }
 
 const char *block_fs_get_version() {
@@ -144,7 +144,7 @@ int block_fs_unlink(const char *valpath) {
 }
 
 int block_fs_truncate(const char *valpath, int64_t len) {
-  if (unlikely(nullptr == valpath)) {
+  if (nullptr == valpath) [[unlikely]] {
     block_fs_set_errno(EFAULT);
     return -1;
   }

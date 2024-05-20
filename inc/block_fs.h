@@ -36,15 +36,6 @@ int block_fs_mount(const char *config_path, bool is_master);
 int block_fs_unmount(const char *uuid);
 
 /**
- * BlockFs use to resize the whole udisk size oneline
- *
- * \param size The udisk_size must mutiple of extend_size(10G)
- *
- * \return mount growfs retcode
- */
-int block_fs_resizefs(uint64_t size);
-
-/**
  * BlockFs use to get git and build version
  *
  * \return version string

@@ -90,18 +90,6 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
 }
 
 /**
- * mount the blockfs filesystem
- *
- * \param uuid, size
- *
- * \return success is zero, otherwise -1
- */
-int32_t FileStore::MountGrowfs(uint64_t size) {
-  LOG(ERROR) << "block fs extend udisk not supported yet";
-  return 0;
-}
-
-/**
  * remount the blockfs filesystem
  *
  * \param void
@@ -436,7 +424,7 @@ int32_t FileStore::CopyFile(const std::string& from, const std::string& to) {
 }
 
 int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
-  if (unlikely(size < 0)) {
+  if (size < 0) [[unlikely]] {
     block_fs_set_errno(EINVAL);
     return -1;
   }

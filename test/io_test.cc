@@ -41,7 +41,6 @@ struct OnceIO {
 
 void aio_cb(evutil_socket_t fd, short event, void *ptr);
 void run_test(IoTest *tester);
-void freePrepareIO(IoTest *tester);
 
 struct iocb *new_iocb() { return (struct iocb *)malloc(sizeof(struct iocb)); }
 void free_iocb(struct iocb *p_iocb) { free(p_iocb); }
@@ -90,7 +89,6 @@ class IoTest {
   int running_num_ = 0;
   std::string category_;
   std::string file_;
-  uint64_t file_size_ = 0;
   // 文件的扇区总数
   uint64_t total_sector_num_ = 0;
   // 命令行指定的每次读写请求的扇区数
@@ -470,6 +468,8 @@ void help() {
   printf("s: operation sector num \n");
   printf("i: io list file \n");
   printf("d: show debug info \n");
+  printf("io_test -c randwrite -f /data/mysql/bfs/testfile -p 100 -s 1024 -i io_list.txt\n");
+  printf("io_test -c randcheck -f /data/mysql/bfs/testfile -p 100 -s 1024 -i io_list.txt\n");
 }
 
 int main(int argc, char **argv) {
