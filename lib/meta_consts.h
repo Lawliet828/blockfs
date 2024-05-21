@@ -1,11 +1,9 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_META_CONSTS_H
 #define LIB_META_CONSTS_H
 
 #include <stdint.h>
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 const uint64_t K = 1024;
 const uint64_t M = (1024 * K);
@@ -39,6 +37,5 @@ const uint64_t kBlockFsFileMetaSize = 256;
 const uint64_t kBlockFsFileBlockCapacity = 1000;
 const uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 const uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

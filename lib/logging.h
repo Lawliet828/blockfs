@@ -8,19 +8,16 @@
 
 #include "time_stamp.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 typedef enum {
-  TRACE,          //跟踪
-  DEBUG,          //除错
-  INFO,           //信息
-  WARNING,        //警告
-  ERROR,          //错误
-  FATAL,          //致命
-  NUM_LOG_LEVELS  //日志级别的数量
+  TRACE,
+  DEBUG,
+  INFO,
+  WARNING,
+  ERROR,
+  FATAL,
+  NUM_LOG_LEVELS
 } LogLevel;
 
 class Logger {
@@ -87,6 +84,5 @@ class Logger {
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define LOG(level) Logger(level, __FILE__, __LINE__)
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

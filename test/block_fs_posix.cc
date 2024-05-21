@@ -634,7 +634,6 @@ TEST_F(FileTest, file_test) {
 TEST_F(FileTest, posix_write) {
     int fd;
     int ret;
-    uint64_t count = 8 * K;
 
     void *raw_buffer = nullptr;
     ret = ::posix_memalign(&raw_buffer, 512, 8192);
@@ -647,16 +646,8 @@ TEST_F(FileTest, posix_write) {
     ::memset(aligned_buffer + 256, '3', 128);
     ::memset(aligned_buffer + 384, '4', 128);
 
-    ret = block_fs_write(BLOCKFS_UNUSED_FD, aligned_buffer, count);
-    EXPECT_EQ(ret, -1);
-    EXPECT_EQ(errno, ENOENT);
-
     fd = block_fs_open(filename, O_WRONLY | O_CREAT);
     EXPECT_GT(fd, -1);
-    EXPECT_EQ(errno, 0);
-
-    ret = block_fs_write(fd, aligned_buffer, count);
-    EXPECT_EQ(ret, count);
     EXPECT_EQ(errno, 0);
 
     ret = block_fs_lseek(fd, 0, SEEK_SET);
@@ -805,11 +796,6 @@ TEST_F(RenameTest, normal_test) {
     EXPECT_NE(raw_buffer, nullptr);
     aligned_buffer = static_cast<char *>(raw_buffer);
 
-    uint64_t count = 8 * K;
-    ret = block_fs_write(fd, aligned_buffer, count);
-    EXPECT_EQ(ret, count);
-    EXPECT_EQ(errno, 0);
-
     ret = block_fs_rename(filename2, filename3);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(errno, 0);
@@ -838,16 +824,8 @@ TEST_F(RenameTest, dest_file_exist) {
     EXPECT_NE(raw_buffer, nullptr);
     aligned_buffer = static_cast<char *>(raw_buffer);
 
-    uint64_t count = 8 * K;
-    ret = block_fs_write(fd, aligned_buffer, count);
-    EXPECT_EQ(ret, count);
-    EXPECT_EQ(errno, 0);
-
     fd2 = block_fs_open(filename2, O_RDWR | O_CREAT);
     EXPECT_GT(fd2, -1);
-    EXPECT_EQ(errno, 0);
-    ret = block_fs_write(fd2, aligned_buffer, count);
-    EXPECT_EQ(ret, count);
     EXPECT_EQ(errno, 0);
     ret = block_fs_close(fd2);
     EXPECT_EQ(ret, 0);

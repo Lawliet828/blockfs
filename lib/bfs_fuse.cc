@@ -518,9 +518,9 @@ static int bfs_read(const char *path, char *buf, size_t size, off_t offset,
  * Unless FUSE_CAP_HANDLE_KILLPRIV is disabled, this method is
  * expected to reset the setuid and setgid bits.
  */
-static int bfs_write(const char *path, const char *buf, size_t size,
+static int mfs_write(const char *path, const char *buf, size_t size,
                      off_t offset, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_write file: " << path;
+  LOG(INFO) << "call mfs_write file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -535,9 +535,7 @@ static int bfs_write(const char *path, const char *buf, size_t size,
 
   if (fd == -1) return -errno;
 
-  res = block_fs_lseek(fd, offset, SEEK_SET);
-  if (res < 0) res = -errno;
-  res = block_fs_write(fd, const_cast<char *>(buf), size);
+  res = block_fs_pwrite(fd, const_cast<char *>(buf), size, offset);
   if (res < 0) res = -errno;
 
   if (fi == nullptr) block_fs_close(fd);
@@ -1286,7 +1284,7 @@ static const struct fuse_operations kBFSOps = {
     .truncate = bfs_truncate,
     .open = bfs_open,
     .read = bfs_read,
-    .write = bfs_write,
+    .write = mfs_write,
     .statfs = bfs_statfs,
     .flush = bfs_flush,
     .release = bfs_release,

@@ -82,7 +82,7 @@ Logger::Logger(LogLevel logLevel, const char* FILE, int LINE)
     std::string level = LogLevelConvert(logLevel);
     std::string now = GetCurrentTime(1);
     CurrentThread::tid();
-    snprintf(buffer_, sizeof(buffer_) - 1, "[%s%s][%s][%s:%d] ",
+    snprintf(buffer_, sizeof(buffer_) - 1, "%s%s %s %s:%d - ",
              CurrentThread::tidString(), now.c_str(), level.c_str(), FILE,
              LINE);
   }
@@ -117,6 +117,7 @@ std::string Logger::GetCurrentTime(int flag) const {
                                        TimeStamp::kMicroSecondsPerSecond);
   int microseconds = static_cast<int>(microSecondsSinceEpoch %
                                       TimeStamp::kMicroSecondsPerSecond);
+  int milliseconds = microseconds / 1000;
   if (seconds != t_lastSecond) {
     t_lastSecond = seconds;
     struct tm tm_time;
@@ -133,7 +134,7 @@ std::string Logger::GetCurrentTime(int flag) const {
   }
 
   char time_str[64] = {0};
-  ::snprintf(time_str, sizeof(time_str) - 1, "%s.%06dZ", t_time, microseconds);
+  ::snprintf(time_str, sizeof(time_str) - 1, "%s.%03d", t_time, milliseconds);
   return time_str;
 }
 

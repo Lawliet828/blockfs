@@ -1062,27 +1062,35 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
  * allocates new bytes and updates file size as necessary,
  * fills any gaps with zeros */
 int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
+  file_->WriteLockAcquire();
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pwrite size: " << size
             << " offset: " << offset;
   void *buffer = const_cast<void *>(buf);
-  if (!CheckIOParam(buffer, size, offset)) [[unlikely]] {
-    return -1;
-  }
   if (size == 0) [[unlikely]] {
+    file_->WriteLockRelease();
     return 0;
   }
 
-  if ((offset + size) > file_->file_size()) [[unlikely]] {
+  if ((offset + size) > file_->file_size()) {
     LOG(WARNING) << file_->file_name() << " pwrite exceed file size,"
                  << " file size: " << file_->file_size()
                  << " write offset: " << offset << " write size: " << size;
     if (file_->ftruncate(offset + size) < 0) {
+      file_->WriteLockRelease();
       return -1;
     }
   }
-  FileWriter writer = FileWriter(shared_from_this(), buffer, size, offset);
-  return writer.WriteData();
+
+  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+    file_->UpdateTimeStamp(false, true, true);
+    return true;
+  });
+  // 目前不能以direct方式打开, 因为如果以direct方式打开, 必须要扇区对齐写入
+  FileWriter writer = FileWriter(shared_from_this(), buffer, size, offset, false);
+  int64_t ret = writer.WriteData();
+  file_->WriteLockRelease();
+  return ret;
 }
 
 }

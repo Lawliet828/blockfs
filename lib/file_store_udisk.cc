@@ -518,9 +518,11 @@ int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
 
 int64_t FileStore::PwriteFile(int32_t fd, const void* buf, size_t len,
                               off_t offset) {
+  LOG(INFO) << "pwrite file fd: " << fd << " len: " << len << " offset: "
+            << offset;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
-    // errno = ENOENT;
+    errno = ENOENT;
     return -1;
   }
   return open_file->pwrite(buf, len, offset);
