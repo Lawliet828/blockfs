@@ -126,8 +126,6 @@ class FileStore : public FileSystem {
   int32_t FileDataSync(const int32_t fd) override;
   int32_t FileDup(const int32_t fd) override;
   int32_t RemovePath(const std::string &path) override;
-  // Show system status
-  int32_t SysStat(const std::string &stat_name, std::string *result) override;
 
   void DumpFileMeta(const std::string &path) override;
 

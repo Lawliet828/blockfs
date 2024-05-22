@@ -13,10 +13,7 @@
 #include "block_fs_config.h"
 #include "comm_utils.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class Directory;
 
@@ -77,8 +74,8 @@ class FileSystem {
   FileSystem &operator=(const FileSystem&) = delete;
 
  public:
-  explicit FileSystem();
-  virtual ~FileSystem();
+  explicit FileSystem() = default;
+  virtual ~FileSystem() = default;
 
   bfs_config_info* mount_config() { return &mount_config_; }
 
@@ -146,20 +143,14 @@ class FileSystem {
   virtual off_t SeekFile(int32_t fd, off_t offset, int whence) = 0;
   virtual int32_t FcntlFile(int32_t fd, int32_t set_flag) = 0;
   virtual int32_t FcntlFile(int32_t fd, int16_t lock_type) = 0;
-  virtual int32_t Sync();
+  virtual int32_t Sync() = 0;
   virtual int32_t FileSync(const int32_t fd) = 0;
   virtual int32_t FileDataSync(const int32_t fd) = 0;
   virtual int32_t FileDup(const int32_t fd) = 0;
   virtual int32_t RemovePath(const std::string& path) = 0;
-  // Hard Link file src to target.
-  virtual int32_t LinkFile(const std::string& src, const std::string& target);
-  // Show system status
-  virtual int32_t SysStat(const std::string& stat_name,
-                          std::string* result) = 0;
 
   virtual void DumpFileMeta(const std::string& path) = 0;
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

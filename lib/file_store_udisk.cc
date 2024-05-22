@@ -565,12 +565,6 @@ int32_t FileStore::RemovePath(const std::string& path) {
   }
 }
 
-// Show system status
-int32_t FileStore::SysStat(const std::string& stat_name, std::string* result) {
-  LOG(WARNING) << "system stat not implemented yet";
-  return -1;
-}
-
 /**
  * Initialize handle in order
  *
