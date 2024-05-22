@@ -21,20 +21,10 @@ int32_t FileSystem::Sync() {
   return -1;
 }
 
-int32_t FileSystem::Symlink(const char *oldpath, const char *newpath) {
-  LOG(WARNING) << "symlink not implemented yet";
-  return -1;
-}
-
 // Hard Link file src to target.
 int32_t FileSystem::LinkFile(const std::string &src,
                              const std::string &target) {
   LOG(WARNING) << "link not implemented yet";
-  return -1;
-}
-
-int32_t FileSystem::ReadLink(const char *path, char *buf, size_t size) {
-  LOG(WARNING) << "readlink not implemented yet";
   return -1;
 }
 

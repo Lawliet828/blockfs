@@ -159,9 +159,6 @@ class FileSystem {
   virtual int32_t FileDataSync(const int32_t fd) = 0;
   virtual int32_t FileDup(const int32_t fd) = 0;
   virtual int32_t RemovePath(const std::string& path) = 0;
-  // Create symlink
-  virtual int32_t Symlink(const char* oldpath, const char* newpath);
-  virtual int32_t ReadLink(const char* path, char* buf, size_t size);
   // Hard Link file src to target.
   virtual int32_t LinkFile(const std::string& src, const std::string& target);
   // Show system status

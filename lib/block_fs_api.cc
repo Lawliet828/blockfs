@@ -114,14 +114,6 @@ int block_fs_create(const char *filename, mode_t mode) {
   return FileStore::Instance()->CreateFile(filename, mode);
 }
 
-int block_fs_symlink(const char *from, const char *to) {
-  return FileStore::Instance()->Symlink(from, to);
-}
-
-int block_fs_readlink(const char *path, char *buf, size_t size) {
-  return FileStore::Instance()->ReadLink(path, buf, size);
-}
-
 int block_fs_unlink(const char *valpath) {
   return FileStore::Instance()->DeleteFile(valpath);
 }

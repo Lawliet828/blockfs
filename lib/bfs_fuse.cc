@@ -1,6 +1,7 @@
 #include "bfs_fuse.h"
 
 #include <fuse3/fuse.h>
+#include <fuse3/fuse_lowlevel.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h> /* flock(2) */
@@ -108,6 +109,19 @@ class UDiskBFS {
   std::map<uint64_t, BLOCKFS_DIR *> open_dirs_;
 };
 
+void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
+  LOG(INFO) << "call mfs_lookup parent: " << parent << " name: " << name;
+
+  struct fuse_entry_param e;
+  ::memset(&e, 0, sizeof(e));
+
+  e.ino = 0;
+  e.attr_timeout = 1.0;
+  e.entry_timeout = 1.0;
+
+  fuse_reply_entry(req, &e);
+}
+
 /** Get file attributes.
  *
  * Similar to stat().  The 'st_dev' and 'st_blksize' fields are
@@ -166,26 +180,6 @@ static int bfs_getattr(const char *path, struct stat *sb)
     res = block_fs_stat(in_path.c_str(), sb);
   if (res < 0) return -errno;
 
-  return 0;
-}
-
-/** Read the target of a symbolic link
- *
- * The buffer should be filled with a null terminated string.  The
- * buffer size argument includes the space for the terminating
- * null character.	If the linkname is too long to fit in the
- * buffer, it should be truncated.	The return value should be 0
- * for success.
- */
-static int bfs_readlink(const char *path, char *buf, size_t size) {
-  LOG(INFO) << "call bfs_readlink file: " << path;
-
-  int res;
-
-  res = block_fs_readlink(path, buf, size - 1);
-  if (res < 0) return -errno;
-
-  buf[res] = '\0';
   return 0;
 }
 
@@ -258,23 +252,6 @@ static int bfs_rmdir(const char *path) {
   return 0;
 }
 
-/** Create a symbolic link */
-int bfs_symlink(const char *from, const char *to) {
-  LOG(INFO) << "call bfs_symlink from: " << from << " to: " << to;
-
-  std::string from_path = UDiskBFS::Instance()->uxdb_mount_point();
-  std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
-  from_path += from;
-  to_path += to;
-
-  int res;
-
-  res = block_fs_symlink(from_path.c_str(), to_path.c_str());
-  if (res < 0) return -errno;
-
-  return 0;
-}
-
 /** Rename a file
  *
  * *flags* may be `RENAME_EXCHANGE` or `RENAME_NOREPLACE`. If
@@ -297,47 +274,6 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
   if (flags) return -EINVAL;
 
   res = block_fs_rename(from_path.c_str(), to_path.c_str());
-  if (res < 0) return -errno;
-
-  return 0;
-}
-
-/** Create a hard link to a file */
-int bfs_link(const char *from, const char *to) {
-  LOG(INFO) << "call bfs_rename from: " << from << " to: " << to;
-
-  std::string from_path = UDiskBFS::Instance()->uxdb_mount_point();
-  std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
-  from_path += from;
-  to_path += to;
-
-  // 尚未实现
-  return -1;
-}
-
-/** Change the owner and group of a file
- *
- * `fi` will always be nullptr if the file is not currenlty open, but
- * may also be nullptr if the file is open.
- *
- * Unless FUSE_CAP_HANDLE_KILLPRIV is disabled, this method is
- * expected to reset the setuid and setgid bits.
- */
-#ifdef HAVE_FUSE3
-static int bfs_chown(const char *path, uid_t uid, gid_t gid,
-                     struct fuse_file_info *fi)
-#else
-static int bfs_chown(const char *path, uid_t uid, gid_t gid)
-#endif
-{
-  LOG(INFO) << "call bfs_chown file: " << path;
-
-  int res;
-
-  if (fi)
-    res = ::fchown(fi->fh, uid, gid);
-  else
-    res = ::lchown(path, uid, gid);
   if (res < 0) return -errno;
 
   return 0;
@@ -821,25 +757,6 @@ static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
   if (conn->capable & FUSE_CAP_EXPLICIT_INVAL_DATA)
     LOG(INFO) << "FUSE_CAP_EXPLICIT_INVAL_DATA";
 
-  // cfg->kernel_cache = 1;
-  // cfg->use_ino = 1;
-  // cfg->nullpath_ok = 1;
-
-  /* Pick up changes from lower filesystem right away. This is
-     also necessary for better hardlink support. When the kernel
-     calls the unlink() handler, it does not know the inode of
-     the to-be-removed entry and can therefore not invalidate
-     the cache of the associated inode - resulting in an
-     incorrect st_nlink value being reported for any remaining
-     hardlinks to this inode. */
-  // cfg->entry_timeout = 0;
-  // cfg->attr_timeout = 0;
-  // cfg->negative_timeout = 0;
-
-  // FUSE的big_writes与direct_io选项分析
-  // https://www.cnblogs.com/yunnotes/archive/2013/04/19/3032497.html
-  cfg->direct_io = 1;
-
   struct fuse_context *cxt = fuse_get_context();
   (void)cxt;
   return nullptr;
@@ -850,7 +767,7 @@ static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
  *
  * Called on filesystem exit.
  */
-static void bfs_destroy(void *private_data) {
+static void bfs_destroy(void *userdata) {
   LOG(INFO) << "call bfs_destroy";
   UDiskBFS::Destroy();
 }
@@ -1220,16 +1137,17 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
 }
 
 static const struct fuse_operations kBFSOps = {
+    // .lookup = mfs_lookup,
     .getattr = bfs_getattr,
-    .readlink = bfs_readlink,
+    .readlink = nullptr,
     .mknod = bfs_mknod,
     .mkdir = bfs_mkdir,
     .unlink = bfs_unlink,
     .rmdir = bfs_rmdir,
-    .symlink = bfs_symlink,
+    .symlink = nullptr,
     .rename = bfs_rename,
-    .link = bfs_link,
-    .chown = bfs_chown,
+    .link = nullptr,
+    .chown = nullptr,
     .truncate = bfs_truncate,
     .open = bfs_open,
     .read = mfs_read,

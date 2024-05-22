@@ -81,11 +81,7 @@ bool SetCoreDump(bool on) {
 }
 
 bool RunAsAdmin() {
-#ifdef WIN32
-  return IsUserAnAdmin();  // true, is admin
-#else
   return (::geteuid() == 0);                    // true, is root
-#endif
 }
 
 }

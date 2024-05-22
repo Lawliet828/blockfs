@@ -6,8 +6,7 @@
 
 #include "comm_utils.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class MetaHandle {
  private:
@@ -36,6 +35,5 @@ class MetaHandle {
   char *base_addr_;
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif  // LIB_META_HANDLE_H_

@@ -304,27 +304,6 @@ int block_fs_stat(const char *valpath, struct stat *buf);
 int block_fs_fstat(int fd, struct stat *buf);
 
 /**
- * Link dir or file to another path
- *
- * \param from Source dir or file path
- * \param to Target dir or file path
- *
- * \return link retcode
- */
-int block_fs_symlink(const char *from, const char *to);
-
-/**
- * Read link of dir or file
- *
- * \param path dir or file path
- * \param buf link storage buffer
- * \param buf link storage size
- *
- * \return link retcode
- */
-int block_fs_readlink(const char *path, char *buf, size_t size);
-
-/**
  * Unlink dir or file, only dec refcnt
  * when equal zero, remove completely
  *
