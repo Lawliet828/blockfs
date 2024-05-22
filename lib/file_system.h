@@ -115,11 +115,6 @@ class FileSystem {
                                  block_fs_dirent** result) = 0;
   virtual int32_t CloseDirectory(BLOCKFS_DIR* dir) = 0;
 
-  // Change Work Directory
-  virtual int32_t ChangeWorkDirectory(const std::string& path) = 0;
-  virtual int32_t GetWorkDirectory(std::string& path) = 0;
-  // Du
-  virtual int32_t DiskUsage(const std::string& path, int64_t* du_size) = 0;
   // Stat
   virtual int32_t StatPath(const std::string& path, struct stat* fileinfo) = 0;
   virtual int32_t StatPath(const int32_t fd, struct stat* fileinfo) = 0;
@@ -139,12 +134,9 @@ class FileSystem {
   virtual int32_t RenamePath(const std::string& src,
                              const std::string& target) = 0;
   // Returns 0 on success.
-  virtual int32_t CopyFile(const std::string& from, const std::string& to) = 0;
   virtual int32_t TruncateFile(const std::string& filename, int64_t size) = 0;
   virtual int32_t TruncateFile(const int32_t fd, int64_t size) = 0;
   virtual int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len) = 0;
-  virtual int32_t GetFileModificationTime(const std::string& filename,
-                                          uint64_t* filemtime) = 0;
   virtual int64_t ReadFile(int32_t fd, void* buf, size_t len) = 0;
   virtual int64_t WriteFile(int32_t fd, const void* buf, size_t len) = 0;
   virtual int64_t PreadFile(int32_t fd, void* buf, size_t len,
@@ -164,12 +156,6 @@ class FileSystem {
   // Show system status
   virtual int32_t SysStat(const std::string& stat_name,
                           std::string* result) = 0;
-
-  virtual int32_t LockFile(const std::string& fname) = 0;
-  virtual int32_t UnlockFile(const std::string& fname) = 0;
-
-  virtual int32_t GetAbsolutePath(const std::string& in_path,
-                                  std::string* output_path) = 0;
 
   virtual void DumpFileMeta(const std::string& path) = 0;
 };

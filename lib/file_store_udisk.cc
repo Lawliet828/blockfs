@@ -204,21 +204,6 @@ int32_t FileStore::CloseDirectory(BLOCKFS_DIR* dir) {
   return dir_handle()->CloseDirectory(dir);
 }
 
-int32_t FileStore::ChangeWorkDirectory(const std::string& path) {
-  LOG(WARNING) << "chdir not implemented yet";
-  return 0;
-}
-
-int32_t FileStore::GetWorkDirectory(std::string& path) {
-  path = "/mnt/mysql/data";
-  return 0;
-}
-
-// Du
-int32_t FileStore::DiskUsage(const std::string& path, int64_t* du_size) {
-  return 0;
-}
-
 /**
  * stat a file or directory
  *
@@ -398,11 +383,6 @@ int32_t FileStore::RenamePath(const std::string& oldpath,
   return file->rename(newpath);
 }
 
-// Returns 0 on success.
-int32_t FileStore::CopyFile(const std::string& from, const std::string& to) {
-  return 0;
-}
-
 int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
   if (size < 0) [[unlikely]] {
     block_fs_set_errno(EINVAL);
@@ -441,11 +421,6 @@ int32_t FileStore::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
     return -1;
   }
   return open_file->file()->posix_fallocate(offset, len);
-}
-
-int32_t FileStore::GetFileModificationTime(const std::string& filename,
-                                           uint64_t* filemtime) {
-  return 0;
 }
 
 int64_t FileStore::ReadFile(int32_t fd, void* buf, size_t len) {
@@ -594,14 +569,6 @@ int32_t FileStore::RemovePath(const std::string& path) {
 int32_t FileStore::SysStat(const std::string& stat_name, std::string* result) {
   LOG(WARNING) << "system stat not implemented yet";
   return -1;
-}
-
-int32_t FileStore::LockFile(const std::string& fname) { return 0; }
-int32_t FileStore::UnlockFile(const std::string& fname) { return 0; }
-
-int32_t FileStore::GetAbsolutePath(const std::string& in_path,
-                                   std::string* output_path) {
-  return 0;
 }
 
 /**

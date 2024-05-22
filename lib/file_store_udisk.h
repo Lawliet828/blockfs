@@ -89,12 +89,7 @@ class FileStore : public FileSystem {
   int32_t ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
                          block_fs_dirent **result);
   int32_t CloseDirectory(BLOCKFS_DIR *dir) override;
-  int32_t ChangeWorkDirectory(const std::string &path);
 
-  int32_t GetWorkDirectory(std::string &path) override;
-
-  // Du
-  int32_t DiskUsage(const std::string &path, int64_t *du_size) override;
   // Stat
   int32_t StatPath(const std::string &path, struct stat *fileinfo) override;
   int32_t StatPath(const int32_t fd, struct stat *fileinfo) override;
@@ -114,13 +109,9 @@ class FileStore : public FileSystem {
   int32_t RenamePath(const std::string &src,
                      const std::string &target) override;
   // Returns 0 on success.
-  int32_t CopyFile(const std::string &from, const std::string &to) override;
   int32_t TruncateFile(const std::string &filename, int64_t size) override;
   int32_t TruncateFile(const int32_t fd, int64_t size) override;
   int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len) override;
-
-  int32_t GetFileModificationTime(const std::string &filename,
-                                  uint64_t *filemtime) override;
 
   int64_t ReadFile(int32_t fd, void *buf, size_t len) override;
   int64_t WriteFile(int32_t fd, const void *buf, size_t len) override;
@@ -137,12 +128,6 @@ class FileStore : public FileSystem {
   int32_t RemovePath(const std::string &path) override;
   // Show system status
   int32_t SysStat(const std::string &stat_name, std::string *result) override;
-
-  int32_t LockFile(const std::string &fname) override;
-  int32_t UnlockFile(const std::string &fname) override;
-
-  int32_t GetAbsolutePath(const std::string &in_path,
-                          std::string *output_path) override;
 
   void DumpFileMeta(const std::string &path) override;
 

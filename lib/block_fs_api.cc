@@ -99,17 +99,6 @@ int block_fs_rmdir(const char *dirname) {
   return FileStore::Instance()->DeleteDirectory(dirname);
 }
 
-int block_fs_chdir(const char *dirname) {
-  return FileStore::Instance()->ChangeWorkDirectory(dirname);
-}
-
-int block_fs_getwd(char *buf, int32_t size) {
-  std::string work_dir;
-  FileStore::Instance()->GetWorkDirectory(work_dir);
-  ::memcpy(buf, work_dir.c_str(), size);
-  return 0;
-}
-
 int block_fs_create(const char *filename, mode_t mode) {
   return FileStore::Instance()->CreateFile(filename, mode);
 }

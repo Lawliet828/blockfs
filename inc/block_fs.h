@@ -129,24 +129,6 @@ int block_fs_readdir_r(BLOCKFS_DIR *dir, struct blockfs_dirent *entry,
 int block_fs_closedir(BLOCKFS_DIR *dir);
 
 /**
- * Change work dir to given valpath
- *
- * \param valpath target work dir path
- *
- * \return dir change retcode
- */
-int block_fs_chdir(const char *valpath);
-
-/**
- * Get work dir
- *
- * \param buf Save work dir path
- *
- * \return work dir get retcode
- */
-int block_fs_getwd(char *buf, int32_t size);
-
-/**
  * Make a given file
  * Create and open FILE, with mode MODE.  This takes an `int' MODE
  * argument because that is what `mode_t' will be widened to
