@@ -240,7 +240,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
     ~FileWriter();
     int64_t WriteData();
   };
-  bool CheckIOParam(void *buffer, uint64_t size, uint64_t offset);
 
  public:
   OpenFile(const FilePtr &file) : file_(file) {}

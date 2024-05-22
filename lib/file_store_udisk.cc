@@ -508,12 +508,14 @@ int64_t FileStore::WriteFile(int32_t fd, const void* buf, size_t len) {
 }
 
 int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
-  OpenFilePtr file = file_handle()->GetOpenFile(fd);
-  if (!file) {
+  LOG(INFO) << "pread file fd: " << fd << " len: " << len << " offset: "
+            << offset;
+  OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
+  if (!open_file) {
     errno = ENOENT;
     return -1;
   }
-  return file->pread(buf, len, offset);
+  return open_file->pread(buf, len, offset);
 }
 
 int64_t FileStore::PwriteFile(int32_t fd, const void* buf, size_t len,
@@ -751,7 +753,8 @@ bool FileStore::Format(const std::string& dev_name) {
   if (!FormatFSMeta()) {
     return false;
   }
-  return FormatFSData();
+  // return FormatFSData();
+  return true;
 }
 
 /**

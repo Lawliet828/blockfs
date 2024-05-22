@@ -482,9 +482,9 @@ static int bfs_open(const char *path, struct fuse_file_info *fi) {
  * value of the read system call will reflect the return value of
  * this operation.
  */
-static int bfs_read(const char *path, char *buf, size_t size, off_t offset,
+static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
                     struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_read file: " << path;
+  LOG(INFO) << "call mfs_read file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -499,9 +499,7 @@ static int bfs_read(const char *path, char *buf, size_t size, off_t offset,
 
   if (fd == -1) return -errno;
 
-  res = block_fs_lseek(fi->fh, offset, SEEK_SET);
-  if (res < 0) res = -errno;
-  res = block_fs_read(fd, buf, size);
+  res = block_fs_pread(fd, buf, size, offset);
   if (res < 0) res = -errno;
 
   if (fi == nullptr) block_fs_close(fd);
@@ -1283,7 +1281,7 @@ static const struct fuse_operations kBFSOps = {
     .chown = bfs_chown,
     .truncate = bfs_truncate,
     .open = bfs_open,
-    .read = bfs_read,
+    .read = mfs_read,
     .write = mfs_write,
     .statfs = bfs_statfs,
     .flush = bfs_flush,

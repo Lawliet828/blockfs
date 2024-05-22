@@ -1018,31 +1018,20 @@ int64_t OpenFile::FileWriter::WriteData() {
   return ret;
 }
 
-bool OpenFile::CheckIOParam(void *buffer, uint64_t size, uint64_t offset) {
-  uint64_t address = (uint64_t)buffer;
-  if (offset % 512 != 0 || size % 512 != 0 || address % 512 != 0) {
-    LOG(ERROR) << file_->file_name() << " io parameters must aligned";
-    errno = EINVAL;
-    return false;
-  }
-  return true;
-}
-
 /* read count bytes info buf from file starting at offset pos,
  * returns number of bytes actually read in retcount,
  * retcount will be less than count only if an error occurs
  * or end of file is reached */
 int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
+  file_->ReadLockAcquire();
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pread size: " << size
             << " offset: " << offset;
-  if (unlikely(!CheckIOParam(buf, size, offset))) {
-    return -1;
-  }
-  if (unlikely(size == 0 || offset >= file_->file_size())) {
+  if (size == 0 || offset >= file_->file_size()) [[unlikely]] {
     LOG(WARNING) << file_->file_name() << " read nothing,"
                  << " read size: " << size << " read offset: " << offset
                  << " file size: " << file_->file_size();
+    file_->ReadLockRelease();
     return 0;
   }
   uint64_t need_read_size = size;
@@ -1052,10 +1041,15 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
                  << " read file from offset to end, file size:"
                  << file_->file_size() << " offset: " << offset;
   }
-
+  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+    file_->UpdateTimeStamp(true, false, false);
+    return true;
+  });
   FileReader reader =
-      FileReader(shared_from_this(), buf, need_read_size, offset);
-  return reader.ReadData();
+      FileReader(shared_from_this(), buf, need_read_size, offset, false);
+  int64_t ret = reader.ReadData();
+  file_->ReadLockRelease();
+  return ret;
 }
 
 /* write count bytes from buf into file starting at offset pos,
