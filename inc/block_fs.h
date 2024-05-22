@@ -284,30 +284,6 @@ ssize_t block_fs_read(int fd, void *buf, size_t len);
 ssize_t block_fs_write(int fd, void *buf, size_t len);
 
 /**
- * File read to sepcefic pos
- *
- * \param fd File fd
- * \param buf Write buffer
- * \param len Write length
- * \param offset read offset
- *
- * \return write bytes
- */
-ssize_t block_fs_pread(int fd, void *buf, size_t len, off_t offset);
-
-/**
- * File write to sepcefic pos
- *
- * \param fd file fd
- * \param buf Write buffer
- * \param len Write length
- * \param offset write offset
- *
- * \return write bytes
- */
-ssize_t block_fs_pwrite(int fd, void *buf, size_t len, off_t offset);
-
-/**
  * Change dir or file mode
  *
  * \param valpath Dir or file path

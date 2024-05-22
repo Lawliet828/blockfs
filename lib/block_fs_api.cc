@@ -1,12 +1,9 @@
-#include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "block_fs_internal.h"
 #include "file_store_udisk.h"
-#include "logging.h"
 
 using namespace udisk::blockfs;
 
@@ -189,14 +186,6 @@ ssize_t block_fs_read(int fd, void *buf, size_t len) {
 
 ssize_t block_fs_write(int fd, void *buf, size_t len) {
   return FileStore::Instance()->WriteFile(fd, buf, len);
-}
-
-ssize_t block_fs_pread(int fd, void *buf, size_t len, off_t offset) {
-  return FileStore::Instance()->PreadFile(fd, buf, len, offset);
-}
-
-ssize_t block_fs_pwrite(int fd, void *buf, size_t len, off_t offset) {
-  return FileStore::Instance()->PwriteFile(fd, buf, len, offset);
 }
 
 void block_fs_set_errno(int e) { errno = e; }

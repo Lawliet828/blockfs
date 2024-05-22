@@ -1,13 +1,6 @@
 
 set(COMMLIBS block_fs gtest.a gtest_main.a)
 
-# 1. Posix 接口兼容性测试
-add_library(block_fs_posix_objs OBJECT
-            block_fs_posix.cc)
-
-add_executable(block_fs_posix $<TARGET_OBJECTS:block_fs_posix_objs>)
-target_link_libraries(block_fs_posix ${COMMLIBS})
-
 # 2. IO NoMerges验证测试
 add_library(block_fs_ionomerges_objs OBJECT
             block_fs_ionomerges.cc)

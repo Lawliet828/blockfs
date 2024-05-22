@@ -11,8 +11,7 @@ struct blockfs_dirent;
 
 using namespace udisk::blockfs;
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class Directory;
 typedef std::shared_ptr<Directory> DirectoryPtr;
@@ -47,6 +46,5 @@ struct BLOCKFS_DIR_S {
   uint32_t ItemSize() const noexcept { return dir_items_.size(); }
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

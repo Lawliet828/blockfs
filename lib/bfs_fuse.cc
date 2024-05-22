@@ -14,6 +14,7 @@
 
 #include "block_fs.h"
 #include "comm_utils.h"
+#include "file_store_udisk.h"
 #include "logging.h"
 
 namespace udisk::blockfs {
@@ -499,7 +500,7 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
 
   if (fd == -1) return -errno;
 
-  res = block_fs_pread(fd, buf, size, offset);
+  res = FileStore::Instance()->PreadFile(fd, buf, size, offset);
   if (res < 0) res = -errno;
 
   if (fi == nullptr) block_fs_close(fd);
@@ -533,7 +534,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
 
   if (fd == -1) return -errno;
 
-  res = block_fs_pwrite(fd, const_cast<char *>(buf), size, offset);
+  res = FileStore::Instance()->PwriteFile(fd, const_cast<char *>(buf), size, offset);
   if (res < 0) res = -errno;
 
   if (fi == nullptr) block_fs_close(fd);
