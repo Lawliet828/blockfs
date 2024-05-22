@@ -218,26 +218,6 @@ int32_t FileStore::GetWorkDirectory(std::string& path) {
 int32_t FileStore::DiskUsage(const std::string& path, int64_t* du_size) {
   return 0;
 }
-// Access
-int32_t FileStore::Access(const std::string& path, int32_t mode) {
-  LOG(INFO) << "access path name: " << path;
-  if (unlikely(path.empty())) {
-    LOG(ERROR) << "stat file path empty";
-    errno = EINVAL;
-    return -1;
-  }
-  FilePtr file = file_handle()->GetCreatedFile(path);
-  if (!file) {
-    DirectoryPtr dir = dir_handle()->GetCreatedDirectory(path);
-    if (!dir) {
-      errno = ENOENT;
-      return -1;
-    }
-    return dir->access(mode);
-  } else {
-    return file->access(mode);
-  }
-}
 
 /**
  * stat a file or directory
@@ -461,25 +441,6 @@ int32_t FileStore::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
     return -1;
   }
   return open_file->file()->posix_fallocate(offset, len);
-}
-
-int32_t FileStore::ChmodPath(const std::string& path, int32_t mode) {
-  if (unlikely(path.empty())) {
-    LOG(ERROR) << "chmod file path empty";
-    errno = EINVAL;
-    return -1;
-  }
-  FilePtr file = file_handle()->GetCreatedFile(path);
-  if (!file) {
-    DirectoryPtr dir = dir_handle()->GetCreatedDirectory(path);
-    if (!dir) {
-      errno = ENOENT;
-      return -1;
-    }
-    return dir->chmod(mode);
-  } else {
-    return file->chmod(mode);
-  }
 }
 
 int32_t FileStore::GetFileModificationTime(const std::string& filename,

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <mutex>
 
 #include "file_store_udisk.h"
 
@@ -755,7 +756,7 @@ off_t OpenFile::lseek(off_t offset, int whence) {
 }
 
 int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
-  file_->ReadLockAcquire();
+  std::shared_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " read size: " << size
             << " offset: " << append_pos;
@@ -763,7 +764,6 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
     LOG(ERROR) << file_->file_name() << " read nothing,"
                  << " read size: " << size << " read offset: " << append_pos
                  << " file size: " << file_->file_size();
-    file_->ReadLockRelease();
     return 0;
   }
   uint64_t need_read_size = size;
@@ -780,25 +780,22 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
   FileReader reader =
       FileReader(shared_from_this(), buf, need_read_size, append_pos, false);
   int64_t ret = reader.ReadData();
-  file_->ReadLockRelease();
   return ret;
 }
 
 int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
-  file_->WriteLockAcquire();
+  std::unique_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << ", file size: " << file_->file_size() << ", write size: " << size
             << ", offset: " << append_pos;
   void *buffer = const_cast<void *>(buf);
   if (size == 0) [[unlikely]] {
-    file_->WriteLockRelease();
     return 0;
   }
 
   if ((append_pos + size) > file_->file_size()) {
     LOG(WARNING) << file_->file_name() << " write exceed file size";
     if (file_->ftruncate(append_pos + size) < 0) {
-      file_->WriteLockRelease();
       return -1;
     }
   }
@@ -810,7 +807,6 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
   FileWriter writer =
       FileWriter(shared_from_this(), buffer, size, append_pos, false);
   int64_t ret = writer.WriteData();
-  file_->WriteLockRelease();
   return ret;
 }
 
@@ -1023,7 +1019,7 @@ int64_t OpenFile::FileWriter::WriteData() {
  * retcount will be less than count only if an error occurs
  * or end of file is reached */
 int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
-  file_->ReadLockAcquire();
+  std::shared_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pread size: " << size
             << " offset: " << offset;
@@ -1031,7 +1027,6 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
     LOG(WARNING) << file_->file_name() << " read nothing,"
                  << " read size: " << size << " read offset: " << offset
                  << " file size: " << file_->file_size();
-    file_->ReadLockRelease();
     return 0;
   }
   uint64_t need_read_size = size;
@@ -1048,7 +1043,6 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
   FileReader reader =
       FileReader(shared_from_this(), buf, need_read_size, offset, false);
   int64_t ret = reader.ReadData();
-  file_->ReadLockRelease();
   return ret;
 }
 
@@ -1056,13 +1050,12 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
  * allocates new bytes and updates file size as necessary,
  * fills any gaps with zeros */
 int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
-  file_->WriteLockAcquire();
+  std::unique_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pwrite size: " << size
             << " offset: " << offset;
   void *buffer = const_cast<void *>(buf);
   if (size == 0) [[unlikely]] {
-    file_->WriteLockRelease();
     return 0;
   }
 
@@ -1071,7 +1064,6 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
                  << " file size: " << file_->file_size()
                  << " write offset: " << offset << " write size: " << size;
     if (file_->ftruncate(offset + size) < 0) {
-      file_->WriteLockRelease();
       return -1;
     }
   }
@@ -1083,7 +1075,6 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
   // 目前不能以direct方式打开, 因为如果以direct方式打开, 必须要扇区对齐写入
   FileWriter writer = FileWriter(shared_from_this(), buffer, size, offset, false);
   int64_t ret = writer.WriteData();
-  file_->WriteLockRelease();
   return ret;
 }
 

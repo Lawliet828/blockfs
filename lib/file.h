@@ -49,9 +49,6 @@ class File : public Inode<FileMeta, FileBlock>,
   bool locked_ = false;
   bool deleted_ = false;
 
-  // File read/write lock, write first
-  std::shared_mutex io_lock_;
-
  private:
   uint32_t GetNextFileCut() noexcept;
   int ExtendFile(uint64_t offset);
@@ -124,19 +121,10 @@ class File : public Inode<FileMeta, FileBlock>,
   static bool WriteMeta(int32_t fh);
   static void ClearMeta(FileMeta *meta);
 
-  void WriteLockAcquire() { io_lock_.lock(); }
-  void WriteLockRelease() { io_lock_.unlock(); }
-  void ReadLockAcquire() { io_lock_.lock_shared(); }
-  void ReadLockRelease() { io_lock_.unlock_shared(); }
-
  public:
   // common file posix functions
   void stat(struct stat *buf) override;
-  int chmod(mode_t mode) override { return 0; }
-  int chown(uid_t uid, gid_t gid) override { return 0; }
-  int access(int mask) const override { return 0; }
   int rename(const std::string &to) override;
-  int remove() override { return 0; }
 
   void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) override;
   bool UpdateMeta() override;
@@ -157,6 +145,7 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   mode_t open_mode_ = 0;    /* current open mode */
   int32_t open_flags_ = 0;  /* current open file flag */
   uint64_t append_pos_ = 0; /* current open file offset */
+  std::shared_mutex rw_lock_;
  private:
   struct FileOffset {
     int32_t file_block_index = 0;          /* in which file cut */

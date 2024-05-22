@@ -31,16 +31,6 @@ int block_fs_rename(const char *oldpath, const char *newpath) {
   return FileStore::Instance()->RenamePath(oldpath, newpath);
 }
 
-int block_fs_chmod(const char *path, mode_t mode) {
-  return FileStore::Instance()->ChmodPath(path, mode);
-}
-
-int block_fs_fchmod(int fd, mode_t mode) { return 0; }
-
-int block_fs_access(const char *path, int amode) {
-  return FileStore::Instance()->Access(path, amode);
-}
-
 int block_fs_stat(const char *valpath, struct stat *buf) {
   return FileStore::Instance()->StatPath(valpath, buf);
 }

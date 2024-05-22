@@ -1,10 +1,10 @@
 [common]
 core_dump                 = true
 log_level                 = DEBUG
-log_path                  = /var/log/bfs/
+log_path                  = /var/log/mfs/
 
 [bfs]
-device_uuid               = 8897500f-14d3-475f-b8bd-36dc5904336d
+device_uuid               = f5a0c4c9-eeac-4f20-b317-a35c1c57dbb5
 # virtual mysql mount point
 uxdb_mount_point          = /mnt/mysql/
 
@@ -14,7 +14,7 @@ uxdb_mount_point          = /mnt/mysql/
 fuse_mount_point          = /data/mysql/bfs/
 
 # enbale libfuse debug
-fuse_debug                = true
+fuse_debug                = false
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true

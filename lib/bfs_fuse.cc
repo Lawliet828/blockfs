@@ -315,33 +315,6 @@ int bfs_link(const char *from, const char *to) {
   return -1;
 }
 
-/** Change the permission bits of a file
- *
- * `fi` will always be nullptr if the file is not currenlty open, but
- * may also be nullptr if the file is open.
- */
-#ifdef HAVE_FUSE3
-static int bfs_chmod(const char *path, mode_t mode, struct fuse_file_info *fi)
-#else
-static int bfs_chmod(const char *path, mode_t mode)
-#endif
-{
-  LOG(INFO) << "call bfs_chmod file: " << path;
-
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
-  int res;
-
-  if (fi)
-    res = block_fs_fchmod(fi->fh, mode);
-  else
-    res = block_fs_chmod(in_path.c_str(), mode);
-  if (res < 0) return -errno;
-
-  return 0;
-}
-
 /** Change the owner and group of a file
  *
  * `fi` will always be nullptr if the file is not currenlty open, but
@@ -883,28 +856,6 @@ static void bfs_destroy(void *private_data) {
 }
 
 /**
- * Check file access permissions
- *
- * This will be called for the access() system call.  If the
- * 'default_permissions' mount option is given, this method is not
- * called.
- *
- * This method is not called under Linux kernel versions 2.4.x
- */
-static int bfs_access(const char *path, int mask) {
-  LOG(INFO) << "call bfs_access: " << path;
-
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-  int res;
-
-  res = block_fs_access(in_path.c_str(), mask);
-  if (res < 0) return -errno;
-
-  return 0;
-}
-
-/**
  * Create and open a file
  *
  * If the file does not exist, first create it with the specified
@@ -1278,7 +1229,6 @@ static const struct fuse_operations kBFSOps = {
     .symlink = bfs_symlink,
     .rename = bfs_rename,
     .link = bfs_link,
-    .chmod = bfs_chmod,
     .chown = bfs_chown,
     .truncate = bfs_truncate,
     .open = bfs_open,
@@ -1297,7 +1247,7 @@ static const struct fuse_operations kBFSOps = {
     .releasedir = bfs_releasedir,
     .init = bfs_init,
     .destroy = bfs_destroy,
-    .access = bfs_access,
+    .access = nullptr,
     .create = bfs_create,
     .lock = bfs_lock,
 #ifdef BFS_USE_READ_WRITE_BUFFER

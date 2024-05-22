@@ -38,9 +38,6 @@ class Inode {
     return nullptr;
   }
 
-  // Fsync directory. Can be called concurrently from multiple threads.
-  virtual bool Fsync() { return true; }
-
   virtual void set_atime(time_t time) noexcept {};
   virtual time_t atime() noexcept { return 0; };
   virtual void set_mtime(time_t time) noexcept {};
@@ -49,11 +46,7 @@ class Inode {
   virtual time_t ctime() noexcept { return 0; };
 
   virtual void stat(struct stat *buf) { return; }
-  virtual int chmod(mode_t mode) { return 0; }
-  virtual int chown(uid_t uid, gid_t gid) { return 0; }
-  virtual int access(int mask) const { return 0; }
   virtual int rename(const std::string &to) { return 0; }
-  virtual int remove() { return 0; }
 
   virtual void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) {
   }

@@ -61,11 +61,7 @@ class Directory : public Inode<DirMeta, File>,
 
   // common dir/file functions
   void stat(struct stat *buf) override;
-  int chmod(mode_t mode) override { return 0; }
-  int chown(uid_t uid, gid_t gid) override { return 0; }
-  int access(int mask) const override { return 0; }
   int rename(const std::string &to) override;
-  int remove() override { return 0; }
 
   void DumpMeta() override;
   static void ClearMeta(dh_t dh) noexcept;

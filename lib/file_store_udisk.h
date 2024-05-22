@@ -95,8 +95,6 @@ class FileStore : public FileSystem {
 
   // Du
   int32_t DiskUsage(const std::string &path, int64_t *du_size) override;
-  // Access
-  int32_t Access(const std::string &path, int32_t mode) override;
   // Stat
   int32_t StatPath(const std::string &path, struct stat *fileinfo) override;
   int32_t StatPath(const int32_t fd, struct stat *fileinfo) override;
@@ -121,7 +119,6 @@ class FileStore : public FileSystem {
   int32_t TruncateFile(const int32_t fd, int64_t size) override;
   int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len) override;
 
-  int32_t ChmodPath(const std::string &path, int32_t mode) override;
   int32_t GetFileModificationTime(const std::string &filename,
                                   uint64_t *filemtime) override;
 

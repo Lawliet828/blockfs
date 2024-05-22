@@ -120,8 +120,6 @@ class FileSystem {
   virtual int32_t GetWorkDirectory(std::string& path) = 0;
   // Du
   virtual int32_t DiskUsage(const std::string& path, int64_t* du_size) = 0;
-  // Access
-  virtual int32_t Access(const std::string& path, int32_t mode) = 0;
   // Stat
   virtual int32_t StatPath(const std::string& path, struct stat* fileinfo) = 0;
   virtual int32_t StatPath(const int32_t fd, struct stat* fileinfo) = 0;
@@ -145,7 +143,6 @@ class FileSystem {
   virtual int32_t TruncateFile(const std::string& filename, int64_t size) = 0;
   virtual int32_t TruncateFile(const int32_t fd, int64_t size) = 0;
   virtual int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len) = 0;
-  virtual int32_t ChmodPath(const std::string& path, int32_t mode) = 0;
   virtual int32_t GetFileModificationTime(const std::string& filename,
                                           uint64_t* filemtime) = 0;
   virtual int64_t ReadFile(int32_t fd, void* buf, size_t len) = 0;

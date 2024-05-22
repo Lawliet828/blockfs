@@ -284,18 +284,6 @@ ssize_t block_fs_read(int fd, void *buf, size_t len);
 ssize_t block_fs_write(int fd, void *buf, size_t len);
 
 /**
- * Change dir or file mode
- *
- * \param valpath Dir or file path
- * \param mode Target mode
- *
- * \return chmod retcode
- */
-int block_fs_chmod(const char *valpath, mode_t mode);
-
-int block_fs_fchmod(int fd, mode_t mode);
-
-/**
  * Get dir or file stat
  *
  * \param path Dir or file path
@@ -314,16 +302,6 @@ int block_fs_stat(const char *valpath, struct stat *buf);
  * \return chmod retcode
  */
 int block_fs_fstat(int fd, struct stat *buf);
-
-/**
- * Check access of dir or file
- *
- * \param valpath Dir or file path
- * \param amode Access mode
- *
- * \return access retcode
- */
-int block_fs_access(const char *valpath, int amode);
 
 /**
  * Link dir or file to another path

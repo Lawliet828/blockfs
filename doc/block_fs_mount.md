@@ -120,8 +120,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 
 [58515 20210202 14:51:37.200378Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
 [58514 20210202 14:51:38.902754Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
-[58515 20210202 14:51:39.385142Z][INFO][lib/block_fs_fuse.cc:992] call bfs_access: /
-[58515 20210202 14:51:39.385177Z][INFO][lib/file_store_udisk.cc:283] access path name: /mnt/mysql/data/
 [58515 20210202 14:51:39.385198Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/
 [58515 20210202 14:51:39.385208Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/ mount point: /mnt/mysql/data/
 [58515 20210202 14:51:39.385212Z][ERROR][lib/super_block.cc:262] file cannot endwith dir separator: /mnt/mysql/data/
