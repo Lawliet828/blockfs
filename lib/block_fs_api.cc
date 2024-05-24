@@ -123,18 +123,6 @@ int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len) {
   return FileStore::Instance()->PosixFallocate(fd, offset, len);
 }
 
-int block_fs_open(const char *valpath, int flags, ...) {
-  /* if O_CREAT is set, we should also have some mode flags */
-  mode_t mode = 0;
-  if (flags & O_CREAT) {
-    va_list arg;
-    ::va_start(arg, flags);
-    mode = va_arg(arg, int32_t);
-    ::va_end(arg);
-  }
-  return FileStore::Instance()->OpenFile(valpath, flags, mode);
-}
-
 int block_fs_close(int fd) { return FileStore::Instance()->CloseFile(fd); }
 
 int block_fs_dup(int oldfd) { return FileStore::Instance()->FileDup(oldfd); }

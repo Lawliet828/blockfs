@@ -358,21 +358,16 @@ static int bfs_truncate(const char *path, off_t newsize)
  * to the filesystem process.
  *
  */
-static int bfs_open(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_open file: " << path;
+static int mfs_open(const char *path, struct fuse_file_info *fi) {
+  LOG(INFO) << "call mfs_open file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int32_t fd = block_fs_open(in_path.c_str(), fi->flags);
+  int32_t fd = FileStore::Instance()->OpenFile(in_path.c_str(), fi->flags);
   if (fd < 0) {
     return -errno;
   }
-  /*
-   * fsel files are nonseekable somewhat pipe-like files which
-   * gets filled up periodically by producer thread and consumed
-   * on read.  Tell FUSE as such.
-   */
   fi->fh = fd;
   fi->direct_io = 1;
   // fi->nonseekable = 1;
@@ -403,7 +398,7 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
   int res;
 
   if (fi == nullptr)
-    fd = block_fs_open(in_path.c_str(), O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
 
@@ -437,7 +432,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   int res;
 
   if (fi == nullptr)
-    fd = block_fs_open(in_path.c_str(), O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
 
@@ -502,7 +497,7 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
   int res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
 
@@ -560,7 +555,7 @@ static int bfs_fsync(const char *path, int datasync,
   int res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
 
@@ -791,7 +786,7 @@ static int bfs_create(const char *path, mode_t mode,
 
   int fd;
 
-  fd = block_fs_open(in_path.c_str(), fi->flags, mode);
+  fd = FileStore::Instance()->OpenFile(in_path.c_str(), fi->flags, mode);
   if (fd < 0) return -errno;
 
   fi->fh = fd;
@@ -839,7 +834,7 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
   int res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_WRONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
   else
     fd = fi->fh;
 
@@ -873,7 +868,7 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
   uint64_t res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_WRONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
   else
     fd = fi->fh;
 
@@ -944,7 +939,7 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
   ssize_t res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
 
@@ -1016,7 +1011,7 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   int res;
 
   if (!fi)
-    fd = block_fs_open(in_path.c_str(), O_WRONLY);
+    fd = FileStore::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
   else
     fd = fi->fh;
 
@@ -1050,7 +1045,7 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
   if (mode) return -EOPNOTSUPP;
 
   if (fi == nullptr)
-    fd = block_fs_open(path, O_WRONLY);
+    fd = FileStore::Instance()->OpenFile(path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -1086,14 +1081,14 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
   ssize_t res;
 
   if (fi_in == nullptr)
-    fd_in = block_fs_open(path_in, O_RDONLY);
+    fd_in = FileStore::Instance()->OpenFile(path_in, O_RDONLY);
   else
     fd_in = fi_in->fh;
 
   if (fd_in == -1) return -errno;
 
   if (fi_out == nullptr)
-    fd_out = block_fs_open(path_out, O_WRONLY);
+    fd_out = FileStore::Instance()->OpenFile(path_out, O_WRONLY);
   else
     fd_out = fi_out->fh;
 
@@ -1122,7 +1117,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
   off_t res;
 
   if (fi == nullptr)
-    fd = block_fs_open(path, O_RDONLY);
+    fd = FileStore::Instance()->OpenFile(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -1149,7 +1144,7 @@ static const struct fuse_operations kBFSOps = {
     .link = nullptr,
     .chown = nullptr,
     .truncate = bfs_truncate,
-    .open = bfs_open,
+    .open = mfs_open,
     .read = mfs_read,
     .write = mfs_write,
     .statfs = bfs_statfs,

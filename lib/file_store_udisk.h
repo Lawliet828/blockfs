@@ -101,7 +101,7 @@ class FileStore : public FileSystem {
 
   // Open file for read or write, flags: O_WRONLY or O_RDONLY
   int32_t OpenFile(const std::string &path, int32_t flags,
-                   int32_t mode) override;
+                   int32_t mode = 0) override;
   int32_t CloseFile(int32_t fd) override;
   int32_t FileExists(const std::string &path) override;
   int32_t CreateFile(const std::string &path, mode_t mode) override;

@@ -744,7 +744,6 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
             << " fh: " << file->fh();
   OpenFilePtr open_file = std::make_shared<OpenFile>(file);
   AddOpenFile(fd, open_file);
-  open_file->set_open_fd(fd);
 
   if (flags & O_APPEND) {
     // if O_APPEND is set, we need to place file pointer at end of file
@@ -805,7 +804,6 @@ int FileHandle::dup(int oldfd) {
             << " fh: " << file->fh();
   OpenFilePtr new_open_file = std::make_shared<OpenFile>(file);
   AddOpenFile(newfd, new_open_file);
-  new_open_file->set_open_fd(newfd);
   file->IncLinkCount();
 
   block_fs_set_errno(0);

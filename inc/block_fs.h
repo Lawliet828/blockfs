@@ -141,18 +141,6 @@ int block_fs_closedir(BLOCKFS_DIR *dir);
 int block_fs_create(const char *filename, mode_t mode);
 
 /**
- * Open a given file
- *
- * \param valpath File absolute path
- * \param flags File open flag
- * \param mode File open mode
- *
- * \return file fd(fd)
- */
-// int block_fs_open(const char *valpath, int flags, mode_t mode);
-int block_fs_open(const char *valpath, int flags, ...);
-
-/**
  * Close a given file fd
  *
  * \param fd File fd(fd)

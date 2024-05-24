@@ -81,7 +81,7 @@ class FileSystem {
 
   // Open file for read or write, flags: O_WRONLY or O_RDONLY
   virtual int32_t OpenFile(const std::string& path, int32_t flags,
-                           int32_t mode) = 0;
+                           int32_t mode = 0) = 0;
   virtual int32_t CloseFile(int32_t fd) = 0;
   virtual int32_t FileExists(const std::string& path) = 0;
   virtual int32_t CreateFile(const std::string& path, mode_t mode) = 0;

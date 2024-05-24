@@ -237,8 +237,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   int32_t open_flags() const noexcept { return open_flags_; }
   uint64_t append_pos() const noexcept { return append_pos_; }
   void set_append_pos(uint64_t offset) noexcept { append_pos_ = offset; }
-  int32_t open_fd() const noexcept { return open_fd_; }
-  void set_open_fd(int32_t fd) noexcept { open_fd_ = fd; }
 
   const FilePtr &file() noexcept { return file_; }
 
