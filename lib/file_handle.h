@@ -32,19 +32,17 @@ struct FileNameKeyHash {
 };
 
 typedef std::unordered_map<int32_t, ParentFilePtr> ParentFileHandleMap;
-typedef std::unordered_map<int32_t, FilePtr> FileHandleMap;
-typedef std::unordered_map<int32_t, OpenFilePtr> OpenFileHandleMap;
 typedef std::unordered_map<FileNameKey, FilePtr, FileNameKeyHash> FileNameMap;
 
 class FileHandle : public MetaHandle {
  private:
   std::list<int32_t> free_metas_;  // 文件Meta的空闲链表
 
-  FileNameMap deleted_files_;         // 待删除的目录
-  FileNameMap created_files_;         // 已创建的文件
-  FileHandleMap created_fhs_;         // 已创建的文件
-  OpenFileHandleMap open_files_;      // 已打开的文件
-  ParentFileHandleMap parent_files_;  // 继承的父文件
+  FileNameMap deleted_files_;                            // 待删除的目录
+  FileNameMap created_files_;                            // 已创建的文件
+  std::unordered_map<int32_t, FilePtr> created_fhs_;     // 已创建的文件
+  std::unordered_map<int32_t, OpenFilePtr> open_files_;  // 已打开的文件
+  ParentFileHandleMap parent_files_;                     // 继承的父文件
 
  private:
   bool TransformPath(const std::string &filename, std::string &new_dirname,

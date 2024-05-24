@@ -1,5 +1,4 @@
 
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_FILE_SYSTEM_H_
 #define LIB_FILE_SYSTEM_H_
 
@@ -16,47 +15,6 @@
 namespace udisk::blockfs {
 
 class Directory;
-
-// 抽象一个文件系统相关的数据结构定义
-// 测试的时候可以使用标准的posix函数
-
-/* Filesystem space information  */
-struct SpaceInfo {
-  uint64_t capacity_;  /* total size of the filesystem, in bytes */
-  uint64_t free_;      /* free space on the filesystem, in bytes */
-  uint64_t available_; /* free space available to a non-privileged process (may
-                          be equal or less than free) */
-};
-
-enum WriteMode {
-  kWriteDefault,  // use write strategy specified by flag file by default
-  kWriteChains,
-  kWriteFanout,
-};
-
-struct WriteOptions {
-  int flush_timeout;  // in ms, <= 0 means do not timeout, == 0 means do not
-                      // wait
-  int sync_timeout;  // in ms, <= 0 means do not timeout, == 0 means do not wait
-  int close_timeout;  // in ms, <= 0 means do not timeout, == 0 means do not
-                      // wait
-  int replica;
-  WriteMode write_mode;
-  bool sync_on_close;  // flush data to disk when closing the file
-  WriteOptions()
-      : flush_timeout(-1),
-        sync_timeout(-1),
-        close_timeout(-1),
-        replica(-1),
-        write_mode(kWriteDefault),
-        sync_on_close(false) {}
-};
-
-struct ReadOptions {
-  int timeout;  // in ms, <= 0 means do not timeout, == 0 means do not wait
-  ReadOptions() : timeout(-1) {}
-};
-
 struct FileInfo {
   int64_t size_;
   uint32_t ctime_;
