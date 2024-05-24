@@ -2,6 +2,7 @@
 #ifndef LIB_META_DEFINES_H
 #define LIB_META_DEFINES_H
 
+#include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -19,10 +20,40 @@
 #include <unordered_set>
 #include <vector>
 
-#include "meta_consts.h"
+namespace udisk::blockfs {
 
-namespace udisk {
-namespace blockfs {
+const uint64_t K = 1024;
+const uint64_t M = (1024 * K);
+const uint64_t G = (1024 * M);
+const uint64_t T = (1024 * G);
+
+#define KB *(1 << 10)
+#define MB *(1 << 20)
+#define GB *(1U << 30)
+
+const uint32_t kBlockFsMagic = 0xA5201314;
+
+const uint64_t kBlockFsMaxUuidSize = 64;
+const uint64_t kUXDBMountPrefixMaxLen = 256;
+
+const uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
+
+const uint64_t kBlockFsPageSize = (4 * K);
+const uint64_t kSuperBlockSize = kBlockFsPageSize;
+const uint64_t kSuperBlockOffset = 0;
+const uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
+
+const uint64_t kBlockFsMaxFileNum = 100000;
+const uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
+const uint64_t kBlockFsMaxUDiskSize = (128 * T);
+const uint64_t kBlockFsBlockSize = (16 * M);
+const uint64_t kBlockFsMaxDirNameLen = 768;
+const uint64_t kBlockFsMaxFileNameLen = 64;
+const uint64_t kBlockFsDirMetaSize = (1 * K);
+const uint64_t kBlockFsFileMetaSize = 256;
+const uint64_t kBlockFsFileBlockCapacity = 1000;
+const uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
+const uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
 typedef int32_t dh_t;
 // Represents a sequence number in a WAL file.
@@ -46,18 +77,18 @@ union SuperBlockMeta {
     uint32_t crc_;
     char uuid_[kBlockFsMaxUuidSize];  // bfs uuid -> /dev/vdb
     uint32_t magic_;                  // bfs magic
-    seq_t seq_no_;                 // bfs sequenece
+    seq_t seq_no_;                    // bfs sequenece
     // bfs consts
-    uint64_t max_file_num;        // max supported dirs or files 10w
-    uint64_t max_support_udisk_size_;      // max supported udisk size 128T
-    uint64_t max_file_block_num;  // max supported file block(128T)
-    uint64_t max_support_block_num_;       // max supported block num(128T)
-    uint64_t block_size_;                  // 16M, bfs min block size
-    uint64_t max_dir_name_len_;            // 64B, max dir name length
-    uint64_t max_file_name_len_;           // 64B, max file name length
-    uint64_t dir_meta_size_;               // 1K, per directory meta size
-    uint64_t file_meta_size_;              // 256B, per file meta size
-    uint64_t file_block_meta_size_;        // 4k, per file block meta size
+    uint64_t max_file_num;             // max supported dirs or files 10w
+    uint64_t max_support_udisk_size_;  // max supported udisk size 128T
+    uint64_t max_file_block_num;       // max supported file block(128T)
+    uint64_t max_support_block_num_;   // max supported block num(128T)
+    uint64_t block_size_;              // 16M, bfs min block size
+    uint64_t max_dir_name_len_;        // 64B, max dir name length
+    uint64_t max_file_name_len_;       // 64B, max file name length
+    uint64_t dir_meta_size_;           // 1K, per directory meta size
+    uint64_t file_meta_size_;          // 256B, per file meta size
+    uint64_t file_block_meta_size_;    // 4k, per file block meta size
 
     // The total size of each bfs metadata
     uint64_t super_block_size_;            // total size of super block
@@ -122,7 +153,7 @@ union FileMeta {
     time_t atime_;  // last access times
     time_t mtime_;  // last modify times
     time_t ctime_;  // last change times
-    dh_t dh_;    // belong to one dir
+    dh_t dh_;       // belong to one dir
     int32_t child_fh_;
     int32_t parent_fh_;
     uint64_t parent_size_;
@@ -160,6 +191,5 @@ union FileBlockMeta {
 static_assert(sizeof(FileBlockMeta) == kBlockFsFileBlockMetaSize,
               "BlockFsBlockMeta size must be 4096 Bytes");
 
-}  // namespace blockfs
-}  // namespace udisk
+}  // namespace udisk::blockfs
 #endif
