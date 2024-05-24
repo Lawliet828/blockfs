@@ -2,17 +2,12 @@
 #ifndef LIB_BLOCK_FS_CONFIG_H_
 #define LIB_BLOCK_FS_CONFIG_H_
 
-#ifndef HAVE_FUSE3
-#define HAVE_FUSE3
-#endif
-
 #define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
 
 #include <string>
 #include <vector>
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 struct bfs_config_info {
   bool enable_coredump_ = true;
@@ -44,6 +39,5 @@ struct bfs_config_info {
   bool fuse_auto_unmount_ = true;
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

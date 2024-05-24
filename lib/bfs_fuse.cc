@@ -133,12 +133,8 @@ void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
  * `fi` will always be nullptr if the file is not currently open, but
  * may also be nullptr if the file is open.
  */
-#ifdef HAVE_FUSE3
 static int bfs_getattr(const char *path, struct stat *sb,
                        struct fuse_file_info *fi)
-#else
-static int bfs_getattr(const char *path, struct stat *sb)
-#endif
 {
   LOG(INFO) << "call bfs_getattr file: " << path;
 
@@ -287,12 +283,8 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
  * Unless FUSE_CAP_HANDLE_KILLPRIV is disabled, this method is
  * expected to reset the setuid and setgid bits.
  */
-#ifdef HAVE_FUSE3
 static int bfs_truncate(const char *path, off_t newsize,
                         struct fuse_file_info *fi)
-#else
-static int bfs_truncate(const char *path, off_t newsize)
-#endif
 {
   LOG(INFO) << "call bfs_truncate file: " << path;
 
@@ -616,14 +608,9 @@ static int bfs_opendir(const char *path, struct fuse_file_info *fi) {
  * is full (or an error happens) the filler function will return
  * '1'.
  */
-#ifdef HAVE_FUSE3
 static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                        off_t offset, struct fuse_file_info *fi,
                        enum fuse_readdir_flags flags)
-#else
-static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                       off_t offset, struct fuse_file_info *fi)
-#endif
 {
   LOG(INFO) << "call bfs_readdir: " << path;
 
@@ -889,27 +876,13 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
     buffer = &buf->buf[i];
     LOG(INFO) << "buffer fd: " << buffer->fd << " mem: " << buffer->mem
               << " size: " << buffer->size << " pos: " << buffer->pos;
-    write_size = block_fs_write(fd, buf->buf[i].mem, buffer->size);
+    write_size = FileStore::Instance()->WriteFile(fd, buf->buf[i].mem, buffer->size);
     if (write_size < 0) {
       return -errno;
     }
     res += write_size;
   }
   if (fi == nullptr) block_fs_close(fd);
-
-#if 0
-  struct fuse_bufvec dst = FUSE_BUFVEC_INIT(fuse_buf_size(buf));
-  dst.buf[0].flags =
-      static_cast<fuse_buf_flags>(FUSE_BUF_IS_FD);
-  dst.buf[0].fd = fi->fh;
-  dst.buf[0].pos = offset;
-  dst.buf[0].write = block_fs_write;
-
-  res = fuse_buf_copy(&dst, buf, FUSE_BUF_NO_SPLICE);
-  if (res < 0) {
-    LOG(ERROR) << "bfs_write_buf res: " << res << " errno: " << errno;
-  }
-#endif
 
   return res;
 }
@@ -969,13 +942,6 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
   if (res < 0) return -errno;
 
   *bufp = src;
-
-#if 0
-  res = fuse_buf_copy(src, *bufp, FUSE_BUF_NO_SPLICE);
-  if (res < 0) {
-    LOG(ERROR) << "bfs_read_buf res: " << res << " errno: " << errno;
-  }
-#endif
 
   if (fi == nullptr) block_fs_close(fd);
 

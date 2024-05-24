@@ -143,8 +143,4 @@ ssize_t block_fs_read(int fd, void *buf, size_t len) {
   return FileStore::Instance()->ReadFile(fd, buf, len);
 }
 
-ssize_t block_fs_write(int fd, void *buf, size_t len) {
-  return FileStore::Instance()->WriteFile(fd, buf, len);
-}
-
 void block_fs_set_errno(int e) { errno = e; }

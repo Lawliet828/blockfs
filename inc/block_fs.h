@@ -243,17 +243,6 @@ off_t block_fs_lseek(int fd, off_t offset, int whence);
 ssize_t block_fs_read(int fd, void *buf, size_t len);
 
 /**
- * BLOCKFS_FILE write from current pos
- *
- * \param fd BLOCKFS_FILE fd
- * \param buf Write buffer
- * \param len Write length
- *
- * \return write bytes
- */
-ssize_t block_fs_write(int fd, void *buf, size_t len);
-
-/**
  * Get dir or file stat
  *
  * \param path Dir or file path
