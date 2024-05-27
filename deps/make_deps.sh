@@ -21,17 +21,20 @@ else
     echo "cmake version: $cmake_version"
 fi
 
+echo "***** install necessary libraries *****"
 if grep -q 'ID=centos' /etc/os-release || grep -q 'ID=debian' /etc/os-release; then
     echo "Redhat/Centos or Debian Linux detected."
+    yum -y install autoconf automake curl gcc gcc-c++ make git libtool vim
+    yum -y install epel-release wget bzip2-devel zlib-devel
+    yum -y install libaio-devel libevent-devel libffi-devel
+    yum -y groupinstall "Development Tools"
     yum -y install python3
-    yum -y install libevent-devel
 elif grep -q 'ID=ubuntu' /etc/os-release; then
     echo "Ubuntu Linux detected."
     sudo apt update
-    sudo apt install autoconf automake make pkg-config -y
-    sudo apt install libtool cmake curl gcc g++ unzip -y
-    sudo apt install libaio-dev uuid-dev libc6-dev libevent-dev -y
-    sudo apt install ninja-build meson -y
+    sudo apt install autoconf automake cmake curl gcc g++ make pkg-config libtool unzip -y
+    sudo apt install libaio-dev libc6-dev libarchive-zip-perl libsnappy-dev libssl-dev libsasl2-dev libevent-dev zlib1g-dev uuid-dev -y
+    sudo apt install ninja-build meson google-perftools -y
     sudo apt install python3 -y
     sudo apt install python3-pip -y
 else

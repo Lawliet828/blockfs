@@ -571,7 +571,6 @@ int32_t FileSystem::RemovePath(const std::string& path) {
  */
 bool FileSystem::Initialize() {
   if (!remount_) {
-    ChecksumInit();
     device_ = new BlockDevice();
     shm_manager_ = new ShmManager();
   }
