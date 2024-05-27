@@ -580,7 +580,7 @@ bool FileSystem::Initialize() {
   handle_vector_[kDirectoryHandle] = new DirHandle();
   handle_vector_[kFileHandle] = new FileHandle();
   handle_vector_[kFileBlockHandle] = new FileBlockHandle();
-  return SetCoreDump(true);
+  return true;
 }
 
 /**

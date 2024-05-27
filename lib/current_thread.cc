@@ -5,8 +5,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 namespace CurrentThread {
 __thread int t_cachedTid = 0;
@@ -22,5 +21,4 @@ void CurrentThread::cacheTid() {
   }
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

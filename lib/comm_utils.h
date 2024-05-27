@@ -5,7 +5,6 @@
 #include <string>
 namespace udisk::blockfs {
 
-#define likely(x) __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
 
 /* Meta 区域大小保证4K对齐 */
@@ -20,8 +19,6 @@ namespace udisk::blockfs {
 std::string GetFileName(const std::string &path);
 std::string GetDirName(const std::string &path);
 std::string GetParentDirName(const std::string &path);
-
-bool SetCoreDump(bool on = true);
 
 bool RunAsAdmin();
 

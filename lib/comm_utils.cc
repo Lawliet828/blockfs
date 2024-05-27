@@ -46,40 +46,6 @@ std::string GetParentDirName(const std::string &path) {
   return GetDirName(parent);
 }
 
-/* allow coredump after setuid() in Linux 2.4.x */
-bool SetCoreDump(bool on) {
-  int opt = on ? 1 : 0;
-  int value = 0;
-  if (::prctl(PR_GET_DUMPABLE, &value) < 0) {
-    LOG(ERROR) << "prctl get dumpable failed, errno: " << errno;
-    return false;
-  }
-  if (value == opt) {
-    LOG(DEBUG) << "process is already dumpable";
-    return true;
-  }
-  /* Set Linux DUMPABLE flag */
-  if (::prctl(PR_SET_DUMPABLE, opt, 0, 0, 0) < 0) {
-    LOG(ERROR) << "prctl set dumpable failed, errno: " << errno;
-    return false;
-  }
-
-  /* Make sure coredumps are not limited */
-  struct rlimit rlim;
-  if (::getrlimit(RLIMIT_CORE, &rlim) < 0) {
-    LOG(ERROR) << "get coredump limit, errno: " << errno;
-    return false;
-  }
-  rlim.rlim_cur = rlim.rlim_max;
-  if (::setrlimit(RLIMIT_CORE, &rlim) < 0) {
-    LOG(ERROR) << "set coredump limit, errno: " << errno;
-    return false;
-  }
-  LOG(DEBUG) << "coredump rlim_cur: " << rlim.rlim_cur
-             << " max rlim_max: " << rlim.rlim_max;
-  return true;
-}
-
 bool RunAsAdmin() {
   return (::geteuid() == 0);                    // true, is root
 }
