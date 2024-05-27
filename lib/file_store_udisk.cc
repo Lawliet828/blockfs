@@ -442,7 +442,7 @@ int64_t FileSystem::WriteFile(int32_t fd, const void* buf, size_t len) {
   return open_file->write(buf, len, open_file->append_pos());
 }
 
-int64_t FileSystem::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
+int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
   LOG(INFO) << "pread file fd: " << fd << " len: " << len << " offset: "
             << offset;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
@@ -453,7 +453,7 @@ int64_t FileSystem::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
   return open_file->pread(buf, len, offset);
 }
 
-int64_t FileSystem::PwriteFile(uint64_t fd, const void* buf, size_t len,
+int64_t FileSystem::PwriteFile(ino_t fd, const void* buf, size_t len,
                               off_t offset) {
   LOG(INFO) << "pwrite file fd: " << fd << " len: " << len << " offset: "
             << offset;

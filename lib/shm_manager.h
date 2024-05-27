@@ -12,15 +12,8 @@
 #include "aligned_buffer.h"
 #include "meta_defines.h"
 
-using namespace udisk::blockfs;
+namespace udisk::blockfs {
 
-namespace udisk {
-namespace blockfs {
-
-enum MemType {
-  MEM_TYPE_SHAREDMEM = 0,
-  MEM_TYPE_MEMALIGN = 1,
-};
 class ShmManager {
  public:
   ShmManager();
@@ -43,7 +36,6 @@ class ShmManager {
   void RegistMetaBaseAddr();
 
  private:
-  MemType type_ = MEM_TYPE_MEMALIGN;
   AlignBufferPtr buffer_;
 
   int shm_fd_ = -1;
@@ -55,6 +47,5 @@ class ShmManager {
   SuperBlockMeta super_;
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

@@ -136,12 +136,6 @@ bool ShmManager::MemUnMap() {
     ::close(shm_fd_);
     shm_fd_ = -1;
   }
-  if (type_ == MEM_TYPE_SHAREDMEM && shm_addr_ != MAP_FAILED) {
-    if (::munmap(shm_addr_, shm_size_) < 0) {
-      LOG(ERROR) << "munmap shm fd failed, errno: " << errno;
-      return false;
-    }
-  }
   return true;
 }
 
@@ -186,17 +180,8 @@ bool ShmManager::Initialize(bool create) {
   }
 
   if (create) {
-    if (type_ == MEM_TYPE_MEMALIGN) {
-      if (!NewPosixAlignMem()) {
-        return false;
-      }
-    } else {
-      if (!ShmOpen()) {
-        return false;
-      }
-      if (!MemMap()) {
-        return false;
-      }
+    if (!NewPosixAlignMem()) {
+      return false;
     }
   }
 

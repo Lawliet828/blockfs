@@ -263,7 +263,7 @@ bool BlockFsTool::DoBlockFsTool() {
     }
   } else {
     is_success = FileSystem::Instance()->Check(dev_name_);
-    if (unlikely(!is_success)) {
+    if (!is_success) [[unlikely]] {
       LOG(ERROR) << "check load BlockFS failed";
       return false;
     }

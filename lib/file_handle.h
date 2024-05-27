@@ -47,7 +47,6 @@ class FileHandle : public MetaHandle {
  private:
   bool TransformPath(const std::string &filename, std::string &new_dirname,
                      std::string &new_filename);
-  FilePtr GetCreatedFile(int32_t dh, const std::string &filename) const;
 
   FilePtr NewFreeFileNolock(int32_t dh, const std::string &filename);
   FilePtr NewFreeTmpFileNolock(int32_t dh);
@@ -101,8 +100,8 @@ class FileHandle : public MetaHandle {
   bool RemoveParentFile(const ParentFilePtr &parent);
 
   bool CheckFileExist(const std::string &path);
-  const OpenFilePtr &GetOpenFile(uint64_t fd);
-  const OpenFilePtr &GetOpenFileNolock(uint64_t fd);
+  const OpenFilePtr &GetOpenFile(ino_t fd);
+  const OpenFilePtr &GetOpenFileNolock(ino_t fd);
   const FilePtr &GetCreatedFile(int32_t fh);
   const FilePtr &GetCreatedFileNoLock(int32_t fh);
   const FilePtr &GetCreatedFile(const std::string &filename);
@@ -117,7 +116,6 @@ class FileHandle : public MetaHandle {
  public:
   bool UpdateMeta() override;
   int unlink(const std::string &filename);
-  int mkstemp(char *template_str);
 
   int open(const std::string &filename, int32_t flags, mode_t mode = 0);
   int close(int32_t fh) noexcept;

@@ -415,7 +415,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  uint64_t fd;
+  ino_t fd;
   int res;
 
   if (fi == nullptr)

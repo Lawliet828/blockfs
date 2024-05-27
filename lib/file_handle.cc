@@ -562,20 +562,18 @@ int FileHandle::unlink(const std::string &filename) {
   return 0;
 }
 
-int FileHandle::mkstemp(char *template_str) { return -1; }
-
 bool FileHandle::CheckFileExist(const std::string &path) {
   return (GetCreatedFile(path) == kEmptyFilePtr);
 }
 
-const OpenFilePtr &FileHandle::GetOpenFile(uint64_t fd) {
+const OpenFilePtr &FileHandle::GetOpenFile(ino_t fd) {
   META_HANDLE_LOCK();
   return GetOpenFileNolock(fd);
 }
 
-const OpenFilePtr &FileHandle::GetOpenFileNolock(uint64_t fd) {
+const OpenFilePtr &FileHandle::GetOpenFileNolock(ino_t fd) {
   auto itor = open_files_.find(fd);
-  if (unlikely(itor == open_files_.end())) {
+  if (itor == open_files_.end()) [[unlikely]] {
     LOG(WARNING) << "fd not been opened: " << fd;
     errno = EBADF;
     return kEmptyOpenFilePtr;
