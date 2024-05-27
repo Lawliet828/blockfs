@@ -1,22 +1,36 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_FILE_STORE_H_
 #define LIB_FILE_STORE_H_
 
+#include <stdint.h>
 #include <sys/statvfs.h>
+
+#include <memory>
+#include <string>
 
 #include "aligned_buffer.h"
 #include "block_fs_internal.h"
+#include "block_fs.h"
+#include "block_fs_config.h"
+#include "comm_utils.h"
 #include "bfs_fuse.h"
 #include "block_handle.h"
 #include "dir_handle.h"
 #include "fd_handle.h"
 #include "file_block_handle.h"
-#include "file_system.h"
 #include "shm_manager.h"
 #include "super_block.h"
 
 namespace udisk {
 namespace blockfs {
+
+class Directory;
+struct FileInfo {
+  int64_t size_;
+  uint32_t ctime_;
+  uint32_t mode_;
+  char name_[1024];
+  char link_[1024];
+};
 
 enum MetaHandleType {
   kSuperBlockHandle,
@@ -28,8 +42,9 @@ enum MetaHandleType {
   kMetaHandleSize,
 };
 
-class FileStore : public FileSystem {
+class FileStore {
  private:
+  bfs_config_info mount_config_;
   bool remount_ = false;
 
   BlockDevice *device_;
@@ -56,78 +71,80 @@ class FileStore : public FileSystem {
 
   static FileStore *Instance();
 
-  const uint64_t GetMaxSupportFileNumber() noexcept override;
-  const uint64_t GetMaxSupportBlockNumer() noexcept override;
-  const uint64_t GetFreeBlockNumber() noexcept override;
-  const uint64_t GetBlockSize() noexcept override;
-  const uint64_t GetFreeFileNumber() noexcept override;
-  const uint64_t GetMaxFileMetaSize() noexcept override;
-  const uint64_t GetMaxFileNameLength() noexcept override;
+  bfs_config_info* mount_config() { return &mount_config_; }
+
+  const uint64_t GetMaxSupportFileNumber() noexcept;
+  const uint64_t GetMaxSupportBlockNumer() noexcept;
+  const uint64_t GetFreeBlockNumber() noexcept;
+  const uint64_t GetBlockSize() noexcept;
+  const uint64_t GetFreeFileNumber() noexcept;
+  const uint64_t GetMaxFileMetaSize() noexcept;
+  const uint64_t GetMaxFileNameLength() noexcept;
 
   // Mount FileSystem
-  int32_t MountFileSystem(const std::string &config_path) override;
-  int32_t RemountFileSystem() override;
-  int32_t UnmountFileSystem() override;
+  int32_t MountFileSystem(const std::string &config_path);
+  int32_t RemountFileSystem();
+  int32_t UnmountFileSystem();
 
   // Create directory
-  int32_t CreateDirectory(const std::string &path) override;
+  int32_t CreateDirectory(const std::string &path);
   int32_t NewDirectory(const std::string &dirname,
-                       std::unique_ptr<Directory> *result) override;
+                       std::unique_ptr<Directory> *result);
   // List Directory
   int32_t ListDirectory(const std::string &path, FileInfo **filelist,
-                        int *num) override;
+                        int *num);
   // Delete Directory
   int32_t DeleteDirectory(const std::string &path,
-                          bool recursive = false) override;
+                          bool recursive = false);
   // Lock Directory
-  int32_t LockDirectory(const std::string &path) override;
+  int32_t LockDirectory(const std::string &path);
   // Unlock Directory
-  int32_t UnlockDirectory(const std::string &path) override;
+  int32_t UnlockDirectory(const std::string &path);
 
   BLOCKFS_DIR *OpenDirectory(const std::string &dirname);
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
   int32_t ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
                          block_fs_dirent **result);
-  int32_t CloseDirectory(BLOCKFS_DIR *dir) override;
+  int32_t CloseDirectory(BLOCKFS_DIR *dir);
 
   // Stat
-  int32_t StatPath(const std::string &path, struct stat *fileinfo) override;
-  int32_t StatPath(const int32_t fd, struct stat *fileinfo) override;
+  int32_t StatPath(const std::string &path, struct stat *fileinfo);
+  int32_t StatPath(const int32_t fd, struct stat *fileinfo);
   int32_t StatVFS(const std::string &path,
-                  struct statvfs *buf) override;
-  int32_t StatVFS(const int32_t fd, struct statvfs *buf) override;
+                  struct statvfs *buf);
+  int32_t StatVFS(const int32_t fd, struct statvfs *buf);
   // GetFileSize: get real file size
-  int32_t GetFileSize(const std::string &path, int64_t *file_size) override;
+  int32_t GetFileSize(const std::string &path, int64_t *file_size);
 
   // Open file for read or write, flags: O_WRONLY or O_RDONLY
   int32_t OpenFile(const std::string &path, int32_t flags,
-                   int32_t mode = 0) override;
-  int32_t CloseFile(int32_t fd) override;
-  int32_t FileExists(const std::string &path) override;
-  int32_t CreateFile(const std::string &path, mode_t mode) override;
-  int32_t DeleteFile(const std::string &path) override;
+                   int32_t mode = 0);
+  int32_t CloseFile(int32_t fd);
+  int32_t FileExists(const std::string &path);
+  int32_t CreateFile(const std::string &path, mode_t mode);
+  int32_t DeleteFile(const std::string &path);
   int32_t RenamePath(const std::string &src,
-                     const std::string &target) override;
+                     const std::string &target);
   // Returns 0 on success.
-  int32_t TruncateFile(const std::string &filename, int64_t size) override;
-  int32_t TruncateFile(const int32_t fd, int64_t size) override;
-  int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len) override;
+  int32_t TruncateFile(const std::string &filename, int64_t size);
+  int32_t TruncateFile(const int32_t fd, int64_t size);
+  int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len);
 
-  int64_t ReadFile(int32_t fd, void *buf, size_t len) override;
-  int64_t WriteFile(int32_t fd, const void *buf, size_t len) override;
-  int64_t PreadFile(int32_t fd, void *buf, size_t len, off_t offset) override;
+  int64_t ReadFile(int32_t fd, void *buf, size_t len);
+  int64_t WriteFile(int32_t fd, const void *buf, size_t len);
+  int64_t PreadFile(int32_t fd, void *buf, size_t len, off_t offset);
   int64_t PwriteFile(int32_t fd, const void *buf, size_t len,
-                     off_t offset) override;
-  off_t SeekFile(int32_t fd, off_t offset, int whence) override;
-  int32_t FcntlFile(int32_t fd, int32_t set_flag) override;
-  int32_t FcntlFile(int32_t fd, int16_t lock_type) override;
-  int32_t Sync() override;
-  int32_t FileSync(const int32_t fd) override;
-  int32_t FileDataSync(const int32_t fd) override;
-  int32_t FileDup(const int32_t fd) override;
-  int32_t RemovePath(const std::string &path) override;
+                     off_t offset);
+  off_t SeekFile(int32_t fd, off_t offset, int whence);
+  int32_t FcntlFile(int32_t fd, int32_t set_flag);
+  int32_t FcntlFile(int32_t fd, int16_t lock_type);
+  int32_t Sync();
+  int32_t FileSync(const int32_t fd);
+  int32_t FileDataSync(const int32_t fd);
+  int32_t FileDup(const int32_t fd);
+  int32_t RemovePath(const std::string &path);
 
-  void DumpFileMeta(const std::string &path) override;
+  void DumpFileMeta(const std::string &path);
 
   BlockDevice *dev() { return device_; }
 

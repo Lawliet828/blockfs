@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_META_HANDLE_H_
 #define LIB_META_HANDLE_H_
 
