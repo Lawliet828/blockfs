@@ -55,6 +55,7 @@ const uint64_t kBlockFsFileBlockCapacity = 1000;
 const uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 const uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
+typedef uint64_t ino_t;
 typedef int32_t dh_t;
 // Represents a sequence number in a WAL file.
 typedef uint64_t seq_t;

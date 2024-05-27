@@ -637,15 +637,6 @@ const FilePtr &FileHandle::GetCreatedFileNolock(int32_t dh,
   return itor->second;
 }
 
-void FileHandle::AddOpenFile(int32_t fd, const OpenFilePtr &file) noexcept {
-  META_HANDLE_LOCK();
-  open_files_[fd] = file;
-}
-void FileHandle::RemoveOpenFile(int32_t fd, const OpenFilePtr &file) noexcept {
-  META_HANDLE_LOCK();
-  open_files_.erase(fd);
-}
-
 static bool HasWriteFlag(const int32_t flags) {
   if (!(flags & O_RDWR) && !(flags & O_WRONLY)) {
     return false;

@@ -356,10 +356,7 @@ static int mfs_open(const char *path, struct fuse_file_info *fi) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int32_t fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags);
-  if (fd < 0) {
-    return -errno;
-  }
+  ino_t fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags);
   fi->fh = fd;
   fi->direct_io = 1;
   // fi->nonseekable = 1;
@@ -386,15 +383,13 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (fi == nullptr)
     fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   res = FileSystem::Instance()->PreadFile(fd, buf, size, offset);
   if (res < 0) res = -errno;
@@ -483,7 +478,7 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (!fi)
@@ -541,7 +536,7 @@ static int bfs_fsync(const char *path, int datasync,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (!fi)
@@ -769,10 +764,7 @@ static int bfs_create(const char *path, mode_t mode,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
-
-  fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags, mode);
-  if (fd < 0) return -errno;
+  ino_t fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags, mode);
 
   fi->fh = fd;
   return 0;
@@ -815,7 +807,7 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (!fi)
@@ -849,15 +841,13 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   uint64_t res;
 
   if (!fi)
     fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   int64_t write_size = fuse_buf_size(buf);
   int64_t write_offset = offset;
@@ -906,15 +896,13 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   ssize_t res;
 
   if (!fi)
     fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   struct fuse_bufvec *src;
   src = (struct fuse_bufvec *)::malloc(sizeof(struct fuse_bufvec));
@@ -971,15 +959,13 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (!fi)
     fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   struct flock fl;
   // 	res = flock(fi->fh, op);
@@ -1003,7 +989,7 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
                          struct fuse_file_info *fi) {
   LOG(INFO) << "call bfs_fallocate: " << path;
 
-  int fd;
+  ino_t fd;
   int res;
 
   if (mode) return -EOPNOTSUPP;
@@ -1012,8 +998,6 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
     fd = FileSystem::Instance()->OpenFile(path, O_WRONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   res = -block_fs_posix_fallocate(fd, offset, length);
 
@@ -1077,15 +1061,13 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
                 struct fuse_file_info *fi) {
   LOG(INFO) << "call bfs_lseek: " << path;
 
-  int fd;
+  ino_t fd;
   off_t res;
 
   if (fi == nullptr)
     fd = FileSystem::Instance()->OpenFile(path, O_RDONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   res = block_fs_lseek(fi->fh, off, whence);
   if (res < 0) return -errno;
@@ -1220,12 +1202,12 @@ void UDiskBFS::FuseLoop(bfs_config_info *info) {
     LOG(INFO) << "fuse enable debug";
     argv.push_back((char *)"-d");
   }
-  argv.push_back("-f");
+  argv.push_back((char *)"-f");
   argv.push_back(mountpoint);
-  argv.push_back("-oallow_other");
-  argv.push_back("-odefault_permissions");
-  argv.push_back("-orw"); // 读写权限
-  argv.push_back("-oauto_unmount");
+  argv.push_back((char *)"-oallow_other");
+  argv.push_back((char *)"-odefault_permissions");
+  argv.push_back((char *)"-orw"); // 读写权限
+  argv.push_back((char *)"-oauto_unmount");
   for (size_t i = 0; i < argv.size(); ++i) {
     LOG(INFO) << "fuse args: " << argv[i];
   }

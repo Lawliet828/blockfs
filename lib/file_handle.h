@@ -57,8 +57,14 @@ class FileHandle : public MetaHandle {
   bool FindFile(const std::string &dirname, const std::string &filename,
                 std::pair<DirectoryPtr, FilePtr> *dirs);
 
-  void AddOpenFile(int32_t fd, const OpenFilePtr &file) noexcept;
-  void RemoveOpenFile(int32_t fd, const OpenFilePtr &file) noexcept;
+  void AddOpenFile(ino_t fd, const OpenFilePtr &file) noexcept {
+    META_HANDLE_LOCK();
+    open_files_[fd] = file;
+  }
+  void RemoveOpenFile(ino_t fd, const OpenFilePtr &file) noexcept {
+    META_HANDLE_LOCK();
+    open_files_.erase(fd);
+  }
 
  public:
   FileHandle() = default;

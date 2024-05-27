@@ -361,7 +361,7 @@ bool DirHandle::RemoveDirectory(const DirectoryPtr &parent,
   return RemoveDirectoryFromCreateNolock(child);
 }
 
-const DirectoryPtr &DirHandle::GetOpenDirectory(int32_t fd) {
+const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
   META_HANDLE_LOCK();
   auto itor = open_dirs_.find(fd);
   if (unlikely(itor == open_dirs_.end())) {

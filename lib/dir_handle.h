@@ -51,7 +51,7 @@ class DirHandle : public MetaHandle {
 
   const uint32_t GetFreeMetaSize() const noexcept { return free_dhs_.size(); }
 
-  const DirectoryPtr &GetOpenDirectory(int32_t fd);
+  const DirectoryPtr &GetOpenDirectory(ino_t fd);
   const DirectoryPtr &GetCreatedDirectory(dh_t dh);
   const DirectoryPtr &GetCreatedDirectoryNolock(dh_t dh);
   const DirectoryPtr &GetCreatedDirectory(const std::string &dirname);
