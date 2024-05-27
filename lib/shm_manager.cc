@@ -21,7 +21,7 @@ ShmManager::~ShmManager() { MemUnMap(); }
 
 bool ShmManager::PrefetchSuperMeta(SuperBlockMeta &meta) {
   ::memset(&meta, 0, sizeof(SuperBlockMeta));
-  int64_t ret = FileStore::Instance()->dev()->PreadCache(&meta, kSuperBlockSize,
+  int64_t ret = FileSystem::Instance()->dev()->PreadCache(&meta, kSuperBlockSize,
                                                          kSuperBlockOffset);
   if (unlikely(ret != kSuperBlockSize)) {
     LOG(ERROR) << "read super block error size:" << ret;
@@ -196,7 +196,7 @@ bool ShmManager::NewPosixAlignMem() {
   }
   LOG(DEBUG) << "using posix mem aligned meta";
   buffer_ = std::make_shared<AlignBuffer>(
-      shm_size_, FileStore::Instance()->dev()->block_size());
+      shm_size_, FileSystem::Instance()->dev()->block_size());
 
   shm_addr_ = buffer_->data();
   return true;
@@ -212,7 +212,7 @@ bool ShmManager::NewPosixAlignMem() {
 bool ShmManager::ReadAllMeta() {
   ::memset(shm_addr_, 0, shm_size_);
   int64_t ret =
-      FileStore::Instance()->dev()->PreadDirect(shm_addr_, shm_size_, 0);
+      FileSystem::Instance()->dev()->PreadDirect(shm_addr_, shm_size_, 0);
   if (unlikely(ret != shm_size_)) {
     LOG(ERROR) << "read all meta error size: " << ret;
     return false;
@@ -276,12 +276,12 @@ bool ShmManager::Destroy() {
  * \return void
  */
 void ShmManager::RegistMetaBaseAddr() {
-  FileStore::Instance()->super()->set_base_addr(shm_addr_ + kSuperBlockOffset);
-  FileStore::Instance()->dir_handle()->set_base_addr(shm_addr_ +
+  FileSystem::Instance()->super()->set_base_addr(shm_addr_ + kSuperBlockOffset);
+  FileSystem::Instance()->dir_handle()->set_base_addr(shm_addr_ +
                                                      super_.dir_meta_offset_);
-  FileStore::Instance()->file_handle()->set_base_addr(shm_addr_ +
+  FileSystem::Instance()->file_handle()->set_base_addr(shm_addr_ +
                                                       super_.file_meta_offset_);
-  FileStore::Instance()->file_block_handle()->set_base_addr(
+  FileSystem::Instance()->file_block_handle()->set_base_addr(
       shm_addr_ + super_.file_block_meta_offset_);
 }
 

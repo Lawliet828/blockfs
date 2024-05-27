@@ -8,43 +8,43 @@
 using namespace udisk::blockfs;
 
 int block_fs_mount(const char *config_path, bool is_master) {
-  if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
+  if (FileSystem::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
 
-  bfs_config_info *conf = FileStore::Instance()->mount_config();
+  bfs_config_info *conf = FileSystem::Instance()->mount_config();
   conf->fuse_mount_point = "/data/mysql/bfs";
 
-  block_fs_fuse_mount(FileStore::Instance()->mount_config());
+  block_fs_fuse_mount(FileSystem::Instance()->mount_config());
   return 0;
 }
 
 int block_fs_unmount(const char *uuid) {
-  return FileStore::Instance()->UnmountFileSystem();
+  return FileSystem::Instance()->UnmountFileSystem();
 }
 
 int block_fs_remove(const char *path) {
-  return FileStore::Instance()->RemovePath(path);
+  return FileSystem::Instance()->RemovePath(path);
 }
 
 int block_fs_rename(const char *oldpath, const char *newpath) {
-  return FileStore::Instance()->RenamePath(oldpath, newpath);
+  return FileSystem::Instance()->RenamePath(oldpath, newpath);
 }
 
 int block_fs_stat(const char *valpath, struct stat *buf) {
-  return FileStore::Instance()->StatPath(valpath, buf);
+  return FileSystem::Instance()->StatPath(valpath, buf);
 }
 
 int block_fs_fstat(int fd, struct stat *buf) {
-  return FileStore::Instance()->StatPath(fd, buf);
+  return FileSystem::Instance()->StatPath(fd, buf);
 }
 
 int block_fs_statvfs(const char *path, struct statvfs *buf) {
-  return FileStore::Instance()->StatVFS(path, buf);
+  return FileSystem::Instance()->StatVFS(path, buf);
 }
 
 int block_fs_fstatvfs(int fd, struct statvfs *buf) {
-  return FileStore::Instance()->StatVFS(fd, buf);
+  return FileSystem::Instance()->StatVFS(fd, buf);
 }
 
 int block_fs_fcntl(int fd, int cmd, ...) {
@@ -56,7 +56,7 @@ int block_fs_fcntl(int fd, int cmd, ...) {
       ::va_start(arg, cmd);
       flag = va_arg(arg, int32_t);
       ::va_end(arg);
-      return FileStore::Instance()->FcntlFile(fd, flag);
+      return FileSystem::Instance()->FcntlFile(fd, flag);
     } break;
     case F_GETLK:
     case F_SETLK:
@@ -67,7 +67,7 @@ int block_fs_fcntl(int fd, int cmd, ...) {
       va_start(arg, cmd);
       fl = va_arg(arg, struct flock *);
       va_end(arg);
-      return FileStore::Instance()->FcntlFile(fd, fl->l_type);
+      return FileSystem::Instance()->FcntlFile(fd, fl->l_type);
     } break;
     default:
       return -1;
@@ -75,36 +75,36 @@ int block_fs_fcntl(int fd, int cmd, ...) {
 }
 
 int block_fs_mkdir(const char *dirname, mode_t mode) {
-  return FileStore::Instance()->CreateDirectory(dirname);
+  return FileSystem::Instance()->CreateDirectory(dirname);
 }
 
 BLOCKFS_DIR *block_fs_opendir(const char *name) {
-  return FileStore::Instance()->OpenDirectory(name);
+  return FileSystem::Instance()->OpenDirectory(name);
 }
 
 struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir) {
-  return FileStore::Instance()->ReadDirectory(dir);
+  return FileSystem::Instance()->ReadDirectory(dir);
 }
 
 int block_fs_readdir_r(BLOCKFS_DIR *dir, struct blockfs_dirent *entry,
                        struct blockfs_dirent **result) {
-  return FileStore::Instance()->ReadDirectoryR(dir, entry, result);
+  return FileSystem::Instance()->ReadDirectoryR(dir, entry, result);
 }
 
 int block_fs_closedir(BLOCKFS_DIR *dir) {
-  return FileStore::Instance()->CloseDirectory(dir);
+  return FileSystem::Instance()->CloseDirectory(dir);
 }
 
 int block_fs_rmdir(const char *dirname) {
-  return FileStore::Instance()->DeleteDirectory(dirname);
+  return FileSystem::Instance()->DeleteDirectory(dirname);
 }
 
 int block_fs_create(const char *filename, mode_t mode) {
-  return FileStore::Instance()->CreateFile(filename, mode);
+  return FileSystem::Instance()->CreateFile(filename, mode);
 }
 
 int block_fs_unlink(const char *valpath) {
-  return FileStore::Instance()->DeleteFile(valpath);
+  return FileSystem::Instance()->DeleteFile(valpath);
 }
 
 int block_fs_truncate(const char *valpath, int64_t len) {
@@ -112,35 +112,35 @@ int block_fs_truncate(const char *valpath, int64_t len) {
     block_fs_set_errno(EFAULT);
     return -1;
   }
-  return FileStore::Instance()->TruncateFile(valpath, len);
+  return FileSystem::Instance()->TruncateFile(valpath, len);
 }
 
 int block_fs_ftruncate(int fd, int64_t len) {
-  return FileStore::Instance()->TruncateFile(fd, len);
+  return FileSystem::Instance()->TruncateFile(fd, len);
 }
 
 int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len) {
-  return FileStore::Instance()->PosixFallocate(fd, offset, len);
+  return FileSystem::Instance()->PosixFallocate(fd, offset, len);
 }
 
-int block_fs_close(int fd) { return FileStore::Instance()->CloseFile(fd); }
+int block_fs_close(int fd) { return FileSystem::Instance()->CloseFile(fd); }
 
-int block_fs_dup(int oldfd) { return FileStore::Instance()->FileDup(oldfd); }
+int block_fs_dup(int oldfd) { return FileSystem::Instance()->FileDup(oldfd); }
 
-int block_fs_sync() { return FileStore::Instance()->Sync(); }
+int block_fs_sync() { return FileSystem::Instance()->Sync(); }
 
-int block_fs_fsync(int fd) { return FileStore::Instance()->FileSync(fd); }
+int block_fs_fsync(int fd) { return FileSystem::Instance()->FileSync(fd); }
 
 int block_fs_fdatasync(int fd) {
-  return FileStore::Instance()->FileDataSync(fd);
+  return FileSystem::Instance()->FileDataSync(fd);
 }
 
 off_t block_fs_lseek(int fd, off_t offset, int whence) {
-  return FileStore::Instance()->SeekFile(fd, offset, whence);
+  return FileSystem::Instance()->SeekFile(fd, offset, whence);
 }
 
 ssize_t block_fs_read(int fd, void *buf, size_t len) {
-  return FileStore::Instance()->ReadFile(fd, buf, len);
+  return FileSystem::Instance()->ReadFile(fd, buf, len);
 }
 
 void block_fs_set_errno(int e) { errno = e; }

@@ -18,11 +18,11 @@ bool DirHandle::RunInMetaGuard(const DirectoryCallback &cb) {
 bool DirHandle::InitializeMeta() {
   DirMeta *meta;
   for (uint64_t dh = 0;
-       dh < FileStore::Instance()->super_meta()->max_file_num; ++dh) {
+       dh < FileSystem::Instance()->super_meta()->max_file_num; ++dh) {
     meta = reinterpret_cast<DirMeta *>(
-        base_addr() + FileStore::Instance()->super_meta()->dir_meta_size_ * dh);
+        base_addr() + FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                         FileStore::Instance()->super_meta()->dir_meta_size_ -
+                         FileSystem::Instance()->super_meta()->dir_meta_size_ -
                              sizeof(meta->crc_));
     if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "directory meta " << dh << " " << meta->dir_name_
@@ -79,33 +79,33 @@ bool DirHandle::InitializeMeta() {
  */
 uint32_t DirHandle::PageAlignIndex(uint32_t index) const {
   static const uint32_t DIR_ALIGN =
-      kBlockFsPageSize / FileStore::Instance()->super_meta()->dir_meta_size_;
+      kBlockFsPageSize / FileSystem::Instance()->super_meta()->dir_meta_size_;
   return index - (index % DIR_ALIGN);
 }
 
 bool DirHandle::FormatAllMeta() {
   uint64_t dir_meta_total_size =
-      FileStore::Instance()->super_meta()->dir_meta_total_size_;
+      FileSystem::Instance()->super_meta()->dir_meta_total_size_;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
-      dir_meta_total_size, FileStore::Instance()->dev()->block_size());
+      dir_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   DirMeta *meta;
   for (uint64_t dh = 0;
-       dh < FileStore::Instance()->super_meta()->max_file_num; ++dh) {
+       dh < FileSystem::Instance()->super_meta()->max_file_num; ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         buffer->data() +
-        FileStore::Instance()->super_meta()->dir_meta_size_ * dh);
+        FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
     meta->used_ = false;
     meta->dh_ = dh;
     meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                       FileStore::Instance()->super_meta()->dir_meta_size_ -
+                       FileSystem::Instance()->super_meta()->dir_meta_size_ -
                            sizeof(meta->crc_));
   }
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
-      buffer->data(), FileStore::Instance()->super_meta()->dir_meta_total_size_,
-      FileStore::Instance()->super_meta()->dir_meta_offset_);
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
+      buffer->data(), FileSystem::Instance()->super_meta()->dir_meta_total_size_,
+      FileSystem::Instance()->super_meta()->dir_meta_offset_);
   if (ret != static_cast<int64_t>(
-                 FileStore::Instance()->super_meta()->dir_meta_total_size_)) {
+                 FileSystem::Instance()->super_meta()->dir_meta_total_size_)) {
     LOG(ERROR) << "write directory meta error size:" << ret;
     return false;
   }
@@ -136,7 +136,7 @@ bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
   }
   // 创建挂载目录不需要检查
   if (!IsMountPoint(dir_name)) {
-    return FileStore::Instance()->super()->CheckMountPoint(dir_name);
+    return FileSystem::Instance()->super()->CheckMountPoint(dir_name);
   }
   return true;
 }
@@ -149,7 +149,7 @@ bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
  * \return strip success or failed
  */
 bool DirHandle::IsMountPoint(const std::string &dirname) const noexcept {
-  return FileStore::Instance()->super()->is_mount_point(dirname);
+  return FileSystem::Instance()->super()->is_mount_point(dirname);
 }
 
 /**
@@ -167,7 +167,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
       path.erase(path.size() - 1);
     }
     // 检查同名的文件是否存在
-    if (FileStore::Instance()->file_handle()->GetCreatedFile(path)) {
+    if (FileSystem::Instance()->file_handle()->GetCreatedFile(path)) {
       LOG(ERROR) << "the same file path exist: " << dirname;
       if (check_parent) {
         errno = EEXIST;
@@ -182,7 +182,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
         parent_path.erase(parent_path.size() - 1);
       }
       // 检查上一层是否目录是否存在并且为文件
-      if (FileStore::Instance()->file_handle()->GetCreatedFile(parent_path)) {
+      if (FileSystem::Instance()->file_handle()->GetCreatedFile(parent_path)) {
         LOG(ERROR) << "the same parent path file exist: " << dirname;
         block_fs_set_errno(ENOTDIR);
         return false;
@@ -418,7 +418,7 @@ int32_t DirHandle::DeleteDirectory(dh_t dh) {
 }
 int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   LOG(INFO) << "delete dir handle: " << dh;
-  const DirectoryPtr dir = FileStore::Instance()->dir_handle()->GetCreatedDirectoryNolock(dh);
+  const DirectoryPtr dir = FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(dh);
   if (!dir) {
     block_fs_set_errno(ENOENT);
     return -1;
@@ -630,13 +630,13 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
     return nullptr;
   }
   DirectoryPtr dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
   if (unlikely(!dir)) {
     block_fs_set_errno(ENOTDIR);
     block_fs_set_errno(ENOENT);
     return nullptr;
   }
-  int32_t fd = FileStore::Instance()->fd_handle()->get_fd();
+  int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
     block_fs_set_errno(ENFILE);
     return nullptr;
@@ -675,7 +675,7 @@ int32_t DirHandle::ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
 int32_t DirHandle::CloseDirectory(BLOCKFS_DIR *d) {
   LOG(INFO) << "close directory name: " << d->dir_->dir_name()
             << " fd: " << d->fd();
-  FileStore::Instance()->fd_handle()->put_fd(d->fd_);
+  FileSystem::Instance()->fd_handle()->put_fd(d->fd_);
   for (uint32_t i = 0; i < d->dir_items_.size(); ++i) {
     delete d->dir_items_[i];
   }

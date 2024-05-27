@@ -6,7 +6,7 @@
 namespace udisk::blockfs {
 
 bool BlockHandle::InitializeMeta() {
-  set_max_block_num(FileStore::Instance()->super_meta()->curr_block_num_);
+  set_max_block_num(FileSystem::Instance()->super_meta()->curr_block_num_);
   return true;
 }
 

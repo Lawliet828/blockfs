@@ -10,44 +10,43 @@
 #include "config_load.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 static const std::string kBlockDevivePath = "/sys/block";
 
-FileStore::FileStore() {}
+FileSystem::FileSystem() {}
 
-FileStore::~FileStore() { UnmountFileSystem(); }
+FileSystem::~FileSystem() { UnmountFileSystem(); }
 
-FileStore *FileStore::g_instance = new FileStore();
+FileSystem *FileSystem::g_instance = new FileSystem();
 
-FileStore *FileStore::Instance() { return g_instance; }
+FileSystem *FileSystem::Instance() { return g_instance; }
 
-const uint64_t FileStore::GetMaxSupportFileNumber() noexcept {
+const uint64_t FileSystem::GetMaxSupportFileNumber() noexcept {
   return super_meta()->max_file_num;
 }
 
-const uint64_t FileStore::GetMaxSupportBlockNumer() noexcept {
+const uint64_t FileSystem::GetMaxSupportBlockNumer() noexcept {
   return super_meta()->max_support_block_num_;
 }
 
-const uint64_t FileStore::GetFreeBlockNumber() noexcept {
+const uint64_t FileSystem::GetFreeBlockNumber() noexcept {
   return super_meta()->curr_block_num_;
 }
 
-const uint64_t FileStore::GetBlockSize() noexcept {
+const uint64_t FileSystem::GetBlockSize() noexcept {
   return super_meta()->block_size_;
 }
 
-const uint64_t FileStore::GetFreeFileNumber() noexcept {
+const uint64_t FileSystem::GetFreeFileNumber() noexcept {
   return file_handle()->free_meta_size();
 }
 
-const uint64_t FileStore::GetMaxFileMetaSize() noexcept {
+const uint64_t FileSystem::GetMaxFileMetaSize() noexcept {
   return super_meta()->file_meta_size_;
 }
 
-const uint64_t FileStore::GetMaxFileNameLength() noexcept {
+const uint64_t FileSystem::GetMaxFileNameLength() noexcept {
   return super_meta()->max_file_name_len_;
 }
 
@@ -58,7 +57,7 @@ const uint64_t FileStore::GetMaxFileNameLength() noexcept {
  *
  * \return 0 on success, -1 on error
  */
-int32_t FileStore::MountFileSystem(const std::string& config_path) {
+int32_t FileSystem::MountFileSystem(const std::string& config_path) {
   if (config_path.empty()) [[unlikely]] {
     LOG(ERROR) << "config path is empty";
     return -1;
@@ -96,7 +95,7 @@ int32_t FileStore::MountFileSystem(const std::string& config_path) {
  *
  * \return success is zero, otherwise -1
  */
-int32_t FileStore::RemountFileSystem() {
+int32_t FileSystem::RemountFileSystem() {
   remount_ = true;
   Destroy();
 
@@ -123,7 +122,7 @@ int32_t FileStore::RemountFileSystem() {
  *
  * \return success is zero, otherwise -1
  */
-int32_t FileStore::UnmountFileSystem() {
+int32_t FileSystem::UnmountFileSystem() {
   Destroy();
   return 0;
 }
@@ -131,18 +130,18 @@ int32_t FileStore::UnmountFileSystem() {
 /**
  * \param dirname: abosolute dirname
  */
-int32_t FileStore::CreateDirectory(const std::string& path) {
+int32_t FileSystem::CreateDirectory(const std::string& path) {
   LOG(INFO) << "make directory: " << path;
   return dir_handle()->CreateDirectory(path);
 }
 
-int32_t FileStore::NewDirectory(const std::string& dirname,
+int32_t FileSystem::NewDirectory(const std::string& dirname,
                                 std::unique_ptr<Directory>* result) {
   return 0;
 }
 
 // List Directory
-int32_t FileStore::ListDirectory(const std::string& path, FileInfo** filelist,
+int32_t FileSystem::ListDirectory(const std::string& path, FileInfo** filelist,
                                  int* num) {
   return 0;
 }
@@ -154,15 +153,15 @@ int32_t FileStore::ListDirectory(const std::string& path, FileInfo** filelist,
  *
  * \return success or failed
  */
-int32_t FileStore::DeleteDirectory(const std::string& path, bool recursive) {
+int32_t FileSystem::DeleteDirectory(const std::string& path, bool recursive) {
   LOG(INFO) << "remove directory: " << path;
   return dir_handle()->DeleteDirectory(path, recursive);
 }
 
 // Lock Directory
-int32_t FileStore::LockDirectory(const std::string& path) { return 0; }
+int32_t FileSystem::LockDirectory(const std::string& path) { return 0; }
 // Unlock Directory
-int32_t FileStore::UnlockDirectory(const std::string& path) { return 0; }
+int32_t FileSystem::UnlockDirectory(const std::string& path) { return 0; }
 
 /**
  * open a directory
@@ -171,7 +170,7 @@ int32_t FileStore::UnlockDirectory(const std::string& path) { return 0; }
  *
  * \return success or failed
  */
-BLOCKFS_DIR* FileStore::OpenDirectory(const std::string& dirname) {
+BLOCKFS_DIR* FileSystem::OpenDirectory(const std::string& dirname) {
   LOG(INFO) << "open directory: " << dirname;
   return dir_handle()->OpenDirectory(dirname);
 }
@@ -183,11 +182,11 @@ BLOCKFS_DIR* FileStore::OpenDirectory(const std::string& dirname) {
  *
  * \return success or failed
  */
-block_fs_dirent* FileStore::ReadDirectory(BLOCKFS_DIR* dir) {
+block_fs_dirent* FileSystem::ReadDirectory(BLOCKFS_DIR* dir) {
   return dir_handle()->ReadDirectory(dir);
 }
 
-int32_t FileStore::ReadDirectoryR(BLOCKFS_DIR* dir, block_fs_dirent* entry,
+int32_t FileSystem::ReadDirectoryR(BLOCKFS_DIR* dir, block_fs_dirent* entry,
                                   block_fs_dirent** result) {
   return dir_handle()->ReadDirectoryR(dir, entry, result);
   ;
@@ -200,7 +199,7 @@ int32_t FileStore::ReadDirectoryR(BLOCKFS_DIR* dir, block_fs_dirent* entry,
  *
  * \return success or failed
  */
-int32_t FileStore::CloseDirectory(BLOCKFS_DIR* dir) {
+int32_t FileSystem::CloseDirectory(BLOCKFS_DIR* dir) {
   return dir_handle()->CloseDirectory(dir);
 }
 
@@ -212,7 +211,7 @@ int32_t FileStore::CloseDirectory(BLOCKFS_DIR* dir) {
  *
  * \return success or failed
  */
-int32_t FileStore::StatPath(const std::string& path, struct stat* buf) {
+int32_t FileSystem::StatPath(const std::string& path, struct stat* buf) {
   LOG(INFO) << "stat path: " << path;
   if (unlikely(path.empty())) {
     LOG(ERROR) << "stat path empty";
@@ -248,7 +247,7 @@ int32_t FileStore::StatPath(const std::string& path, struct stat* buf) {
   return 0;
 }
 
-int32_t FileStore::StatPath(const int32_t fd, struct stat* fileinfo) {
+int32_t FileSystem::StatPath(const int32_t fd, struct stat* fileinfo) {
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     DirectoryPtr dir = dir_handle()->GetOpenDirectory(fd);
@@ -264,7 +263,7 @@ int32_t FileStore::StatPath(const int32_t fd, struct stat* fileinfo) {
   return 0;
 }
 
-int32_t FileStore::StatVFS(const std::string& path,
+int32_t FileSystem::StatVFS(const std::string& path,
                            struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = GetBlockSize();
@@ -288,7 +287,7 @@ int32_t FileStore::StatVFS(const std::string& path,
   return 0;
 }
 
-int32_t FileStore::StatVFS(const int32_t fd, struct statvfs* buf) {
+int32_t FileSystem::StatVFS(const int32_t fd, struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = GetBlockSize();
   // f_frsize: 分栈大小
@@ -316,11 +315,11 @@ int32_t FileStore::StatVFS(const int32_t fd, struct statvfs* buf) {
 }
 
 // GetFileSize: get real file size
-int32_t FileStore::GetFileSize(const std::string& path, int64_t* file_size) {
+int32_t FileSystem::GetFileSize(const std::string& path, int64_t* file_size) {
   return 0;
 }
 
-int32_t FileStore::OpenFile(const std::string& path, int32_t flags,
+int32_t FileSystem::OpenFile(const std::string& path, int32_t flags,
                             int32_t mode) {
   if (path.empty()) [[unlikely]] {
     errno = EINVAL;
@@ -330,19 +329,19 @@ int32_t FileStore::OpenFile(const std::string& path, int32_t flags,
   return file_handle()->open(path, flags, mode);
 }
 
-int32_t FileStore::CloseFile(int32_t fd) {
+int32_t FileSystem::CloseFile(int32_t fd) {
   LOG(INFO) << "close file fd: " << fd;
   return file_handle()->close(fd);
 }
 
-int32_t FileStore::FileExists(const std::string& path) { return 0; }
+int32_t FileSystem::FileExists(const std::string& path) { return 0; }
 
-int32_t FileStore::CreateFile(const std::string& path, mode_t mode) {
+int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
   // O_TMPFILE
   return file_handle()->CreateFile(path, mode) ? 0 : -1;
 }
 
-int32_t FileStore::DeleteFile(const std::string& path) {
+int32_t FileSystem::DeleteFile(const std::string& path) {
   return file_handle()->unlink(path);
 }
 
@@ -354,7 +353,7 @@ int32_t FileStore::DeleteFile(const std::string& path) {
  *
  * \return success or failed
  */
-int32_t FileStore::RenamePath(const std::string& oldpath,
+int32_t FileSystem::RenamePath(const std::string& oldpath,
                               const std::string& newpath) {
   LOG(INFO) << "old path: " << oldpath << " newpath: " << newpath;
   if (unlikely(oldpath.empty() || newpath.empty())) {
@@ -383,7 +382,7 @@ int32_t FileStore::RenamePath(const std::string& oldpath,
   return file->rename(newpath);
 }
 
-int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
+int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
   if (size < 0) [[unlikely]] {
     block_fs_set_errno(EINVAL);
     return -1;
@@ -397,7 +396,7 @@ int32_t FileStore::TruncateFile(const std::string& filename, int64_t size) {
   return file->ftruncate(size);
 }
 
-int32_t FileStore::TruncateFile(const int32_t fd, int64_t size) {
+int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
   if (unlikely(size < 0)) {
     block_fs_set_errno(EINVAL);
     return -1;
@@ -412,7 +411,7 @@ int32_t FileStore::TruncateFile(const int32_t fd, int64_t size) {
   return open_file->file()->ftruncate(size);
 }
 
-int32_t FileStore::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
+int32_t FileSystem::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
   LOG(INFO) << "posix fallocate file fd: " << fd << " offset: " << offset
             << " len: " << len;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
@@ -423,7 +422,7 @@ int32_t FileStore::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
   return open_file->file()->posix_fallocate(offset, len);
 }
 
-int64_t FileStore::ReadFile(int32_t fd, void* buf, size_t len) {
+int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
   LOG(INFO) << "read file fd: " << fd << " len: " << len;
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
@@ -433,7 +432,7 @@ int64_t FileStore::ReadFile(int32_t fd, void* buf, size_t len) {
   return open_file->read(buf, len, open_file->append_pos());
 }
 
-int64_t FileStore::WriteFile(int32_t fd, const void* buf, size_t len) {
+int64_t FileSystem::WriteFile(int32_t fd, const void* buf, size_t len) {
   LOG(INFO) << "write file fd: " << fd;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
@@ -443,7 +442,7 @@ int64_t FileStore::WriteFile(int32_t fd, const void* buf, size_t len) {
   return open_file->write(buf, len, open_file->append_pos());
 }
 
-int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
+int64_t FileSystem::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
   LOG(INFO) << "pread file fd: " << fd << " len: " << len << " offset: "
             << offset;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
@@ -454,7 +453,7 @@ int64_t FileStore::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
   return open_file->pread(buf, len, offset);
 }
 
-int64_t FileStore::PwriteFile(int32_t fd, const void* buf, size_t len,
+int64_t FileSystem::PwriteFile(int32_t fd, const void* buf, size_t len,
                               off_t offset) {
   LOG(INFO) << "pwrite file fd: " << fd << " len: " << len << " offset: "
             << offset;
@@ -466,7 +465,7 @@ int64_t FileStore::PwriteFile(int32_t fd, const void* buf, size_t len,
   return open_file->pwrite(buf, len, offset);
 }
 
-off_t FileStore::SeekFile(int32_t fd, off_t offset, int whence) {
+off_t FileSystem::SeekFile(int32_t fd, off_t offset, int whence) {
   LOG(INFO) << "lseek file fd: " << fd << " offset: " << offset;
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
@@ -476,8 +475,8 @@ off_t FileStore::SeekFile(int32_t fd, off_t offset, int whence) {
   return open_file->lseek(offset, whence);
 }
 
-int32_t FileStore::FcntlFile(int32_t fd, int32_t set_flag) {
-  OpenFilePtr open_file = FileStore::Instance()->file_handle()->GetOpenFile(fd);
+int32_t FileSystem::FcntlFile(int32_t fd, int32_t set_flag) {
+  OpenFilePtr open_file = FileSystem::Instance()->file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
     return -1;
@@ -486,8 +485,8 @@ int32_t FileStore::FcntlFile(int32_t fd, int32_t set_flag) {
   return 0;
 }
 
-int32_t FileStore::FcntlFile(int32_t fd, int16_t lock_type) {
-  OpenFilePtr open_file = FileStore::Instance()->file_handle()->GetOpenFile(fd);
+int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
+  OpenFilePtr open_file = FileSystem::Instance()->file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
     return -1;
@@ -520,22 +519,22 @@ int32_t FileStore::FcntlFile(int32_t fd, int16_t lock_type) {
   return 0;
 }
 
-int32_t FileStore::Sync() {
+int32_t FileSystem::Sync() {
   LOG(INFO) << "sync file system, persistent timestamp only";
   return file_handle()->UpdateMeta() ? 0 : -1;
 }
 
-int32_t FileStore::FileSync(const int32_t fd) {
+int32_t FileSystem::FileSync(const int32_t fd) {
   LOG(INFO) << "fsync file fd: " << fd;
   return file_handle()->fsync(fd);
 }
 
-int32_t FileStore::FileDataSync(const int32_t fd) {
+int32_t FileSystem::FileDataSync(const int32_t fd) {
   LOG(INFO) << "fdatasync file fd: " << fd;
   return file_handle()->fsync(fd);
 }
 
-int32_t FileStore::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
+int32_t FileSystem::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
 
 // https://blog.csdn.net/linlin2178/article/details/57412568?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase
 
@@ -549,7 +548,7 @@ int32_t FileStore::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
  *
  * \return success or failed
  */
-int32_t FileStore::RemovePath(const std::string& path) {
+int32_t FileSystem::RemovePath(const std::string& path) {
   LOG(INFO) << "remove path: " << path;
   if (unlikely(path.empty())) {
     LOG(ERROR) << "remove file path empty";
@@ -570,7 +569,7 @@ int32_t FileStore::RemovePath(const std::string& path) {
  *
  * \return success or failed
  */
-bool FileStore::Initialize() {
+bool FileSystem::Initialize() {
   if (!remount_) {
     ChecksumInit();
     device_ = new BlockDevice();
@@ -592,7 +591,7 @@ bool FileStore::Initialize() {
  *
  * \return void
  */
-void FileStore::Destroy() {
+void FileSystem::Destroy() {
   LOG(DEBUG) << "close file store now";
   for (auto& handle : handle_vector_) {
     if (handle) {
@@ -616,7 +615,7 @@ void FileStore::Destroy() {
 /**
  * format seperate fs metadata
  */
-bool FileStore::FormatFSMeta() {
+bool FileSystem::FormatFSMeta() {
   for (auto& handle : handle_vector_) {
     if (!handle->FormatAllMeta()) {
       return false;
@@ -628,7 +627,7 @@ bool FileStore::FormatFSMeta() {
 /**
  * zero fs data
  */
-bool FileStore::FormatFSData() {
+bool FileSystem::FormatFSData() {
   int64_t ret;
   const uint64_t zero_buffer_len = 4 * M;
   AlignBufferPtr buffer =
@@ -662,7 +661,7 @@ bool FileStore::FormatFSData() {
  *
  * @return success or failed
  */
-bool FileStore::Format(const std::string& dev_name) {
+bool FileSystem::Format(const std::string& dev_name) {
   if (!Initialize()) {
     return false;
   }
@@ -686,7 +685,7 @@ bool FileStore::Format(const std::string& dev_name) {
  *
  * \return success or failed
  */
-bool FileStore::Check(const std::string& dev_name, const std::string &log_level) {
+bool FileSystem::Check(const std::string& dev_name, const std::string &log_level) {
   Logger::set_min_level(Logger::LogLevelConvert(log_level));
   if (!Initialize()) {
     return false;
@@ -722,7 +721,7 @@ int EasyReaddir(const std::string& dir, std::set<std::string>* out) {
   return 0;
 }
 
-bool FileStore::OpenTarget(const std::string& uuid) {
+bool FileSystem::OpenTarget(const std::string& uuid) {
   try {
     for (const auto& entry : std::filesystem::directory_iterator(kBlockDevivePath)) {
       if (!device_->Open("/dev/" + entry.path().filename().string())) {
@@ -746,7 +745,7 @@ bool FileStore::OpenTarget(const std::string& uuid) {
   return false;
 }
 
-bool FileStore::InitializeMeta() {
+bool FileSystem::InitializeMeta() {
   for (auto& handle : handle_vector_) {
     if (!handle->InitializeMeta()) {
       return false;
@@ -762,7 +761,7 @@ bool FileStore::InitializeMeta() {
  *
  * \return true or false
  */
-int FileStore::MakeMountPoint(const char* mount_point) {
+int FileSystem::MakeMountPoint(const char* mount_point) {
   LOG(INFO) << "create fs mount point: " << mount_point;
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
     return CreateDirectory(mount_point);
@@ -770,7 +769,7 @@ int FileStore::MakeMountPoint(const char* mount_point) {
   return 0;
 }
 
-int FileStore::MakeMountPoint(const std::string& mount_point) {
+int FileSystem::MakeMountPoint(const std::string& mount_point) {
   LOG(INFO) << "create fs mount point: " << mount_point;
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
     return CreateDirectory(mount_point);
@@ -778,7 +777,7 @@ int FileStore::MakeMountPoint(const std::string& mount_point) {
   return 0;
 }
 
-void FileStore::DumpFileMeta(const std::string& path) {
+void FileSystem::DumpFileMeta(const std::string& path) {
   LOG(INFO) << "dump file meta: " << path;
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
@@ -795,5 +794,4 @@ void FileStore::DumpFileMeta(const std::string& path) {
   }
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}

@@ -13,24 +13,24 @@ namespace udisk::blockfs {
 
 bool File::WriteMeta(int32_t fh) {
   FileMeta *meta = reinterpret_cast<FileMeta *>(
-      FileStore::Instance()->file_handle()->base_addr() +
-      FileStore::Instance()->super_meta()->file_meta_size_ * fh);
+      FileSystem::Instance()->file_handle()->base_addr() +
+      FileSystem::Instance()->super_meta()->file_meta_size_ * fh);
   uint32_t align_index =
-      FileStore::Instance()->file_handle()->PageAlignIndex(fh);
+      FileSystem::Instance()->file_handle()->PageAlignIndex(fh);
   uint64_t offset =
-      FileStore::Instance()->super_meta()->file_meta_size_ * align_index;
+      FileSystem::Instance()->super_meta()->file_meta_size_ * align_index;
   void *align_meta =
-      static_cast<char *>(FileStore::Instance()->file_handle()->base_addr()) +
+      static_cast<char *>(FileSystem::Instance()->file_handle()->base_addr()) +
       offset;
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                     FileStore::Instance()->super_meta()->file_meta_size_ -
+                     FileSystem::Instance()->super_meta()->file_meta_size_ -
                          sizeof(meta->crc_));
   LOG(INFO) << "write file meta, name: " << meta->file_name_ << " fh: " << fh
             << " align_index: " << align_index << " crc: " << meta->crc_;
   // TODO: 需要全局统一枷锁
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
-      FileStore::Instance()->super_meta()->file_meta_offset_ + offset);
+      FileSystem::Instance()->super_meta()->file_meta_offset_ + offset);
   if (unlikely(ret != kBlockFsPageSize)) {
     LOG(ERROR) << "write file meta, name: " << meta->file_name_ << " fh: " << fh
                << " error size:" << ret << " need:" << kBlockFsPageSize;
@@ -90,7 +90,7 @@ bool ParentFile::Recycle() {
       } else {
         LOG(INFO) << meta_->file_name_ << " put block id "
                   << fb->meta()->block_id_[j] << " to freelist";
-        FileStore::Instance()->block_handle()->PutFreeBlockIdLock(
+        FileSystem::Instance()->block_handle()->PutFreeBlockIdLock(
             fb->meta()->block_id_[j]);
       }
     }
@@ -106,7 +106,7 @@ bool ParentFile::Recycle() {
     return false;
   }
 
-  FileStore::Instance()->file_handle()->AddFile2FreeNolock(meta_->fh_);
+  FileSystem::Instance()->file_handle()->AddFile2FreeNolock(meta_->fh_);
   return true;
 }
 
@@ -133,18 +133,18 @@ uint32_t File::GetNextFileCut() noexcept {
 
 int File::rename(const std::string &to) {
   bool success =
-      FileStore::Instance()->file_handle()->RunInMetaGuard([this, to] {
+      FileSystem::Instance()->file_handle()->RunInMetaGuard([this, to] {
         LOG(INFO) << "rename old name: " << file_name() << " to: " << to;
         // 先把之前的文件映射去掉
         const DirectoryPtr &old_dir =
-            FileStore::Instance()->dir_handle()->GetCreatedDirectory(dh());
+            FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());
         if (!old_dir) {
           return false;
         }
 
         std::string dir_name = GetDirName(to);
         const DirectoryPtr &new_dir =
-            FileStore::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
+            FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
         if (!new_dir) {
           return false;
         }
@@ -153,7 +153,7 @@ int File::rename(const std::string &to) {
         if (!old_dir->RemoveChildFile(file)) {
           return false;
         }
-        if (unlikely(!FileStore::Instance()->file_handle()->RemoveFileNoLock(file))) {
+        if (unlikely(!FileSystem::Instance()->file_handle()->RemoveFileNoLock(file))) {
           return false;
         }
 
@@ -163,7 +163,7 @@ int File::rename(const std::string &to) {
         UpdateTimeStamp(false, true, true);
 
         // 添加新的文件映射
-        FileStore::Instance()->file_handle()->AddFileNoLock(file);
+        FileSystem::Instance()->file_handle()->AddFileNoLock(file);
         if (!new_dir->AddChildFile(file)) {
           return false;
         }
@@ -188,7 +188,7 @@ const uint32_t File::GetBlockNumber() const noexcept {
 }
 
 void File::stat(struct stat *buf) {
-  FileStore::Instance()->file_handle()->RunInMetaGuard([this, buf] {
+  FileSystem::Instance()->file_handle()->RunInMetaGuard([this, buf] {
     uint64_t numer_of_block_512 = GetBlockNumber() * kBlockFsBlockSize / 512;
     /* initialize all the values */
     buf->st_dev = 0;                     /* ID of device containing file */
@@ -210,7 +210,7 @@ void File::stat(struct stat *buf) {
 }
 
 bool File::Release() {
-  return FileStore::Instance()->file_handle()->RunInMetaGuard(
+  return FileSystem::Instance()->file_handle()->RunInMetaGuard(
       [this] { return ReleaseNolock(); });
 }
 
@@ -291,10 +291,10 @@ FileBlockPtr File::GetFileBlock(int32_t file_cut) {
 
 int File::ExtendFile(uint64_t offset) {
   if (unlikely(offset >
-               FileStore::Instance()->super_meta()->curr_udisk_size_)) {
+               FileSystem::Instance()->super_meta()->curr_udisk_size_)) {
     LOG(ERROR) << file_name() << " truncate offset: " << offset
                << " cannot exceed free uidsk size: "
-               << FileStore::Instance()->super_meta()->curr_udisk_size_;
+               << FileSystem::Instance()->super_meta()->curr_udisk_size_;
     return -1;
   }
   // 计算需要扩大偏移的位置
@@ -357,17 +357,17 @@ int File::ExtendFile(uint64_t offset) {
   // 开始申请资源
   std::vector<FileBlockPtr> file_blocks;
   if (file_block_num > 0) {
-    if (!FileStore::Instance()->file_block_handle()->GetFileBlockLock(
+    if (!FileSystem::Instance()->file_block_handle()->GetFileBlockLock(
             file_block_num, &file_blocks)) {
       return -1;
     }
   }
   std::vector<uint32_t> block_ids;
   if (block_num > 0) {
-    if (!FileStore::Instance()->block_handle()->GetFreeBlockIdLock(
+    if (!FileSystem::Instance()->block_handle()->GetFreeBlockIdLock(
             block_num, &block_ids)) {
       if (file_block_num > 0) {
-        FileStore::Instance()->file_block_handle()->PutFileBlockLock(
+        FileSystem::Instance()->file_block_handle()->PutFileBlockLock(
             file_blocks);
       }
       return -1;
@@ -440,7 +440,7 @@ int File::ExtendFile(uint64_t offset) {
   }
 
   bool success =
-      FileStore::Instance()->file_handle()->RunInMetaGuard([this, offset] {
+      FileSystem::Instance()->file_handle()->RunInMetaGuard([this, offset] {
         // 更新内存: 文件的大小
         set_file_size(offset);
         // 开始持久化更新文件元数据
@@ -459,7 +459,7 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
                     uint64_t offset, uint64_t len) {
   const uint64_t kZeroBufferSize = 4 * M;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
-      kZeroBufferSize, FileStore::Instance()->dev()->block_size());
+      kZeroBufferSize, FileSystem::Instance()->dev()->block_size());
   int64_t ret;
   uint64_t data_len = 0;
   uint64_t data_offset = 0;
@@ -467,10 +467,10 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
     data_len = std::min(len, kZeroBufferSize);
     ::memset(buffer->data(), 0, data_len);
     data_offset =
-        FileStore::Instance()->super_meta()->block_data_start_offset_ +
-        FileStore::Instance()->super_meta()->block_size_ * src_block_id +
+        FileSystem::Instance()->super_meta()->block_data_start_offset_ +
+        FileSystem::Instance()->super_meta()->block_size_ * src_block_id +
         offset;
-    ret = FileStore::Instance()->dev()->PreadCache(buffer->data(), data_len,
+    ret = FileSystem::Instance()->dev()->PreadCache(buffer->data(), data_len,
                                                    data_offset);
     if (ret != static_cast<int64_t>(data_len)) {
       LOG(ERROR) << file_name() << " read data error size: " << ret
@@ -478,10 +478,10 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
       return false;
     }
     data_offset =
-        FileStore::Instance()->super_meta()->block_data_start_offset_ +
-        FileStore::Instance()->super_meta()->block_size_ * dst_block_id +
+        FileSystem::Instance()->super_meta()->block_data_start_offset_ +
+        FileSystem::Instance()->super_meta()->block_size_ * dst_block_id +
         offset;
-    ret = FileStore::Instance()->dev()->PwriteCache(buffer->data(), data_len,
+    ret = FileSystem::Instance()->dev()->PwriteCache(buffer->data(), data_len,
                                                     data_offset);
     if (ret != static_cast<int64_t>(data_len)) {
       LOG(ERROR) << file_name() << " write data error size: " << ret
@@ -491,7 +491,7 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
     len -= data_len;
     offset += data_len;
   }
-  ret = FileStore::Instance()->dev()->Fsync();
+  ret = FileSystem::Instance()->dev()->Fsync();
   LOG(INFO) << file_name() << " copy data success";
   return (ret == 0);
 }
@@ -502,10 +502,10 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
 int File::RecycleParentFh(int32_t fh, bool immediately) {
   if (immediately) {
     LOG(INFO) << file_name() << " recycle parent fh immediately";
-    if (!FileStore::Instance()->file_handle()->RemoveParentFile(fh)) {
+    if (!FileSystem::Instance()->file_handle()->RemoveParentFile(fh)) {
       return -1;
     }
-    bool success = FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+    bool success = FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
       set_parent_fh(-1);
       set_parent_size(0);
       if (!WriteMeta()) {
@@ -525,7 +525,7 @@ int File::ShrinkFile(uint64_t offset) {
   // 先保证申请fh成功, 并且如果需要涉及到block的申请和拷贝
   // TODO: 可以先使用临时的meta保证不被写入到磁盘上去
   FileMeta *new_meta =
-      FileStore::Instance()->file_handle()->NewFreeFileMeta(dh(), file_name());
+      FileSystem::Instance()->file_handle()->NewFreeFileMeta(dh(), file_name());
   if (unlikely(!new_meta)) {
     return -1;
   }
@@ -557,7 +557,7 @@ int File::ShrinkFile(uint64_t offset) {
   LOG(INFO) << file_name() << " need alloc file block num: " << file_block_num;
   std::vector<FileBlockPtr> file_blocks;
   if (file_block_num > 0) {
-    if (!FileStore::Instance()->file_block_handle()->GetFileBlockLock(
+    if (!FileSystem::Instance()->file_block_handle()->GetFileBlockLock(
             file_block_num, &file_blocks)) {
       return -1;
     }
@@ -596,7 +596,7 @@ int File::ShrinkFile(uint64_t offset) {
     // 在block中间截断需要单独申请一个block来承载
     if (block_offset > 0) {
       std::vector<uint32_t> block_ids;
-      if (!FileStore::Instance()->block_handle()->GetFreeBlockIdLock(
+      if (!FileSystem::Instance()->block_handle()->GetFreeBlockIdLock(
               1, &block_ids)) {
         return -1;
       }
@@ -624,22 +624,22 @@ int File::ShrinkFile(uint64_t offset) {
 //  uint64_t tmp_seq_no = seq_no();
 
   const DirectoryPtr &dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(dh());
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());
   if (unlikely(!dir)) {
     return -1;
   }
   // 删除之前的meta的fh映射
-  FileStore::Instance()->file_handle()->RemoveFileFromoDirectory(
+  FileSystem::Instance()->file_handle()->RemoveFileFromoDirectory(
       dir, shared_from_this());
 
   // 把文件的元数据更新到的FileMeta
   this->set_meta(new_meta);
-  FileStore::Instance()->file_handle()->AddFileToDirectory(dir,
+  FileSystem::Instance()->file_handle()->AddFileToDirectory(dir,
                                                            shared_from_this());
 
   ParentFilePtr parent =
       ParentFile::NewParentFile(old_meta, offset, item_maps_);
-  if (!parent || !FileStore::Instance()->file_handle()->AddParentFile(parent)) {
+  if (!parent || !FileSystem::Instance()->file_handle()->AddParentFile(parent)) {
     return -1;
   }
 
@@ -695,7 +695,7 @@ int File::posix_fallocate(uint64_t offset, uint64_t size) {
   return -1;
 }
 
-int File::fsync() { return FileStore::Instance()->dev()->Fsync(); }
+int File::fsync() { return FileSystem::Instance()->dev()->Fsync(); }
 
 void File::UpdateTimeStamp(bool a, bool m, bool c) {
   TimeStamp ts = TimeStamp::now();
@@ -707,7 +707,7 @@ void File::UpdateTimeStamp(bool a, bool m, bool c) {
   if (c) set_ctime(seconds);
 
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
-                      FileStore::Instance()->super_meta()->file_meta_size_ -
+                      FileSystem::Instance()->super_meta()->file_meta_size_ -
                           sizeof(meta_->crc_));
 }
 
@@ -773,7 +773,7 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
                  << " read file from offset to end, file size:"
                  << file_->file_size() << " offset: " << append_pos;
   }
-  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
     file_->UpdateTimeStamp(true, false, false);
     return true;
   });
@@ -800,7 +800,7 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
     }
   }
 
-  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
     file_->UpdateTimeStamp(false, true, true);
     return true;
   });
@@ -843,12 +843,12 @@ void OpenFile::FileReader::Transform2Block() {
     }
     // 计算当前block在udisk分区上的偏移
     uint64_t udisk_offset =
-        FileStore::Instance()->super_meta()->block_data_start_offset_ +
-        FileStore::Instance()->super_meta()->block_size_ * block_read_index +
+        FileSystem::Instance()->super_meta()->block_data_start_offset_ +
+        FileSystem::Instance()->super_meta()->block_size_ * block_read_index +
         block_read_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
     LOG(INFO) << file->file_name() << " data_start_offset: "
-              << FileStore::Instance()->super_meta()->block_data_start_offset_
+              << FileSystem::Instance()->super_meta()->block_data_start_offset_
               << " need read offset: " << curr_read_count
               << " read block index: " << block_read_index
               << " read block offset: " << block_read_offset
@@ -879,10 +879,10 @@ int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
             << " read size: " << block->read_size_ << " buffer addr: 0x"
             << (uint64_t)block->extern_buffer_;
   if (direct_) {
-    return FileStore::Instance()->dev()->PreadDirect(
+    return FileSystem::Instance()->dev()->PreadDirect(
         block->extern_buffer_, block->read_size_, block->udisk_offset_);
   } else {
-    return FileStore::Instance()->dev()->PreadCache(
+    return FileSystem::Instance()->dev()->PreadCache(
         block->extern_buffer_, block->read_size_, block->udisk_offset_);
   }
 }
@@ -950,12 +950,12 @@ void OpenFile::FileWriter::Transform2Block() {
           std::min(size_ - curr_write_count, (uint64_t)kBlockFsBlockSize);
     }
     uint64_t udisk_offset =
-        FileStore::Instance()->super_meta()->block_data_start_offset_ +
-        FileStore::Instance()->super_meta()->block_size_ * block_write_index +
+        FileSystem::Instance()->super_meta()->block_data_start_offset_ +
+        FileSystem::Instance()->super_meta()->block_size_ * block_write_index +
         block_write_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
     LOG(INFO) << file->file_name() << " data_start_offset: "
-              << FileStore::Instance()->super_meta()->block_data_start_offset_
+              << FileSystem::Instance()->super_meta()->block_data_start_offset_
               << " need wirte offset: " << curr_write_count
               << " block_write_index: " << block_write_index
               << " block_write_offset: " << block_write_offset
@@ -985,10 +985,10 @@ int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
             << " write size: " << block->write_size_ << " buffer addr: 0x"
             << (uint64_t)block->extern_buffer_;
   if (direct_) {
-    return FileStore::Instance()->dev()->PwriteDirect(
+    return FileSystem::Instance()->dev()->PwriteDirect(
         block->extern_buffer_, block->write_size_, block->udisk_offset_);
   } else {
-    return FileStore::Instance()->dev()->PwriteCache(
+    return FileSystem::Instance()->dev()->PwriteCache(
         block->extern_buffer_, block->write_size_, block->udisk_offset_);
   }
 }
@@ -1036,7 +1036,7 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
                  << " read file from offset to end, file size:"
                  << file_->file_size() << " offset: " << offset;
   }
-  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
     file_->UpdateTimeStamp(true, false, false);
     return true;
   });
@@ -1068,7 +1068,7 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
     }
   }
 
-  FileStore::Instance()->file_handle()->RunInMetaGuard([this] {
+  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
     file_->UpdateTimeStamp(false, true, true);
     return true;
   });

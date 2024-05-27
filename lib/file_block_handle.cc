@@ -9,16 +9,16 @@ namespace udisk::blockfs {
 bool FileBlockHandle::InitializeMeta() {
   LOG(DEBUG)
       << "total file block num: "
-      << FileStore::Instance()->super_meta()->max_file_block_num;
+      << FileSystem::Instance()->super_meta()->max_file_block_num;
   FileBlockMeta *meta;
   for (uint32_t index = 0;
-       index < FileStore::Instance()->super_meta()->max_file_block_num;
+       index < FileSystem::Instance()->super_meta()->max_file_block_num;
        ++index) {
     meta = reinterpret_cast<FileBlockMeta *>(base_addr() +
-        FileStore::Instance()->super_meta()->file_block_meta_size_ * index);
+        FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
     uint32_t crc =
         Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-              FileStore::Instance()->super_meta()->file_block_meta_size_ -
+              FileSystem::Instance()->super_meta()->file_block_meta_size_ -
                   sizeof(meta->crc_));
     if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "debug file block meta: \n"
@@ -50,7 +50,7 @@ bool FileBlockHandle::InitializeMeta() {
         continue;
       }
       const FilePtr &file =
-          FileStore::Instance()->file_handle()->GetCreatedFileNoLock(meta->fh_);
+          FileSystem::Instance()->file_handle()->GetCreatedFileNoLock(meta->fh_);
       if (!file) [[unlikely]] {
         LOG(ERROR) << "file block meta: " << index
                    << " invalid for fh: " << meta->fh_
@@ -68,7 +68,7 @@ bool FileBlockHandle::InitializeMeta() {
       for (uint32_t i = 0; i < fb->used_block_num(); ++i) {
         LOG(DEBUG) << file->file_name() << " block index: " << i
                    << " block id: " << fb->get_block_id(i);
-        if (!FileStore::Instance()->block_handle()->GetSpecificBlockId(
+        if (!FileSystem::Instance()->block_handle()->GetSpecificBlockId(
                 fb->get_block_id(i))) {
           return false;
         }
@@ -84,32 +84,32 @@ bool FileBlockHandle::InitializeMeta() {
 
 bool FileBlockHandle::FormatAllMeta() {
   uint64_t file_block_meta_total_size =
-      FileStore::Instance()->super_meta()->file_block_meta_total_size_;
+      FileSystem::Instance()->super_meta()->file_block_meta_total_size_;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
-      file_block_meta_total_size, FileStore::Instance()->dev()->block_size());
+      file_block_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   FileBlockMeta *meta;
   for (uint32_t i = 0;
-       i < FileStore::Instance()->super_meta()->max_file_block_num;
+       i < FileSystem::Instance()->super_meta()->max_file_block_num;
        ++i) {
     meta = reinterpret_cast<FileBlockMeta *>(
         (buffer->data() +
-         FileStore::Instance()->super_meta()->file_block_meta_size_ * i));
+         FileSystem::Instance()->super_meta()->file_block_meta_size_ * i));
     meta->used_ = false;
     meta->fh_ = -1;
     meta->index_ = i;
     meta->crc_ =
         Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-              FileStore::Instance()->super_meta()->file_block_meta_size_ -
+              FileSystem::Instance()->super_meta()->file_block_meta_size_ -
                   sizeof(meta->crc_));
   }
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       buffer->data(),
-      FileStore::Instance()->super_meta()->file_block_meta_total_size_,
-      FileStore::Instance()->super_meta()->file_block_meta_offset_);
+      FileSystem::Instance()->super_meta()->file_block_meta_total_size_,
+      FileSystem::Instance()->super_meta()->file_block_meta_offset_);
   if (ret !=
       static_cast<int64_t>(
-          FileStore::Instance()->super_meta()->file_block_meta_total_size_)) {
+          FileSystem::Instance()->super_meta()->file_block_meta_total_size_)) {
     LOG(ERROR) << "write file block meta error size:" << ret;
     return false;
   }
@@ -132,7 +132,7 @@ bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
     free_fbhs_.pop_front();
     meta = reinterpret_cast<FileBlockMeta *>(
         base_addr() +
-        FileStore::Instance()->super_meta()->file_block_meta_size_ * index);
+        FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
     assert(meta->used_ == false);
     assert(meta->used_block_num_ == 0);
     file_blocks->push_back(std::make_shared<FileBlock>(index, meta));

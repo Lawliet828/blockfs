@@ -19,21 +19,21 @@ void FileBlock::ClearMeta(FileBlockMeta *meta) {
 
 bool FileBlock::WriteMeta(int32_t index) {
   uint64_t offset =
-      FileStore::Instance()->super_meta()->file_block_meta_size_ * index;
+      FileSystem::Instance()->super_meta()->file_block_meta_size_ * index;
   FileBlockMeta *meta = reinterpret_cast<FileBlockMeta *>(
-      FileStore::Instance()->file_block_handle()->base_addr() + offset);
+      FileSystem::Instance()->file_block_handle()->base_addr() + offset);
   meta->crc_ =
       Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-            FileStore::Instance()->super_meta()->file_block_meta_size_ -
+            FileSystem::Instance()->super_meta()->file_block_meta_size_ -
                 sizeof(meta->crc_));
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
-      meta, FileStore::Instance()->super_meta()->file_block_meta_size_,
-      FileStore::Instance()->super_meta()->file_block_meta_offset_ + offset);
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
+      meta, FileSystem::Instance()->super_meta()->file_block_meta_size_,
+      FileSystem::Instance()->super_meta()->file_block_meta_offset_ + offset);
   if (unlikely(ret != static_cast<int64_t>(
-              FileStore::Instance()->super_meta()->file_block_meta_size_))) {
+              FileSystem::Instance()->super_meta()->file_block_meta_size_))) {
     LOG(ERROR) << "write file block meta index: " << index
                << " error size: " << ret << " need: "
-               << FileStore::Instance()->super_meta()->file_block_meta_size_;
+               << FileSystem::Instance()->super_meta()->file_block_meta_size_;
     return false;
   }
   LOG(INFO) << "write file block meta index: " << index
@@ -62,13 +62,13 @@ bool FileBlock::ReleaseAll() {
   for (uint32_t i = 0; i < meta_->used_block_num_; ++i) {
     block_list.push_back(meta_->block_id_[i]);
   }
-  FileStore::Instance()->block_handle()->PutFreeBlockIdLock(block_list);
+  FileSystem::Instance()->block_handle()->PutFreeBlockIdLock(block_list);
 
   FileBlock::ClearMeta(meta_);
   if (!WriteMeta()) {
     return false;
   }
-  FileStore::Instance()->file_block_handle()->PutFileBlockLock(index_);
+  FileSystem::Instance()->file_block_handle()->PutFileBlockLock(index_);
   return true;
 }
 
@@ -79,7 +79,7 @@ bool FileBlock::ReleaseMyself() {
   if (!WriteMeta()) {
     return false;
   }
-  FileStore::Instance()->file_block_handle()->PutFileBlockLock(index_);
+  FileSystem::Instance()->file_block_handle()->PutFileBlockLock(index_);
   return true;
 }
 }  // namespace blockfs

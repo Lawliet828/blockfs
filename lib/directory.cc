@@ -5,7 +5,7 @@
 
 // common dir/file functions
 void Directory::stat(struct stat *buf) {
-  FileStore::Instance()->dir_handle()->RunInMetaGuard([this, buf] {
+  FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, buf] {
     /* initialize all the values */
     buf->st_dev = 0;                     /* ID of device containing file */
     buf->st_ino = dh();                  /* inode number */
@@ -37,7 +37,7 @@ void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
 
   // 更新内存元数据的CRC
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
-                      FileStore::Instance()->super_meta()->dir_meta_size_ -
+                      FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta_->crc_));
 }
 
@@ -69,18 +69,18 @@ void Directory::ClearMeta() const noexcept {
   // ::memset(meta_->dir_name_, 0, sizeof(meta_->dir_name_));
   meta_->size_ = 0;
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
-                      FileStore::Instance()->super_meta()->dir_meta_size_ -
+                      FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta_->crc_));
 }
 
 void Directory::ClearMeta(dh_t dh) noexcept {
   DirMeta *meta = reinterpret_cast<DirMeta *>(
-      FileStore::Instance()->dir_handle()->base_addr() +
-      FileStore::Instance()->super_meta()->dir_meta_size_ * dh);
+      FileSystem::Instance()->dir_handle()->base_addr() +
+      FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
   meta->used_ = false;
   meta->size_ = 0;
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                      FileStore::Instance()->super_meta()->dir_meta_size_ -
+                      FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta->crc_));
 }
 
@@ -93,7 +93,7 @@ void Directory::ClearMeta(dh_t dh) noexcept {
  * \return success or failed
  */
 bool Directory::Suicide() {
-  return FileStore::Instance()->dir_handle()->RunInMetaGuard([this] {
+  return FileSystem::Instance()->dir_handle()->RunInMetaGuard([this] {
     return SuicideNolock();
   });
 }
@@ -154,17 +154,17 @@ void Directory::DumpMeta() {
 
 bool Directory::WriteMeta() {
   uint32_t align_index =
-      FileStore::Instance()->dir_handle()->PageAlignIndex(dh());
+      FileSystem::Instance()->dir_handle()->PageAlignIndex(dh());
   LOG(INFO) << "directory handle: " << dh() << " align_index: " << align_index;
   uint64_t offset =
-      FileStore::Instance()->super_meta()->dir_meta_size_ * align_index;
-  void *align_meta = FileStore::Instance()->dir_handle()->base_addr() + offset;
+      FileSystem::Instance()->super_meta()->dir_meta_size_ * align_index;
+  void *align_meta = FileSystem::Instance()->dir_handle()->base_addr() + offset;
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
-                      FileStore::Instance()->super_meta()->dir_meta_size_ -
+                      FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta_->crc_));
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
-      FileStore::Instance()->super_meta()->dir_meta_offset_ + offset);
+      FileSystem::Instance()->super_meta()->dir_meta_offset_ + offset);
   if (ret != kBlockFsPageSize) [[unlikely]] {
     LOG(ERROR) << "write directory meta " << dh() << "error size:" << ret
                << " need:" << kBlockFsPageSize;
@@ -175,21 +175,21 @@ bool Directory::WriteMeta() {
 
 bool Directory::WriteMeta(dh_t dh) {
   DirMeta *meta = reinterpret_cast<DirMeta *>(
-      FileStore::Instance()->dir_handle()->base_addr() +
-      FileStore::Instance()->super_meta()->dir_meta_size_ * dh);
+      FileSystem::Instance()->dir_handle()->base_addr() +
+      FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
   uint32_t align_index =
-      FileStore::Instance()->dir_handle()->PageAlignIndex(dh);
+      FileSystem::Instance()->dir_handle()->PageAlignIndex(dh);
   uint64_t offset =
-      FileStore::Instance()->super_meta()->dir_meta_size_ * align_index;
-  void *align_meta = FileStore::Instance()->dir_handle()->base_addr() + offset;
+      FileSystem::Instance()->super_meta()->dir_meta_size_ * align_index;
+  void *align_meta = FileSystem::Instance()->dir_handle()->base_addr() + offset;
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                      FileStore::Instance()->super_meta()->dir_meta_size_ -
+                      FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta->crc_));
   LOG(INFO) << "write dir meta, name: " << meta->dir_name_ << " dh: " << dh
             << " align_index: " << align_index << " crc: " << meta->crc_;
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
-      FileStore::Instance()->super_meta()->dir_meta_offset_ + offset);
+      FileSystem::Instance()->super_meta()->dir_meta_offset_ + offset);
   if (unlikely(ret != kBlockFsPageSize)) {
     LOG(ERROR) << "write directory meta " << dh << "error size:" << ret
                << " need:" << kBlockFsPageSize;
@@ -257,7 +257,7 @@ bool Directory::ForceRemoveAllFiles() {
   for (it = item_maps_.begin(); it != item_maps_.end();) {
     LOG(INFO) << "file index: " << it->first
               << " name: " << it->second->file_name();
-    FileStore::Instance()->file_handle()->unlink(dir_name() +
+    FileSystem::Instance()->file_handle()->unlink(dir_name() +
                                                  it->second->file_name());
     item_maps_.erase(it++);
   }
@@ -268,7 +268,7 @@ bool Directory::ForceRemoveAllFiles() {
 
 int Directory::rename(const std::string &to) {
   bool success =
-      FileStore::Instance()->dir_handle()->RunInMetaGuard([this, to] {
+      FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, to] {
         LOG(INFO) << "rename old dir: " << dir_name() << " to: " << to;
         set_dir_name(to);
         if (!WriteMeta()) {

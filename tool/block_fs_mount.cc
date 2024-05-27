@@ -199,17 +199,17 @@ int main(int argc, char *argv[]) {
     std::exit(1);
   }
 
-  if (FileStore::Instance()->MountFileSystem(config_path) < 0) {
+  if (FileSystem::Instance()->MountFileSystem(config_path) < 0) {
     return -1;
   }
 
-  bfs_config_info *conf = FileStore::Instance()->mount_config();
+  bfs_config_info *conf = FileSystem::Instance()->mount_config();
   conf->fuse_mount_point = mountpoint;
 
   ToolLogPreInit("block_fs_mount", conf->log_path_);
 
   // daemonize(true, false);
 
-  block_fs_fuse_mount(FileStore::Instance()->mount_config());
+  block_fs_fuse_mount(FileSystem::Instance()->mount_config());
   return 0;
 }

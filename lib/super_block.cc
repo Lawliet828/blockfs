@@ -37,7 +37,7 @@ bool SuperBlock::InitializeMeta() {
 
 bool SuperBlock::FormatAllMeta() {
   buffer_ = std::make_shared<AlignBuffer>(
-      kSuperBlockSize, FileStore::Instance()->dev()->block_size());
+      kSuperBlockSize, FileSystem::Instance()->dev()->block_size());
 
   // init base addr beacause other handles needed later
   set_base_addr(buffer_->data());
@@ -99,7 +99,7 @@ bool SuperBlock::FormatAllMeta() {
   meta->block_data_start_offset_ =
       ROUND_UP(meta->block_data_start_offset_, kBlockFsBlockSize);
 
-  meta->curr_udisk_size_ = FileStore::Instance()->dev()->dev_size();
+  meta->curr_udisk_size_ = FileSystem::Instance()->dev()->dev_size();
   uint64_t free_udisk_size =
       meta->curr_udisk_size_ - meta->block_data_start_offset_;
   meta->curr_block_num_ = free_udisk_size / kBlockFsBlockSize;
@@ -111,7 +111,7 @@ bool SuperBlock::FormatAllMeta() {
 
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                      kSuperBlockSize - sizeof(meta->crc_));
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       meta, kSuperBlockSize, kSuperBlockOffset);
   if (ret != static_cast<int64_t>(kSuperBlockSize)) {
     LOG(ERROR) << "write super block error size:" << ret;
@@ -292,7 +292,7 @@ bool SuperBlock::WriteMeta() {
   meta()->crc_ =
       Crc32(reinterpret_cast<uint8_t *>(base_addr()) + sizeof(meta()->crc_),
             kSuperBlockSize - sizeof(meta()->crc_));
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       base_addr(), kSuperBlockSize, kSuperBlockOffset);
   if (ret != static_cast<int64_t>(kSuperBlockSize)) {
     LOG(ERROR) << "write super block error size:" << ret;

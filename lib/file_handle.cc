@@ -17,11 +17,11 @@ bool FileHandle::RunInMetaGuard(const FileModifyCallback &cb) {
 bool FileHandle::InitializeMeta() {
   FileMeta *meta;
   for (uint64_t fh = 0;
-       fh < FileStore::Instance()->super_meta()->max_file_num; ++fh) {
+       fh < FileSystem::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(base_addr() +
-        FileStore::Instance()->super_meta()->file_meta_size_ * fh);
+        FileSystem::Instance()->super_meta()->file_meta_size_ * fh);
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                         FileStore::Instance()->super_meta()->file_meta_size_ -
+                         FileSystem::Instance()->super_meta()->file_meta_size_ -
                              sizeof(meta->crc_));
     if (unlikely(meta->crc_ != crc)) {
       LOG(ERROR) << "file meta " << fh << " crc error, read:" << meta->crc_
@@ -66,7 +66,7 @@ bool FileHandle::InitializeMeta() {
 
       // DH索引只在加载元数据时查找文件夹, 因为文件没有记录文件夹的绝对路径
       const DirectoryPtr &dir =
-          FileStore::Instance()->dir_handle()->GetCreatedDirectoryNolock(
+          FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(
               meta->dh_);
       if (unlikely(!dir)) {
         LOG(ERROR) << "file meta " << fh << " cannot find parent directory";
@@ -84,30 +84,30 @@ bool FileHandle::InitializeMeta() {
 
 bool FileHandle::FormatAllMeta() {
   uint64_t file_meta_total_size =
-      FileStore::Instance()->super_meta()->file_meta_total_size_;
+      FileSystem::Instance()->super_meta()->file_meta_total_size_;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
-      file_meta_total_size, FileStore::Instance()->dev()->block_size());
+      file_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   FileMeta *meta;
   for (uint64_t fh = 0;
-       fh < FileStore::Instance()->super_meta()->max_file_num; ++fh) {
+       fh < FileSystem::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(
         buffer->data() +
-        FileStore::Instance()->super_meta()->file_meta_size_ * fh);
+        FileSystem::Instance()->super_meta()->file_meta_size_ * fh);
     meta->used_ = false;
     meta->fh_ = fh;
     meta->child_fh_ = -1;
     meta->parent_fh_ = -1;
     meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-                       FileStore::Instance()->super_meta()->file_meta_size_ -
+                       FileSystem::Instance()->super_meta()->file_meta_size_ -
                            sizeof(meta->crc_));
   }
-  int64_t ret = FileStore::Instance()->dev()->PwriteDirect(
+  int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       buffer->data(),
-      FileStore::Instance()->super_meta()->file_meta_total_size_,
-      FileStore::Instance()->super_meta()->file_meta_offset_);
+      FileSystem::Instance()->super_meta()->file_meta_total_size_,
+      FileSystem::Instance()->super_meta()->file_meta_offset_);
   if (ret != static_cast<int64_t>(
-                 FileStore::Instance()->super_meta()->file_meta_total_size_)) {
+                 FileSystem::Instance()->super_meta()->file_meta_total_size_)) {
     LOG(ERROR) << "write file meta error size:" << ret;
     return false;
   }
@@ -126,7 +126,7 @@ bool FileHandle::TransformPath(const std::string &filename,
                                std::string &new_dirname,
                                std::string &new_filename) {
   std::string file_name = filename;
-  if (!FileStore::Instance()->super()->CheckMountPoint(file_name, true)) {
+  if (!FileSystem::Instance()->super()->CheckMountPoint(file_name, true)) {
     return false;
   }
   new_dirname = GetDirName(file_name);
@@ -259,7 +259,7 @@ bool FileHandle::NewFile(const std::string &dirname,
                          const std::string &filename, bool tmpfile,
                          std::pair<DirectoryPtr, FilePtr> *dirs) {
   const DirectoryPtr &dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(dirname);
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dirname);
   if (!dir) [[unlikely]] {
     LOG(ERROR) << "parent directory not exist: " << dirname;
     errno = ENOENT;
@@ -385,7 +385,7 @@ void FileHandle::AddFile2Free(int32_t index) {
 // 通过索引找到对齐的4K页面的
 uint32_t FileHandle::PageAlignIndex(uint32_t index) {
   static const uint32_t FILE_ALIGN =
-      kBlockFsPageSize / FileStore::Instance()->super_meta()->file_meta_size_;
+      kBlockFsPageSize / FileSystem::Instance()->super_meta()->file_meta_size_;
   return index - (index % FILE_ALIGN);
 }
 
@@ -393,7 +393,7 @@ bool FileHandle::FindFile(const std::string &dirname,
                           const std::string &filename,
                           std::pair<DirectoryPtr, FilePtr> *dirs) {
   const DirectoryPtr &dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(dirname);
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dirname);
   if (unlikely(!dir)) {
     LOG(ERROR) << "parent directory not exist: " << dirname;
     block_fs_set_errno(ENOENT);
@@ -476,7 +476,7 @@ int FileHandle::UnlinkFileNolock(const int fh) {
   }
 
   const DirectoryPtr &parent_dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectoryNolock(
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(
           file->dh());
   if (!parent_dir) {
     block_fs_set_errno(EISDIR);
@@ -516,7 +516,7 @@ int FileHandle::unlink(const std::string &filename) {
   LOG(INFO) << "unlink file: " << filename;
 
   const DirectoryPtr &dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(filename);
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(filename);
   if (dir) {
     block_fs_set_errno(EISDIR);
     return -1;
@@ -606,7 +606,7 @@ const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
     return kEmptyFilePtr;
   }
   const DirectoryPtr &dir =
-      FileStore::Instance()->dir_handle()->GetCreatedDirectory(new_dirname);
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectory(new_dirname);
   if (!dir) [[unlikely]] {
     // block_fs_set_errno(ENOTDIR);
     return kEmptyFilePtr;
@@ -705,7 +705,7 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
       return -1;
     }
   } else {
-    if (FileStore::Instance()->dir_handle()->GetCreatedDirectory(filename)) {
+    if (FileSystem::Instance()->dir_handle()->GetCreatedDirectory(filename)) {
       errno = EISDIR;
       return -1;
     }
@@ -735,7 +735,7 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   }
 
   /* allocate a file fd for this new file */
-  int32_t fd = FileStore::Instance()->fd_handle()->get_fd();
+  int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
     errno = ENFILE;
     return -1;
@@ -781,7 +781,7 @@ int FileHandle::close(int32_t fd) noexcept {
   }
   // keep the reference of file pointer
   open_files_.erase(fd);
-  FileStore::Instance()->fd_handle()->put_fd(fd);
+  FileSystem::Instance()->fd_handle()->put_fd(fd);
   block_fs_set_errno(0);
   return 0;
 }
@@ -795,7 +795,7 @@ int FileHandle::dup(int oldfd) {
   const FilePtr &file = old_open_file->file();
 
   /* allocate a file fd for this new file */
-  int32_t newfd = FileStore::Instance()->fd_handle()->get_fd();
+  int32_t newfd = FileSystem::Instance()->fd_handle()->get_fd();
   if (newfd < 0) {
     block_fs_set_errno(ENFILE);
     return -1;

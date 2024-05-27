@@ -185,7 +185,7 @@ std::vector<std::string> StringSplit(const std::string &s,
 }
 
 void BlockFsTool::PrintFileMetadata(const std::string &file_name) {
-  FileStore::Instance()->DumpFileMeta(file_name);
+  FileSystem::Instance()->DumpFileMeta(file_name);
 }
 
 bool BlockFsTool::ExportBlkDeviceContents() {
@@ -213,7 +213,7 @@ bool BlockFsTool::ExportBlkDeviceContents() {
   while (export_size > 0) {
     ::memset(buffer->data(), 0, kExportBufferSize);
     if (export_size >= kExportBufferSize) {
-      ret = FileStore::Instance()->dev()->PreadCache(
+      ret = FileSystem::Instance()->dev()->PreadCache(
           buffer->data(), kExportBufferSize, read_offset);
       if (ret != kExportBufferSize) {
         ::close(dst_fd);
@@ -227,7 +227,7 @@ bool BlockFsTool::ExportBlkDeviceContents() {
       export_size -= kExportBufferSize;
       read_offset += kExportBufferSize;
     } else {
-      ret = FileStore::Instance()->dev()->PreadCache(buffer->data(),
+      ret = FileSystem::Instance()->dev()->PreadCache(buffer->data(),
                                                      export_size, read_offset);
       if (ret != export_size) {
         ::close(dst_fd);
@@ -255,14 +255,14 @@ bool BlockFsTool::DoBlockFsTool() {
   bool is_success = false;
   auto start = std::chrono::high_resolution_clock::now();
   if (tool_type_ == BLOCKFS_FORMAT) {
-    is_success = FileStore::Instance()->Format(dev_name_);
+    is_success = FileSystem::Instance()->Format(dev_name_);
     if (!is_success) {
       LOG(INFO) << "format block fs failed";
     } else {
       LOG(INFO) << "format block fs success";
     }
   } else {
-    is_success = FileStore::Instance()->Check(dev_name_);
+    is_success = FileSystem::Instance()->Check(dev_name_);
     if (unlikely(!is_success)) {
       LOG(ERROR) << "check load BlockFS failed";
       return false;
@@ -272,14 +272,14 @@ bool BlockFsTool::DoBlockFsTool() {
         if (dump_arg_.find("check") != std::string::npos) {
           LOG(INFO) << "check load block fs success";
         } else if (dump_arg_.find("super") != std::string::npos) {
-          FileStore::Instance()->super()->Dump();
+          FileSystem::Instance()->super()->Dump();
         } else if (dump_arg_.find("uuid") != std::string::npos) {
-          LOG(INFO) << "dump uuid: " << FileStore::Instance()->super()->uuid();
+          LOG(INFO) << "dump uuid: " << FileSystem::Instance()->super()->uuid();
         } else if (dump_arg_.find("files") != std::string::npos) {
-          FileStore::Instance()->file_handle()->Dump();
+          FileSystem::Instance()->file_handle()->Dump();
         } else {
-          FileStore::Instance()->super()->Dump();
-          FileStore::Instance()->file_handle()->Dump();
+          FileSystem::Instance()->super()->Dump();
+          FileSystem::Instance()->file_handle()->Dump();
         }
         break;
       case BLOCKFS_BLK:

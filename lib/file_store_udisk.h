@@ -20,8 +20,7 @@
 #include "shm_manager.h"
 #include "super_block.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class Directory;
 struct FileInfo {
@@ -42,7 +41,7 @@ enum MetaHandleType {
   kMetaHandleSize,
 };
 
-class FileStore {
+class FileSystem {
  private:
   bfs_config_info mount_config_;
   bool remount_ = false;
@@ -52,7 +51,7 @@ class FileStore {
 
   MetaHandle *handle_vector_[kMetaHandleSize];
 
-  static FileStore *g_instance;
+  static FileSystem *g_instance;
 
  private:
   bool FormatFSMeta();
@@ -66,10 +65,10 @@ class FileStore {
   int MakeMountPoint(const std::string &mount_point);
 
  public:
-  FileStore();
-  ~FileStore();
+  FileSystem();
+  ~FileSystem();
 
-  static FileStore *Instance();
+  static FileSystem *Instance();
 
   bfs_config_info* mount_config() { return &mount_config_; }
 
@@ -176,6 +175,5 @@ class FileStore {
   bool Format(const std::string &dev_name);
   bool Check(const std::string &dev_name, const std::string &log_level = "DEBUG");
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif
