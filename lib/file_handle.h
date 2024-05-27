@@ -95,8 +95,8 @@ class FileHandle : public MetaHandle {
   bool RemoveParentFile(const ParentFilePtr &parent);
 
   bool CheckFileExist(const std::string &path);
-  const OpenFilePtr &GetOpenFile(int32_t fd);
-  const OpenFilePtr &GetOpenFileNolock(int32_t fd);
+  const OpenFilePtr &GetOpenFile(uint64_t fd);
+  const OpenFilePtr &GetOpenFileNolock(uint64_t fd);
   const FilePtr &GetCreatedFile(int32_t fh);
   const FilePtr &GetCreatedFileNoLock(int32_t fh);
   const FilePtr &GetCreatedFile(const std::string &filename);

@@ -453,7 +453,7 @@ int64_t FileSystem::PreadFile(int32_t fd, void* buf, size_t len, off_t offset) {
   return open_file->pread(buf, len, offset);
 }
 
-int64_t FileSystem::PwriteFile(int32_t fd, const void* buf, size_t len,
+int64_t FileSystem::PwriteFile(uint64_t fd, const void* buf, size_t len,
                               off_t offset) {
   LOG(INFO) << "pwrite file fd: " << fd << " len: " << len << " offset: "
             << offset;

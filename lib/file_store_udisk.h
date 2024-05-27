@@ -132,7 +132,7 @@ class FileSystem {
   int64_t ReadFile(int32_t fd, void *buf, size_t len);
   int64_t WriteFile(int32_t fd, const void *buf, size_t len);
   int64_t PreadFile(int32_t fd, void *buf, size_t len, off_t offset);
-  int64_t PwriteFile(int32_t fd, const void *buf, size_t len,
+  int64_t PwriteFile(uint64_t fd, const void *buf, size_t len,
                      off_t offset);
   off_t SeekFile(int32_t fd, off_t offset, int whence);
   int32_t FcntlFile(int32_t fd, int32_t set_flag);

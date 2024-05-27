@@ -568,17 +568,16 @@ bool FileHandle::CheckFileExist(const std::string &path) {
   return (GetCreatedFile(path) == kEmptyFilePtr);
 }
 
-const OpenFilePtr &FileHandle::GetOpenFile(int32_t fd) {
+const OpenFilePtr &FileHandle::GetOpenFile(uint64_t fd) {
   META_HANDLE_LOCK();
   return GetOpenFileNolock(fd);
 }
 
-const OpenFilePtr &FileHandle::GetOpenFileNolock(int32_t fd) {
+const OpenFilePtr &FileHandle::GetOpenFileNolock(uint64_t fd) {
   auto itor = open_files_.find(fd);
   if (unlikely(itor == open_files_.end())) {
     LOG(WARNING) << "fd not been opened: " << fd;
-    /* ERROR: invalid file descriptor */
-    block_fs_set_errno(EBADF);
+    errno = EBADF;
     return kEmptyOpenFilePtr;
   }
   return itor->second;
@@ -782,7 +781,7 @@ int FileHandle::close(int32_t fd) noexcept {
   // keep the reference of file pointer
   open_files_.erase(fd);
   FileSystem::Instance()->fd_handle()->put_fd(fd);
-  block_fs_set_errno(0);
+  errno = 0;
   return 0;
 }
 
@@ -806,7 +805,7 @@ int FileHandle::dup(int oldfd) {
   AddOpenFile(newfd, new_open_file);
   file->IncLinkCount();
 
-  block_fs_set_errno(0);
+  errno = 0;
   return newfd;
 }
 

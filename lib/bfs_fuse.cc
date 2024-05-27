@@ -420,15 +420,13 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int fd;
+  uint64_t fd;
   int res;
 
   if (fi == nullptr)
     fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
   else
     fd = fi->fh;
-
-  if (fd == -1) return -errno;
 
   res = FileSystem::Instance()->PwriteFile(fd, const_cast<char *>(buf), size, offset);
   if (res < 0) res = -errno;
