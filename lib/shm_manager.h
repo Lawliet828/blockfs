@@ -39,10 +39,6 @@ class ShmManager {
   bool ShmOpen();
   bool MemMap();
   bool MemUnMap();
-  bool MemProtect(void *ptr, uint64_t size, int flag);
-  bool MemSync(void *ptr, uint64_t size, int flag);
-  bool MemLock(const void *ptr, uint64_t size);
-  bool MemUnlock(const void *ptr, uint64_t size);
   bool ReadAllMeta();
   void RegistMetaBaseAddr();
 

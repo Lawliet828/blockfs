@@ -145,50 +145,6 @@ bool ShmManager::MemUnMap() {
   return true;
 }
 
-/**
- * mmap memory proect
- *
- * \param void
- *
- * \return success or failed
- */
-bool ShmManager::MemProtect(void *ptr, uint64_t size, int flag) {
-  return ::mprotect(ptr, size, flag) == 0;
-}
-
-/**
- * sync mmap memory
- *
- * \param void
- *
- * \return success or failed
- */
-bool ShmManager::MemSync(void *ptr, uint64_t size, int flag) {
-  return ::msync(ptr, size, flag) == 0;
-}
-
-/**
- * lock mmap memory
- *
- * \param void
- *
- * \return success or failed
- */
-bool ShmManager::MemLock(const void *ptr, uint64_t size) {
-  return ::mlock(ptr, size) == 0;
-}
-
-/**
- * unlock mmap memory
- *
- * \param void
- *
- * \return success or failed
- */
-bool ShmManager::MemUnlock(const void *ptr, uint64_t size) {
-  return ::munlock(ptr, size) == 0;
-}
-
 bool ShmManager::NewPosixAlignMem() {
   if (shm_size_ == 0) {
     LOG(ERROR) << "shm size cannot be zero";
