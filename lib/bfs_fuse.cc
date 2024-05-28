@@ -240,9 +240,7 @@ static int bfs_rmdir(const char *path) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int res;
-
-  res = block_fs_rmdir(in_path.c_str());
+  int res = FileSystem::Instance()->dir_handle()->DeleteDirectory(in_path, false);
   if (res < 0) return -errno;
 
   return 0;
@@ -494,7 +492,7 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
      called multiple times for an open file, this must not really
      close the file.  This is important if used on a network
      filesystem like NFS which flush the data/metadata on close() */
-  res = FileSystem::Instance()->file_handle()->close(block_fs_dup(fd));
+  res = FileSystem::Instance()->file_handle()->close(FileSystem::Instance()->file_handle()->dup(fd));
   if (res < 0) return -errno;
 
   if (!fi) FileSystem::Instance()->file_handle()->close(fd);
@@ -547,14 +545,8 @@ static int bfs_fsync(const char *path, int datasync,
   else
     fd = fi->fh;
 
-#ifndef HAVE_FDATASYNC
-  (void)datasync;
-#else
-  if (isdatasync)
-    res = block_fs_fdatasync(fd);
-  else
-#endif
-  res = block_fs_fsync(fd);
+  // TODO: datasync
+  res = FileSystem::Instance()->file_handle()->fsync(fd);
 
   if (res < 0) return -errno;
 

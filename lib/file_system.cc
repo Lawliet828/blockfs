@@ -113,18 +113,6 @@ int32_t FileSystem::RemountFileSystem() {
 }
 
 /**
- * Delete Directory
- *
- * \param dirname: abosolute dirname
- *
- * \return success or failed
- */
-int32_t FileSystem::DeleteDirectory(const std::string& path, bool recursive) {
-  LOG(INFO) << "remove directory: " << path;
-  return dir_handle()->DeleteDirectory(path, recursive);
-}
-
-/**
  * read a directory
  *
  * \param dir: dir info struct
@@ -219,7 +207,7 @@ int32_t FileSystem::StatVFS(const std::string& path,
   return 0;
 }
 
-int32_t FileSystem::StatVFS(const int32_t fd, struct statvfs* buf) {
+int32_t FileSystem::StatVFS(const ino_t fd, struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = GetBlockSize();
   // f_frsize: 分栈大小
@@ -424,23 +412,6 @@ int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
   }
   return 0;
 }
-
-int32_t FileSystem::Sync() {
-  LOG(INFO) << "sync file system, persistent timestamp only";
-  return file_handle()->UpdateMeta() ? 0 : -1;
-}
-
-int32_t FileSystem::FileSync(const int32_t fd) {
-  LOG(INFO) << "fsync file fd: " << fd;
-  return file_handle()->fsync(fd);
-}
-
-int32_t FileSystem::FileDataSync(const int32_t fd) {
-  LOG(INFO) << "fdatasync file fd: " << fd;
-  return file_handle()->fsync(fd);
-}
-
-int32_t FileSystem::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
 
 /**
  * Initialize handle in order

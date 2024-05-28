@@ -12,15 +12,6 @@
 
 #include "block_fs_internal.h"
 
-/**
- * Remove a given dir
- *
- * \param dirname Dir absolute path
- *
- * \return dir remove retcode
- */
-int block_fs_rmdir(const char *dirname);
-
 typedef struct blockfs_dirent {
   long d_ino;                /* inode number */
   off_t d_off;               /* offset to this dirent */
@@ -47,19 +38,7 @@ typedef struct blockfs_dirent {
  *
  * \return struct dirent* head
  */
-struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir);
-
-/**
- * Dup a given file fd, copy old fd to new fd,
- * new fd reference to the same file,
- * Share all locks, read and write pointers,
- * and various permissions or flags
- *
- * \param oldfd Old file fd(fd)
- *
- * \return File new fd
- */
-int block_fs_dup(int oldfd);
+struct blockfs_dirent *block_fs_readdir(udisk::blockfs::BLOCKFS_DIR *dir);
 
 /**
  * Truncate a given file path from offset 0
@@ -91,34 +70,6 @@ int block_fs_ftruncate(int fd, int64_t len);
  * \return File truncate retcode
  */
 int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len);
-
-/**
- * Sync all the meta and data
- * used to sync file timestamp
- *
- * \param void
- *
- * \return File sync retcode
- */
-int block_fs_sync();
-
-/**
- * Sync a given fd
- *
- * \param fd File fd
- *
- * \return File sync retcode
- */
-int block_fs_fsync(int fd);
-
-/**
- * Sync data with a given fd
- *
- * \param fd File fd
- *
- * \return File sync retcode
- */
-int block_fs_fdatasync(int fd);
 
 /**
  * File read from current pos
@@ -169,7 +120,6 @@ typedef struct {
 int block_fs_fcntl(int fd, int cmd, ...);
 
 int block_fs_statvfs(const char *path, struct statvfs *buf);
-int block_fs_fstatvfs(int fd, struct statvfs *buf);
 
 void block_fs_set_errno(int e);
 

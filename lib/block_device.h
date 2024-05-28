@@ -26,7 +26,6 @@ class BlockDevice {
   bool BlkDevGetSectorSize();
   bool Open(const std::string &dev_name);
   void Close();
-  void Sync();
   int Fsync();
 
   int64_t PreadCache(void *buf, uint64_t len, off_t offset);

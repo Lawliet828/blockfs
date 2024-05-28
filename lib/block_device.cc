@@ -164,8 +164,6 @@ void BlockDevice::Close() {
   LOG(DEBUG) << "close block device " << dev_name_;
 }
 
-void BlockDevice::Sync() { ::sync(); }
-
 int BlockDevice::Fsync() {
   int ret;
   if (dev_fd_direct_ > 0) {

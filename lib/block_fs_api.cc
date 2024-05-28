@@ -23,10 +23,6 @@ int block_fs_statvfs(const char *path, struct statvfs *buf) {
   return FileSystem::Instance()->StatVFS(path, buf);
 }
 
-int block_fs_fstatvfs(int fd, struct statvfs *buf) {
-  return FileSystem::Instance()->StatVFS(fd, buf);
-}
-
 int block_fs_fcntl(int fd, int cmd, ...) {
   switch (cmd) {
     case F_SETFL: {
@@ -58,10 +54,6 @@ struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir) {
   return FileSystem::Instance()->ReadDirectory(dir);
 }
 
-int block_fs_rmdir(const char *dirname) {
-  return FileSystem::Instance()->DeleteDirectory(dirname);
-}
-
 int block_fs_truncate(const char *valpath, int64_t len) {
   if (nullptr == valpath) [[unlikely]] {
     block_fs_set_errno(EFAULT);
@@ -76,16 +68,6 @@ int block_fs_ftruncate(int fd, int64_t len) {
 
 int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len) {
   return FileSystem::Instance()->PosixFallocate(fd, offset, len);
-}
-
-int block_fs_dup(int oldfd) { return FileSystem::Instance()->FileDup(oldfd); }
-
-int block_fs_sync() { return FileSystem::Instance()->Sync(); }
-
-int block_fs_fsync(int fd) { return FileSystem::Instance()->FileSync(fd); }
-
-int block_fs_fdatasync(int fd) {
-  return FileSystem::Instance()->FileDataSync(fd);
 }
 
 ssize_t block_fs_read(int fd, void *buf, size_t len) {

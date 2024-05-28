@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_INTERNAL_H_
 #define LIB_INTERNAL_H_
 
@@ -8,8 +7,6 @@
 // https://blog.csdn.net/lee244868149/article/details/38702367?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase
 // https://blog.csdn.net/wogezheerne/article/details/84994476?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-10.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-10.nonecase
 struct blockfs_dirent;
-
-using namespace udisk::blockfs;
 
 namespace udisk::blockfs {
 

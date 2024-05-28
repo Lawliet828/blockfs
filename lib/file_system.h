@@ -77,10 +77,6 @@ class FileSystem {
   int32_t MountFileSystem(const std::string &config_path);
   int32_t RemountFileSystem();
 
-  // Delete Directory
-  int32_t DeleteDirectory(const std::string &path,
-                          bool recursive = false);
-
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
 
   // Stat
@@ -88,7 +84,7 @@ class FileSystem {
   int32_t StatPath(const int32_t fd, struct stat *fileinfo);
   int32_t StatVFS(const std::string &path,
                   struct statvfs *buf);
-  int32_t StatVFS(const int32_t fd, struct statvfs *buf);
+  int32_t StatVFS(const ino_t fd, struct statvfs *buf);
 
   int32_t CreateFile(const std::string &path, mode_t mode);
   int32_t RenamePath(const std::string &src,
@@ -106,10 +102,6 @@ class FileSystem {
   off_t SeekFile(ino_t fd, off_t offset, int whence);
   int32_t FcntlFile(int32_t fd, int32_t set_flag);
   int32_t FcntlFile(int32_t fd, int16_t lock_type);
-  int32_t Sync();
-  int32_t FileSync(const int32_t fd);
-  int32_t FileDataSync(const int32_t fd);
-  int32_t FileDup(const int32_t fd);
 
   void DumpFileMeta(const std::string &path);
 

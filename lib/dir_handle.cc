@@ -569,7 +569,7 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
 
   // 同步从节点
   LOG(INFO) << "remove directory success: " << path;
-  block_fs_set_errno(0);
+  errno = 0;
   return 0;
 }
 
