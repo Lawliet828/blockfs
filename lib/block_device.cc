@@ -15,8 +15,6 @@ static const std::string kBlockDeviceVda = "/dev/vda";
 static const std::string kBlockDeviceCurrent = "/dev/.";
 static const std::string kBlockDeviceParent = "/dev/..";
 
-static constexpr uint32_t kIovMax = IOV_MAX;
-
 static const int kBlkOpenWithDirect =
     O_RDWR | O_LARGEFILE | O_DIRECT | O_CLOEXEC;
 static const int kBlkOpenWithoutDirect = O_RDWR | O_LARGEFILE | O_CLOEXEC;

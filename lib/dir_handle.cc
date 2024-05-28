@@ -113,25 +113,17 @@ bool DirHandle::FormatAllMeta() {
   return true;
 }
 
-bool DirHandle::AddSeparator(std::string &dirname) const noexcept {
-  /* 存储元数据的时候增加文件夹分隔符 */
-  if (dirname[dirname.size() - 1] != '/') {
-    dirname += '/';
-  }
-  if (dirname.size() >= kBlockFsMaxDirNameLen) {
-    LOG(ERROR) << "directory path: " << dirname
-               << " too long, size: " << dirname.size()
-               << " max limit: " << kBlockFsMaxDirNameLen;
-    errno = ENAMETOOLONG;
-    return false;
-  }
-  return true;
-}
-
 bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
   dir_name = path;
-  // 文件夹先加上最后的分隔符
-  if (!AddSeparator(dir_name)) {
+  /* 存储元数据的时候增加文件夹分隔符 */
+  if (dir_name[dir_name.size() - 1] != '/') {
+    dir_name += '/';
+  }
+  if (dir_name.size() >= kBlockFsMaxDirNameLen) {
+    LOG(ERROR) << "directory path: " << dir_name
+               << " too long, size: " << dir_name.size()
+               << " max limit: " << kBlockFsMaxDirNameLen;
+    errno = ENAMETOOLONG;
     return false;
   }
   // 创建挂载目录不需要检查
@@ -364,7 +356,7 @@ bool DirHandle::RemoveDirectory(const DirectoryPtr &parent,
 const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
   META_HANDLE_LOCK();
   auto itor = open_dirs_.find(fd);
-  if (unlikely(itor == open_dirs_.end())) {
+  if (itor == open_dirs_.end()) [[unlikely]] {
     LOG(ERROR) << "directory not been opened: " << fd;
     return kEmptyDirectoryPtr;
   }
@@ -378,7 +370,7 @@ const DirectoryPtr &DirHandle::GetCreatedDirectory(dh_t dh) {
 
 const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(dh_t dh) {
   auto itor = created_dhs_.find(dh);
-  if (unlikely(itor == created_dhs_.end())) {
+  if (itor == created_dhs_.end()) [[unlikely]] {
     LOG(WARNING) << "directory handle not exist: " << dh;
     return kEmptyDirectoryPtr;
   }

@@ -6,7 +6,7 @@ log_path                  = /var/log/mfs/
 [bfs]
 device_uuid               = 70a2ba2a-9267-4ff1-b052-9a159958b255
 # virtual mysql mount point
-uxdb_mount_point          = /mnt/mysql/
+uxdb_mount_point          = /mysql/
 
 [fuse]
 # the mount point (local path) for FUSE

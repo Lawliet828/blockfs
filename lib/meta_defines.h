@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_META_DEFINES_H
 #define LIB_META_DEFINES_H
 
@@ -33,7 +32,7 @@ const uint64_t T = (1024 * G);
 
 const uint32_t kBlockFsMagic = 0xA5201314;
 
-const uint64_t kBlockFsMaxUuidSize = 64;
+const uint64_t kUUIDSize = 64;
 const uint64_t kUXDBMountPrefixMaxLen = 256;
 
 const uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
@@ -76,7 +75,7 @@ static const int32_t kMaxJournalIndex = 4095;
 union SuperBlockMeta {
   struct {
     uint32_t crc_;
-    char uuid_[kBlockFsMaxUuidSize];  // bfs uuid -> /dev/vdb
+    char uuid_[kUUIDSize];  // bfs uuid -> /dev/vdb
     uint32_t magic_;                  // bfs magic
     seq_t seq_no_;                    // bfs sequenece
     // bfs consts

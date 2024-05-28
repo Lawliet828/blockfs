@@ -27,7 +27,6 @@ class DirHandle : public MetaHandle {
   DirectoryHandleMap open_dirs_;    // 已打开的目录
 
  private:
-  bool AddSeparator(std::string &dirname) const noexcept;
   bool TransformPath(const std::string &path, std::string &dir_name);
 
   bool IsMountPoint(const std::string &dirname) const noexcept;

@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_BLOCK_DEVICE_H_
 #define LIB_BLOCK_DEVICE_H_
 
