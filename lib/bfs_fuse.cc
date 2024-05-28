@@ -856,7 +856,7 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
     return -errno;
   }
 
-  res = block_fs_lseek(fd, write_offset, SEEK_SET);
+  res = FileSystem::Instance()->SeekFile(fd, write_offset, SEEK_SET);
   if (res < 0) return -errno;
 
   struct fuse_buf *buffer;
@@ -921,7 +921,7 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
     return -ENOMEM;
   }
 
-  res = block_fs_lseek(fd, offset, SEEK_SET);
+  res = FileSystem::Instance()->SeekFile(fd, offset, SEEK_SET);
   if (res < 0) return -errno;
 
   res = block_fs_read(fd, src->buf[0].mem, size);
@@ -1069,7 +1069,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
   else
     fd = fi->fh;
 
-  res = block_fs_lseek(fi->fh, off, whence);
+  res = FileSystem::Instance()->SeekFile(fd, off, whence);
   if (res < 0) return -errno;
 
   if (fi == nullptr) block_fs_close(fd);

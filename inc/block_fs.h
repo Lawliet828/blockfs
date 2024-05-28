@@ -221,17 +221,6 @@ int block_fs_fsync(int fd);
 int block_fs_fdatasync(int fd);
 
 /**
- * Adjust offset
- *
- * \param fd File fd
- * \param offset File offset
- * \param whence Adjust type
- *
- * \return File lseek retcode
- */
-off_t block_fs_lseek(int fd, off_t offset, int whence);
-
-/**
  * File read from current pos
  *
  * \param fd File fd

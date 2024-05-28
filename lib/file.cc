@@ -717,12 +717,6 @@ bool File::UpdateMeta() { return WriteMeta(); }
 // 没有被实际写入文件的所有字节由重复的0表示
 // 空洞是否占用硬盘空间是由文件系统(file system)决定的.
 off_t OpenFile::lseek(off_t offset, int whence) {
-  // if (offset % 512 != 0) {
-  //   LOG(ERROR) << "lseek offset invalid: " << offset;
-  //   errno = EINVAL;
-  //   return (off_t)-1;
-  // }
-
   /* get current file position */
   off_t current_pos = append_pos();
 

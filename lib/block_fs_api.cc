@@ -135,10 +135,6 @@ int block_fs_fdatasync(int fd) {
   return FileSystem::Instance()->FileDataSync(fd);
 }
 
-off_t block_fs_lseek(int fd, off_t offset, int whence) {
-  return FileSystem::Instance()->SeekFile(fd, offset, whence);
-}
-
 ssize_t block_fs_read(int fd, void *buf, size_t len) {
   return FileSystem::Instance()->ReadFile(fd, buf, len);
 }
