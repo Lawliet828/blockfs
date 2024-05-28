@@ -351,12 +351,15 @@ static int bfs_truncate(const char *path, off_t newsize,
  *
  */
 static int mfs_open(const char *path, struct fuse_file_info *fi) {
+  if (nullptr == path) [[unlikely]] {
+    return -EINVAL;
+  }
   LOG(INFO) << "call mfs_open file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  ino_t fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags);
+  ino_t fd = FileSystem::Instance()->file_handle()->open(in_path, fi->flags);
   fi->fh = fd;
   fi->direct_io = 1;
   // fi->nonseekable = 1;
@@ -387,7 +390,7 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
   int res;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -419,7 +422,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   int res;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -482,7 +485,7 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -540,7 +543,7 @@ static int bfs_fsync(const char *path, int datasync,
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -757,14 +760,17 @@ static void bfs_destroy(void *userdata) {
  * versions earlier than 2.6.15, the mknod() and open() methods
  * will be called instead.
  */
-static int bfs_create(const char *path, mode_t mode,
+static int mfs_create(const char *path, mode_t mode,
                       struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_create: " << path;
+  if (path == nullptr) [[unlikely]] {
+    return -EINVAL;
+  }
+  LOG(INFO) << "call mfs_create: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  ino_t fd = FileSystem::Instance()->OpenFile(in_path.c_str(), fi->flags, mode);
+  ino_t fd = FileSystem::Instance()->file_handle()->open(in_path, fi->flags, mode);
 
   fi->fh = fd;
   return 0;
@@ -811,7 +817,7 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -845,7 +851,7 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
   uint64_t res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -900,7 +906,7 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
   ssize_t res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -963,7 +969,7 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->OpenFile(in_path.c_str(), O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -995,7 +1001,7 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
   if (mode) return -EOPNOTSUPP;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->OpenFile(path, O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -1029,14 +1035,14 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
   ssize_t res;
 
   if (fi_in == nullptr)
-    fd_in = FileSystem::Instance()->OpenFile(path_in, O_RDONLY);
+    fd_in = FileSystem::Instance()->file_handle()->open(path_in, O_RDONLY);
   else
     fd_in = fi_in->fh;
 
   if (fd_in == -1) return -errno;
 
   if (fi_out == nullptr)
-    fd_out = FileSystem::Instance()->OpenFile(path_out, O_WRONLY);
+    fd_out = FileSystem::Instance()->file_handle()->open(path_out, O_WRONLY);
   else
     fd_out = fi_out->fh;
 
@@ -1065,7 +1071,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
   off_t res;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->OpenFile(path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -1107,7 +1113,7 @@ static const struct fuse_operations kBFSOps = {
     .init = bfs_init,
     .destroy = bfs_destroy,
     .access = nullptr,
-    .create = bfs_create,
+    .create = mfs_create,
     .lock = bfs_lock,
 #ifdef BFS_USE_READ_WRITE_BUFFER
     .write_buf = bfs_write_buf,

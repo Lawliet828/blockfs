@@ -8,10 +8,7 @@
 #include "file.h"
 #include "meta_handle.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class Directory;
 class FileBlock;
@@ -122,6 +119,5 @@ class FileHandle : public MetaHandle {
   int dup(int oldfd);
   int fsync(int32_t fh);
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

@@ -319,16 +319,6 @@ int32_t FileSystem::GetFileSize(const std::string& path, int64_t* file_size) {
   return 0;
 }
 
-int32_t FileSystem::OpenFile(const std::string& path, int32_t flags,
-                            int32_t mode) {
-  if (path.empty()) [[unlikely]] {
-    errno = EINVAL;
-    return -1;
-  }
-  LOG(INFO) << "open file: " << path;
-  return file_handle()->open(path, flags, mode);
-}
-
 int32_t FileSystem::CloseFile(int32_t fd) {
   LOG(INFO) << "close file fd: " << fd;
   return file_handle()->close(fd);
