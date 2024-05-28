@@ -24,121 +24,42 @@ static const int kBlkOpenWithoutDirect = O_RDWR | O_LARGEFILE | O_CLOEXEC;
 inline void incr(int64_t /* n */) {}
 inline void incr(int64_t n, off_t &offset) { offset += off_t(n); }
 
+// https://github.com/facebook/folly/blob/main/folly/detail/FileUtilDetail.h#L58
 // Wrap call to read/pread/write/pwrite(fd, buf, count, offset?) to retry on
 // incomplete reads / writes.  The variadic argument magic is there to support
 // an additional argument (offset) for pread / pwrite; see the incr() functions
 // above which do nothing if the offset is not present and increment it if it
 // is.
 template <class F, class... Offset>
-int64_t WrapFull(F f, int fd, void *buf, uint64_t count, Offset... offset) {
-  char *buffer = static_cast<char *>(buf);
-  int64_t totalBytes = 0;
-  int64_t r;
+ssize_t wrapFull(F f, int fd, void* buf, size_t count, Offset... offset) {
+  char* b = static_cast<char*>(buf);
+  ssize_t totalBytes = 0;
+  ssize_t r;
   do {
-    r = f(fd, buffer, count, offset...);
+    r = f(fd, b, count, offset...);
     if (r == -1) {
       if (errno == EINTR) {
         continue;
       }
-      LOG(ERROR) << "return: " << r << " errno: " << errno;
       return r;
     }
 
     totalBytes += r;
-    buffer += r;
+    b += r;
     count -= r;
     incr(r, offset...);
-
-  } while (r != 0 && count);  // 0 means EOF
-
-  return totalBytes;
-}
-
-// Wrap call to readv/preadv/writev/pwritev(fd, iov, count, offset?) to
-// retry on incomplete reads / writes.
-template <class F, class... Offset>
-int64_t WrapvFull(F f, int fd, iovec *iov, uint32_t count, Offset... offset) {
-  int64_t totalBytes = 0;
-  int64_t r;
-  do {
-    r = f(fd, iov, std::min<uint32_t>(count, kIovMax), offset...);
-    if (r == -1) {
-      if (errno == EINTR) {
-        continue;
-      }
-      return r;
-    }
-
-    if (r == 0) {
-      break;  // EOF
-    }
-
-    totalBytes += r;
-    incr(r, offset...);
-    while (r != 0 && count != 0) {
-      if (r >= ssize_t(iov->iov_len)) {
-        r -= ssize_t(iov->iov_len);
-        ++iov;
-        --count;
-      } else {
-        iov->iov_base = static_cast<char *>(iov->iov_base) + r;
-        iov->iov_len -= r;
-        r = 0;
-      }
-    }
-  } while (count);
+  } while (r != 0 && count); // 0 means EOF
 
   return totalBytes;
 }
 
-/**
- * Similar to readFull and preadFull above, wrappers around write() and
- * pwrite() that loop until all data is written.
- *
- * Generally, the write() / pwrite() system call may always write fewer bytes
- * than requested, just like read().  In certain cases (such as when writing to
- * a pipe), POSIX provides stronger guarantees, but not in the general case.
- * For example, Linux (even on a 64-bit platform) won't write more than 2GB in
- * one write() system call.
- *
- * Note that writevFull and pwritevFull require iov to be non-const, unlike
- * writev and pwritev.  The contents of iov after these functions return
- * is unspecified.
- *
- * These functions return -1 on error, or the total number of bytes written
- * (which is always the same as the number of requested bytes) on success.
- */
-int64_t ReadFull(int fd, void *buf, uint64_t size) {
-  return WrapFull(::read, fd, buf, size);
+// https://github.com/facebook/folly/blob/main/folly/FileUtil.cpp#L157
+ssize_t preadFull(int fd, void* buf, size_t count, off_t offset) {
+  return wrapFull(pread, fd, buf, count, offset);
 }
 
-int64_t PreadFull(int fd, void *buf, uint64_t size, off_t offset) {
-  return WrapFull(::pread, fd, buf, size, offset);
-}
-
-int64_t WriteFull(int fd, const void *buf, uint64_t size) {
-  return WrapFull(::write, fd, const_cast<void *>(buf), size);
-}
-
-int64_t PwriteFull(int fd, const void *buf, uint64_t size, off_t offset) {
-  return WrapFull(::pwrite, fd, const_cast<void *>(buf), size, offset);
-}
-
-int64_t ReadvFull(int fd, iovec *iov, uint64_t size) {
-  return WrapvFull(::readv, fd, iov, size);
-}
-
-int64_t PreadvFull(int fd, iovec *iov, uint64_t size, off_t offset) {
-  return WrapvFull(::preadv, fd, iov, size, offset);
-}
-
-int64_t WritevFull(int fd, iovec *iov, uint64_t size) {
-  return WrapvFull(::writev, fd, iov, size);
-}
-// RWF_HIPRI
-// http://manpages.ubuntu.com/manpages/bionic/man2/writev.2.html
-int64_t PwritevFull(int fd, iovec *iov, uint64_t size, off_t offset) {
-  return WrapvFull(::pwritev, fd, iov, size, offset);
+ssize_t pwriteFull(int fd, const void* buf, size_t count, off_t offset) {
+  return wrapFull(pwrite, fd, const_cast<void*>(buf), count, offset);
 }
 
 BlockDevice::~BlockDevice() { Close(); }
@@ -266,59 +187,43 @@ int BlockDevice::Fsync() {
   return 0;
 }
 
-int64_t BlockDevice::ReadCache(void *buf, uint64_t len) {
-  return ReadFull(dev_fd_cache_, buf, len);
-}
-
 int64_t BlockDevice::PreadCache(void *buf, uint64_t len, off_t offset) {
-  if (unlikely((offset + len) > dev_size_)) {
+  if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length), "
                << "offset: " << offset << " length: " << len
                << " dev_size: " << dev_size_;
     return -1;
   }
-  return PreadFull(dev_fd_cache_, buf, len, offset);
-}
-
-int64_t BlockDevice::WriteCache(void *buf, uint64_t len) {
-  return WriteFull(dev_fd_cache_, buf, len);
+  return preadFull(dev_fd_cache_, buf, len, offset);
 }
 
 int64_t BlockDevice::PwriteCache(void *buf, uint64_t len, off_t offset) {
-  if (unlikely((offset + len) > dev_size_)) {
+  if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length),"
                << " offset: " << offset << " length: " << len
                << " dev_size: " << dev_size_;
     return -1;
   }
-  return PwriteFull(dev_fd_cache_, buf, len, offset);
-}
-
-int64_t BlockDevice::ReadDirect(void *buf, uint64_t len) {
-  return ReadFull(dev_fd_direct_, buf, len);
+  return pwriteFull(dev_fd_cache_, buf, len, offset);
 }
 
 int64_t BlockDevice::PreadDirect(void *buf, uint64_t len, off_t offset) {
-  if (unlikely((offset + len) > dev_size_)) {
+  if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length), "
                << "offset: " << offset << " length: " << len
                << " dev_size: " << dev_size_;
     return -1;
   }
-  return PreadFull(dev_fd_direct_, buf, len, offset);
-}
-
-int64_t BlockDevice::WriteDirect(void *buf, uint64_t len) {
-  return WriteFull(dev_fd_direct_, buf, len);
+  return preadFull(dev_fd_direct_, buf, len, offset);
 }
 
 int64_t BlockDevice::PwriteDirect(void *buf, uint64_t len, off_t offset) {
-  if (unlikely((offset + len) > dev_size_)) {
+  if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length),"
                << " offset: " << offset << " length: " << len
                << " dev_size: " << dev_size_;
     return -1;
   }
-  return PwriteFull(dev_fd_direct_, buf, len, offset);
+  return pwriteFull(dev_fd_direct_, buf, len, offset);
 }
 }

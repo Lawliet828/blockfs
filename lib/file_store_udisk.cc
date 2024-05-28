@@ -465,7 +465,7 @@ int64_t FileSystem::PwriteFile(ino_t fd, const void* buf, size_t len,
   return open_file->pwrite(buf, len, offset);
 }
 
-off_t FileSystem::SeekFile(int32_t fd, off_t offset, int whence) {
+off_t FileSystem::SeekFile(ino_t fd, off_t offset, int whence) {
   LOG(INFO) << "lseek file fd: " << fd << " offset: " << offset;
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {

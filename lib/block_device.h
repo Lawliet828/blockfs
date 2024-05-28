@@ -30,14 +30,10 @@ class BlockDevice {
   void Sync();
   int Fsync();
 
-  int64_t ReadCache(void *buf, uint64_t len);
   int64_t PreadCache(void *buf, uint64_t len, off_t offset);
-  int64_t WriteCache(void *buf, uint64_t len);
   int64_t PwriteCache(void *buf, uint64_t len, off_t offset);
 
-  int64_t ReadDirect(void *buf, uint64_t len);
   int64_t PreadDirect(void *buf, uint64_t len, off_t offset);
-  int64_t WriteDirect(void *buf, uint64_t len);
   int64_t PwriteDirect(void *buf, uint64_t len, off_t offset);
 };
 }

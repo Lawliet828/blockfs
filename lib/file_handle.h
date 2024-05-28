@@ -41,7 +41,7 @@ class FileHandle : public MetaHandle {
   FileNameMap deleted_files_;                            // 待删除的目录
   FileNameMap created_files_;                            // 已创建的文件
   std::unordered_map<int32_t, FilePtr> created_fhs_;     // 已创建的文件
-  std::unordered_map<int32_t, OpenFilePtr> open_files_;  // 已打开的文件
+  std::unordered_map<ino_t, OpenFilePtr> open_files_;  // 已打开的文件
   ParentFileHandleMap parent_files_;                     // 继承的父文件
 
  private:
