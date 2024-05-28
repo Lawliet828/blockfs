@@ -123,8 +123,6 @@ int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len) {
   return FileSystem::Instance()->PosixFallocate(fd, offset, len);
 }
 
-int block_fs_close(int fd) { return FileSystem::Instance()->CloseFile(fd); }
-
 int block_fs_dup(int oldfd) { return FileSystem::Instance()->FileDup(oldfd); }
 
 int block_fs_sync() { return FileSystem::Instance()->Sync(); }

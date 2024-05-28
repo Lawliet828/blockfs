@@ -141,15 +141,6 @@ int block_fs_closedir(BLOCKFS_DIR *dir);
 int block_fs_create(const char *filename, mode_t mode);
 
 /**
- * Close a given file fd
- *
- * \param fd File fd(fd)
- *
- * \return File close retcode
- */
-int block_fs_close(int fd);
-
-/**
  * Dup a given file fd, copy old fd to new fd,
  * new fd reference to the same file,
  * Share all locks, read and write pointers,

@@ -397,7 +397,7 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
   res = FileSystem::Instance()->PreadFile(fd, buf, size, offset);
   if (res < 0) res = -errno;
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return res;
 }
@@ -429,7 +429,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   res = FileSystem::Instance()->PwriteFile(fd, const_cast<char *>(buf), size, offset);
   if (res < 0) res = -errno;
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return res;
 }
@@ -494,10 +494,10 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
      called multiple times for an open file, this must not really
      close the file.  This is important if used on a network
      filesystem like NFS which flush the data/metadata on close() */
-  res = block_fs_close(block_fs_dup(fd));
+  res = FileSystem::Instance()->file_handle()->close(block_fs_dup(fd));
   if (res < 0) return -errno;
 
-  if (!fi) block_fs_close(fd);
+  if (!fi) FileSystem::Instance()->file_handle()->close(fd);
 
   return 0;
 }
@@ -521,7 +521,7 @@ static int bfs_release(const char *path, struct fuse_file_info *fi) {
   int res = 0;
 
   if (fi) {
-    res = block_fs_close(fi->fh);
+    res = FileSystem::Instance()->file_handle()->close(fi->fh);
     if (res < 0) return -errno;
   }
   return -res;
@@ -558,7 +558,7 @@ static int bfs_fsync(const char *path, int datasync,
 
   if (res < 0) return -errno;
 
-  if (!fi) block_fs_close(fd);
+  if (!fi) FileSystem::Instance()->file_handle()->close(fd);
 
   return 0;
 }
@@ -876,7 +876,7 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
     }
     res += write_size;
   }
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return res;
 }
@@ -935,7 +935,7 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
 
   *bufp = src;
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return 0;
 }
@@ -978,7 +978,7 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   res = block_fs_fcntl(fd, F_SETLK, &fl);
   if (res < 0) return -errno;
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return 0;
 }
@@ -1007,7 +1007,7 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
 
   res = -block_fs_posix_fallocate(fd, offset, length);
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return res;
 }
@@ -1047,7 +1047,7 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
     fd_out = fi_out->fh;
 
   if (fd_out == -1) {
-    block_fs_close(fd_in);
+    FileSystem::Instance()->file_handle()->close(fd_in);
     return -errno;
   }
 
@@ -1055,8 +1055,8 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
                           flags);
   if (res < 0) return -errno;
 
-  if (fi_out == nullptr) block_fs_close(fd_out);
-  if (fi_in == nullptr) block_fs_close(fd_in);
+  if (fi_out == nullptr) FileSystem::Instance()->file_handle()->close(fd_out);
+  if (fi_in == nullptr) FileSystem::Instance()->file_handle()->close(fd_in);
   return res;
 }
 
@@ -1078,7 +1078,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
   res = FileSystem::Instance()->SeekFile(fd, off, whence);
   if (res < 0) return -errno;
 
-  if (fi == nullptr) block_fs_close(fd);
+  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 
   return res;
 }

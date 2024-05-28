@@ -112,11 +112,7 @@ class FileSystem {
   int32_t StatVFS(const std::string &path,
                   struct statvfs *buf);
   int32_t StatVFS(const int32_t fd, struct statvfs *buf);
-  // GetFileSize: get real file size
-  int32_t GetFileSize(const std::string &path, int64_t *file_size);
 
-  int32_t CloseFile(int32_t fd);
-  int32_t FileExists(const std::string &path);
   int32_t CreateFile(const std::string &path, mode_t mode);
   int32_t DeleteFile(const std::string &path);
   int32_t RenamePath(const std::string &src,

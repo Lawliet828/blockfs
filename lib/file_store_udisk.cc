@@ -314,18 +314,6 @@ int32_t FileSystem::StatVFS(const int32_t fd, struct statvfs* buf) {
   return 0;
 }
 
-// GetFileSize: get real file size
-int32_t FileSystem::GetFileSize(const std::string& path, int64_t* file_size) {
-  return 0;
-}
-
-int32_t FileSystem::CloseFile(int32_t fd) {
-  LOG(INFO) << "close file fd: " << fd;
-  return file_handle()->close(fd);
-}
-
-int32_t FileSystem::FileExists(const std::string& path) { return 0; }
-
 int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
   // O_TMPFILE
   return file_handle()->CreateFile(path, mode) ? 0 : -1;
