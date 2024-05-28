@@ -194,7 +194,7 @@ static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
   int res;
 
   // res = posix_mknod_wrapper(AT_FDCWD, path, nullptr, mode, rdev);
-  res = block_fs_create(in_path.c_str(), mode);
+  res = FileSystem::Instance()->CreateFile(in_path.c_str(), mode);
   if (res < 0) return -errno;
 
   return 0;
@@ -212,7 +212,7 @@ static int bfs_mkdir(const char *path, mode_t mode) {
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  int res = block_fs_mkdir(in_path.c_str(), mode);
+  int res = FileSystem::Instance()->dir_handle()->CreateDirectory(in_path);
   if (res < 0) return -errno;
 
   return 0;
@@ -227,7 +227,7 @@ static int bfs_unlink(const char *path) {
 
   int res;
 
-  res = block_fs_unlink(in_path.c_str());
+  res = FileSystem::Instance()->file_handle()->unlink(in_path);
   if (res < 0) return -errno;
 
   return 0;

@@ -23,13 +23,6 @@
 namespace udisk::blockfs {
 
 class Directory;
-struct FileInfo {
-  int64_t size_;
-  uint32_t ctime_;
-  uint32_t mode_;
-  char name_[1024];
-  char link_[1024];
-};
 
 enum MetaHandleType {
   kSuperBlockHandle,
@@ -85,13 +78,6 @@ class FileSystem {
   int32_t RemountFileSystem();
   int32_t UnmountFileSystem();
 
-  // Create directory
-  int32_t CreateDirectory(const std::string &path);
-  int32_t NewDirectory(const std::string &dirname,
-                       std::unique_ptr<Directory> *result);
-  // List Directory
-  int32_t ListDirectory(const std::string &path, FileInfo **filelist,
-                        int *num);
   // Delete Directory
   int32_t DeleteDirectory(const std::string &path,
                           bool recursive = false);
@@ -114,7 +100,6 @@ class FileSystem {
   int32_t StatVFS(const int32_t fd, struct statvfs *buf);
 
   int32_t CreateFile(const std::string &path, mode_t mode);
-  int32_t DeleteFile(const std::string &path);
   int32_t RenamePath(const std::string &src,
                      const std::string &target);
   // Returns 0 on success.
@@ -134,7 +119,6 @@ class FileSystem {
   int32_t FileSync(const int32_t fd);
   int32_t FileDataSync(const int32_t fd);
   int32_t FileDup(const int32_t fd);
-  int32_t RemovePath(const std::string &path);
 
   void DumpFileMeta(const std::string &path);
 

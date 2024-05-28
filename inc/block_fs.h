@@ -35,20 +35,6 @@ int block_fs_mount(const char *config_path, bool is_master);
 int block_fs_unmount(const char *uuid);
 
 /**
- * Make a given dir
- * Support for directories is very limited at this time
- * mkdir simply puts an entry into the filelist for the
- * requested directory (assuming it does not exist)
- * It doesn't check to see if parent directory exists
- *
- * \param valpath Dir absolute path
- * \param mode Dir mode
- *
- * \return dir create retcode
- */
-int block_fs_mkdir(const char *valpath, mode_t mode);
-
-/**
  * Remove a given dir
  *
  * \param dirname Dir absolute path
@@ -127,18 +113,6 @@ int block_fs_readdir_r(BLOCKFS_DIR *dir, struct blockfs_dirent *entry,
  * \return 0 success, -1 failed
  */
 int block_fs_closedir(BLOCKFS_DIR *dir);
-
-/**
- * Make a given file
- * Create and open FILE, with mode MODE.  This takes an `int' MODE
- * argument because that is what `mode_t' will be widened to
- *
- * \param valpath File absolute path
- * \param mode Dir mode
- *
- * \return File create retcode
- */
-int block_fs_create(const char *filename, mode_t mode);
 
 /**
  * Dup a given file fd, copy old fd to new fd,
@@ -241,25 +215,6 @@ int block_fs_stat(const char *valpath, struct stat *buf);
  * \return chmod retcode
  */
 int block_fs_fstat(int fd, struct stat *buf);
-
-/**
- * Unlink dir or file, only dec refcnt
- * when equal zero, remove completely
- *
- * \param valpath Dir or file path
- *
- * \return unlink retcode
- */
-int block_fs_unlink(const char *filename);
-
-/**
- * Remove dir or file forcely
- *
- * \param valpath Dir or file path
- *
- * \return remove retcode
- */
-int block_fs_remove(const char *filename);
 
 /**
  * Rename dir or file

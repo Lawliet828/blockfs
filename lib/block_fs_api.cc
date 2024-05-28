@@ -23,10 +23,6 @@ int block_fs_unmount(const char *uuid) {
   return FileSystem::Instance()->UnmountFileSystem();
 }
 
-int block_fs_remove(const char *path) {
-  return FileSystem::Instance()->RemovePath(path);
-}
-
 int block_fs_rename(const char *oldpath, const char *newpath) {
   return FileSystem::Instance()->RenamePath(oldpath, newpath);
 }
@@ -74,10 +70,6 @@ int block_fs_fcntl(int fd, int cmd, ...) {
   }
 }
 
-int block_fs_mkdir(const char *dirname, mode_t mode) {
-  return FileSystem::Instance()->CreateDirectory(dirname);
-}
-
 BLOCKFS_DIR *block_fs_opendir(const char *name) {
   return FileSystem::Instance()->OpenDirectory(name);
 }
@@ -97,14 +89,6 @@ int block_fs_closedir(BLOCKFS_DIR *dir) {
 
 int block_fs_rmdir(const char *dirname) {
   return FileSystem::Instance()->DeleteDirectory(dirname);
-}
-
-int block_fs_create(const char *filename, mode_t mode) {
-  return FileSystem::Instance()->CreateFile(filename, mode);
-}
-
-int block_fs_unlink(const char *valpath) {
-  return FileSystem::Instance()->DeleteFile(valpath);
 }
 
 int block_fs_truncate(const char *valpath, int64_t len) {

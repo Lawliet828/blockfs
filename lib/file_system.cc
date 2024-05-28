@@ -126,25 +126,6 @@ int32_t FileSystem::UnmountFileSystem() {
 }
 
 /**
- * \param dirname: abosolute dirname
- */
-int32_t FileSystem::CreateDirectory(const std::string& path) {
-  LOG(INFO) << "make directory: " << path;
-  return dir_handle()->CreateDirectory(path);
-}
-
-int32_t FileSystem::NewDirectory(const std::string& dirname,
-                                std::unique_ptr<Directory>* result) {
-  return 0;
-}
-
-// List Directory
-int32_t FileSystem::ListDirectory(const std::string& path, FileInfo** filelist,
-                                 int* num) {
-  return 0;
-}
-
-/**
  * Delete Directory
  *
  * \param dirname: abosolute dirname
@@ -317,10 +298,6 @@ int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
   return file_handle()->CreateFile(path, mode) ? 0 : -1;
 }
 
-int32_t FileSystem::DeleteFile(const std::string& path) {
-  return file_handle()->unlink(path);
-}
-
 /**
  * rename a file name or directory name
  *
@@ -373,8 +350,8 @@ int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
 }
 
 int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
-  if (unlikely(size < 0)) {
-    block_fs_set_errno(EINVAL);
+  if (size < 0) [[unlikely]] {
+    errno = EINVAL;
     return -1;
   }
   LOG(INFO) << "truncate file fd: " << fd << " len: " << size;
@@ -511,34 +488,6 @@ int32_t FileSystem::FileDataSync(const int32_t fd) {
 }
 
 int32_t FileSystem::FileDup(const int32_t fd) { return file_handle()->dup(fd); }
-
-// https://blog.csdn.net/linlin2178/article/details/57412568?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase
-
-/**
- * remove a file or directory
- *
- * \param path: abosolute path
- * https://blog.csdn.net/qinrenzhi/article/details/94043485
- * if path is a directory, call rmdir()
- * if path is a file, call unlink()
- *
- * \return success or failed
- */
-int32_t FileSystem::RemovePath(const std::string& path) {
-  LOG(INFO) << "remove path: " << path;
-  if (unlikely(path.empty())) {
-    LOG(ERROR) << "remove file path empty";
-    errno = EINVAL;
-    return -1;
-  }
-  FilePtr file = file_handle()->GetCreatedFile(path);
-  if (file) {
-    return file_handle()->unlink(path);
-  } else {
-    // errno = ENOENT;
-    return dir_handle()->DeleteDirectory(path, false);
-  }
-}
 
 /**
  * Initialize handle in order
@@ -740,7 +689,7 @@ bool FileSystem::InitializeMeta() {
 int FileSystem::MakeMountPoint(const char* mount_point) {
   LOG(INFO) << "create fs mount point: " << mount_point;
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
-    return CreateDirectory(mount_point);
+    return dir_handle()->CreateDirectory(mount_point);
   }
   return 0;
 }
@@ -748,7 +697,7 @@ int FileSystem::MakeMountPoint(const char* mount_point) {
 int FileSystem::MakeMountPoint(const std::string& mount_point) {
   LOG(INFO) << "create fs mount point: " << mount_point;
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
-    return CreateDirectory(mount_point);
+    return dir_handle()->CreateDirectory(mount_point);
   }
   return 0;
 }
