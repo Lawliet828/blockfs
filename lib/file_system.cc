@@ -1,4 +1,4 @@
-#include "file_store_udisk.h"
+#include "file_system.h"
 
 #include <assert.h>
 #include <dirent.h>
@@ -11,8 +11,6 @@
 #include "logging.h"
 
 namespace udisk::blockfs {
-
-static const std::string kBlockDevivePath = "/sys/block";
 
 FileSystem::FileSystem() {}
 
@@ -699,6 +697,7 @@ int EasyReaddir(const std::string& dir, std::set<std::string>* out) {
 }
 
 bool FileSystem::OpenTarget(const std::string& uuid) {
+  const std::string kBlockDevivePath = "/sys/block";
   try {
     for (const auto& entry : std::filesystem::directory_iterator(kBlockDevivePath)) {
       if (!device_->Open("/dev/" + entry.path().filename().string())) {

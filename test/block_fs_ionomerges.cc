@@ -11,7 +11,7 @@
 #include <thread>
 
 #include <block_fs.h>
-#include "file_store_udisk.h"
+#include "file_system.h"
 #include "logging.h"
 using namespace udisk::blockfs;
 

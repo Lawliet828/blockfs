@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "block_fs_internal.h"
-#include "file_store_udisk.h"
+#include "file_system.h"
 
 using namespace udisk::blockfs;
 

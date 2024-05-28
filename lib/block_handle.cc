@@ -1,6 +1,6 @@
 #include "block_handle.h"
 
-#include "file_store_udisk.h"
+#include "file_system.h"
 #include "logging.h"
 
 namespace udisk::blockfs {

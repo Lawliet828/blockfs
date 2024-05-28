@@ -7,7 +7,7 @@
 #include <functional>
 #include <mutex>
 
-#include "file_store_udisk.h"
+#include "file_system.h"
 
 namespace udisk::blockfs {
 

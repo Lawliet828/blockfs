@@ -15,7 +15,7 @@
 
 #include "block_fs.h"
 #include "comm_utils.h"
-#include "file_store_udisk.h"
+#include "file_system.h"
 #include "logging.h"
 
 namespace udisk::blockfs {

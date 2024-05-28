@@ -6,7 +6,7 @@
 #include <thread> // std::this_thread::sleep_for
 
 #include "block_fs.h"
-#include "file_store_udisk.h"
+#include "file_system.h"
 #include "logging.h"
 
 static void HelpInfo() {
