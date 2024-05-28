@@ -7,22 +7,6 @@
 
 using namespace udisk::blockfs;
 
-int block_fs_mount(const char *config_path, bool is_master) {
-  if (FileSystem::Instance()->MountFileSystem(config_path) < 0) {
-    return -1;
-  }
-
-  bfs_config_info *conf = FileSystem::Instance()->mount_config();
-  conf->fuse_mount_point = "/data/mysql/bfs";
-
-  block_fs_fuse_mount(FileSystem::Instance()->mount_config());
-  return 0;
-}
-
-int block_fs_unmount(const char *uuid) {
-  return FileSystem::Instance()->UnmountFileSystem();
-}
-
 int block_fs_rename(const char *oldpath, const char *newpath) {
   return FileSystem::Instance()->RenamePath(oldpath, newpath);
 }
@@ -70,21 +54,8 @@ int block_fs_fcntl(int fd, int cmd, ...) {
   }
 }
 
-BLOCKFS_DIR *block_fs_opendir(const char *name) {
-  return FileSystem::Instance()->OpenDirectory(name);
-}
-
 struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir) {
   return FileSystem::Instance()->ReadDirectory(dir);
-}
-
-int block_fs_readdir_r(BLOCKFS_DIR *dir, struct blockfs_dirent *entry,
-                       struct blockfs_dirent **result) {
-  return FileSystem::Instance()->ReadDirectoryR(dir, entry, result);
-}
-
-int block_fs_closedir(BLOCKFS_DIR *dir) {
-  return FileSystem::Instance()->CloseDirectory(dir);
 }
 
 int block_fs_rmdir(const char *dirname) {

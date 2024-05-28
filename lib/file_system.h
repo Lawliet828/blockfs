@@ -76,21 +76,12 @@ class FileSystem {
   // Mount FileSystem
   int32_t MountFileSystem(const std::string &config_path);
   int32_t RemountFileSystem();
-  int32_t UnmountFileSystem();
 
   // Delete Directory
   int32_t DeleteDirectory(const std::string &path,
                           bool recursive = false);
-  // Lock Directory
-  int32_t LockDirectory(const std::string &path);
-  // Unlock Directory
-  int32_t UnlockDirectory(const std::string &path);
 
-  BLOCKFS_DIR *OpenDirectory(const std::string &dirname);
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
-  int32_t ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
-                         block_fs_dirent **result);
-  int32_t CloseDirectory(BLOCKFS_DIR *dir);
 
   // Stat
   int32_t StatPath(const std::string &path, struct stat *fileinfo);

@@ -577,7 +577,7 @@ static int bfs_opendir(const char *path, struct fuse_file_info *fi) {
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-  BLOCKFS_DIR *dp = block_fs_opendir(in_path.c_str());
+  BLOCKFS_DIR *dp = FileSystem::Instance()->dir_handle()->OpenDirectory(in_path);
   if (!dp) {
     return -errno;
   }
@@ -680,7 +680,7 @@ static int bfs_releasedir(const char *path, struct fuse_file_info *fi) {
       LOG(ERROR) << "failed to find open directory: " << path;
       return -EINVAL;
     }
-    return -block_fs_closedir(dp);
+    return -FileSystem::Instance()->dir_handle()->CloseDirectory(dp);
   }
 
   return 0;

@@ -14,7 +14,7 @@ namespace udisk::blockfs {
 
 FileSystem::FileSystem() {}
 
-FileSystem::~FileSystem() { UnmountFileSystem(); }
+FileSystem::~FileSystem() { Destroy(); }
 
 FileSystem *FileSystem::g_instance = new FileSystem();
 
@@ -113,19 +113,6 @@ int32_t FileSystem::RemountFileSystem() {
 }
 
 /**
- * unmount the blockfs filesystem
- * need to wait all pending io or meta done
- *
- * \param moun_info
- *
- * \return success is zero, otherwise -1
- */
-int32_t FileSystem::UnmountFileSystem() {
-  Destroy();
-  return 0;
-}
-
-/**
  * Delete Directory
  *
  * \param dirname: abosolute dirname
@@ -137,23 +124,6 @@ int32_t FileSystem::DeleteDirectory(const std::string& path, bool recursive) {
   return dir_handle()->DeleteDirectory(path, recursive);
 }
 
-// Lock Directory
-int32_t FileSystem::LockDirectory(const std::string& path) { return 0; }
-// Unlock Directory
-int32_t FileSystem::UnlockDirectory(const std::string& path) { return 0; }
-
-/**
- * open a directory
- *
- * \param dirname: abosolute dirname
- *
- * \return success or failed
- */
-BLOCKFS_DIR* FileSystem::OpenDirectory(const std::string& dirname) {
-  LOG(INFO) << "open directory: " << dirname;
-  return dir_handle()->OpenDirectory(dirname);
-}
-
 /**
  * read a directory
  *
@@ -163,23 +133,6 @@ BLOCKFS_DIR* FileSystem::OpenDirectory(const std::string& dirname) {
  */
 block_fs_dirent* FileSystem::ReadDirectory(BLOCKFS_DIR* dir) {
   return dir_handle()->ReadDirectory(dir);
-}
-
-int32_t FileSystem::ReadDirectoryR(BLOCKFS_DIR* dir, block_fs_dirent* entry,
-                                  block_fs_dirent** result) {
-  return dir_handle()->ReadDirectoryR(dir, entry, result);
-  ;
-}
-
-/**
- * close a directory
- *
- * \param dir: dir info struct
- *
- * \return success or failed
- */
-int32_t FileSystem::CloseDirectory(BLOCKFS_DIR* dir) {
-  return dir_handle()->CloseDirectory(dir);
 }
 
 /**

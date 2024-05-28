@@ -75,8 +75,6 @@ class DirHandle : public MetaHandle {
 
   BLOCKFS_DIR *OpenDirectory(const std::string &path);
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
-  int32_t ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
-                         block_fs_dirent **result);
   int32_t CloseDirectory(BLOCKFS_DIR *dir);
 };
 

@@ -1,10 +1,6 @@
 #ifndef INC_BLOCK_FS_H_
 #define INC_BLOCK_FS_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <dirent.h>
 #ifdef __cplusplus
 #include <stdint.h>
@@ -14,25 +10,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <unistd.h>
 
-/**
- * BlockFS mount use to init block file system, load all meta
- *
- * \param config_path Config path, such as /xxxx/bfs.conf
- * \param is_master Running role of this blockfs: master or slave.
- *
- * \return mount retcode
- */
-int block_fs_mount(const char *config_path, bool is_master);
-
-/**
- * BlockFS unmount use to uninit block file system, unload all meta
- * Notice: Only one block device mounted by a process supported
- *
- * \param uuid The device uuid generated when format blockfs
- *
- * \return umount retcode
- */
-int block_fs_unmount(const char *uuid);
+#include "block_fs_internal.h"
 
 /**
  * Remove a given dir
@@ -53,22 +31,6 @@ typedef struct blockfs_dirent {
   time_t d_time_;
 } block_fs_dirent;
 
-typedef struct BLOCKFS_DIR_S BLOCKFS_DIR;
-
-/**
- * Open a directory stream on NAME.
- * Return a DIR stream on the directory,
- * or NULL if it could not be opened.
- *
- * This function is a possible cancellation
- * point and therefore not marked with __THROW.
- *
- * \param name dir path name
- *
- * \return BLOCKFS_DIR*
- */
-BLOCKFS_DIR *block_fs_opendir(const char *name);
-
 /**
  * Read a directory entry from DIRP.  Return a pointer to a `struct
  * dirent' describing the entry, or NULL for EOF or error.  The
@@ -86,33 +48,6 @@ BLOCKFS_DIR *block_fs_opendir(const char *name);
  * \return struct dirent* head
  */
 struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir);
-
-/**
- * Reentrant version of `readdir'.
- * Return in RESULT a pointer to the next entry.
- *
- * This function is a possible cancellation
- * point and therefore not marked with __THROW.
- *
- * \param dir BLOCKFS_DIR opened
- *
- * \return struct blockfs_dirent* head
- */
-int block_fs_readdir_r(BLOCKFS_DIR *dir, struct blockfs_dirent *entry,
-                       struct blockfs_dirent **result);
-
-/**
- * Close the directory stream DIRP.
- * Return 0 if successful, -1 if not.
- *
- * This function is a possible cancellation
- * point and therefore not marked with __THROW.
- *
- * \param dir BLOCKFS_DIR opened
- *
- * \return 0 success, -1 failed
- */
-int block_fs_closedir(BLOCKFS_DIR *dir);
 
 /**
  * Dup a given file fd, copy old fd to new fd,
@@ -238,7 +173,4 @@ int block_fs_fstatvfs(int fd, struct statvfs *buf);
 
 void block_fs_set_errno(int e);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

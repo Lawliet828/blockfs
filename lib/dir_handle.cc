@@ -658,12 +658,6 @@ blockfs_dirent *DirHandle::ReadDirectory(BLOCKFS_DIR *d) {
   return nullptr;
 }
 
-int32_t DirHandle::ReadDirectoryR(BLOCKFS_DIR *dir, block_fs_dirent *entry,
-                                  block_fs_dirent **result) {
-  LOG(WARNING) << "readdir_r not implemented yet";
-  return -1;
-}
-
 int32_t DirHandle::CloseDirectory(BLOCKFS_DIR *d) {
   LOG(INFO) << "close directory name: " << d->dir_->dir_name()
             << " fd: " << d->fd();
