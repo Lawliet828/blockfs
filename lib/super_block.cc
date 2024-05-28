@@ -189,45 +189,28 @@ bool SuperBlock::is_mount_point(const std::string &path) noexcept {
 /**
  * Check the legality of the file/directory mounting path
  *
- * \param path UXDB-UDISK: absolute directory
- *
- * \return strip success or failed
+ * \param path : absolute directory
  */
 bool SuperBlock::CheckMountPoint(const std::string &path, bool isFile) {
-  // step1: 检查参数是否为空, eg: ""
-  if (unlikely(path.empty())) {
+  if (path.empty()) [[unlikely]] {
     LOG(ERROR) << "path cannot be empty";
     errno = EINVAL;
     return false;
   }
   std::string sub = meta()->uxdb_mount_point_;
   LOG(INFO) << "check target path: " << path << " mount point: " << sub;
-  // step2: 目标路径比前缀还短, eg: "/mnt/mysql/d5"
   if (path.size() < sub.size()) {
     LOG(ERROR) << "path less than mount moint: " << path;
     errno = EXDEV;
     return false;
   }
-  // step3: 检查是否包含Mount的前缀, eg: "/mnt/mysql/d5/d6/d7"
-  // step4: 检查是否以Mount前缀开头, eg: "/home/mnt/mysql/data/f1"
-  size_t pos = path.find(sub);
-  if (pos == std::string::npos || pos != 0) {
+  if (path.compare(0, sub.size(), sub) != 0) {
     LOG(ERROR) << "path not startwith mount prefix: " << path;
     errno = EXDEV;
     return false;
   }
-
-  // 上面一个判断应该满足了
-  // step5: 检查是否包含Mount的前缀完整路径
-  // eg: "/mnt/mysql/datad2";
-  // eg: "/mnt/mysql/datad2/f1"
-  // if ((path.size() > sub.size()) && path[sub.size()] != '/') {
-  //   LOG(ERROR) << "Path not endwith dir separator: " << path;
-  //   errno = EXDEV;
-  //   return false;
-  // }
   if (isFile) {
-    if (unlikely(path[path.size() - 1] == '/')) {
+    if (path[path.size() - 1] == '/') [[unlikely]] {
       LOG(ERROR) << "file cannot endwith dir separator: " << path;
       errno = ENOTDIR;
       return false;
