@@ -217,8 +217,7 @@ bool File::Release() {
 bool File::ReleaseNolock() {
   // TODO:判断是否有子文件
   File::ClearMeta(meta_);
-  LOG(INFO) << "release file name: " << file_name() << " fh: " << fh()
-            << " seq_no: " << seq_no();
+  LOG(INFO) << "release file name: " << file_name() << " fh: " << fh();
   return WriteMeta();
 }
 
@@ -227,7 +226,7 @@ bool File::WriteMeta() { return File::WriteMeta(fh()); }
 void File::DumpMeta() {
   LOG(INFO) << "dump file meta: "
             << " file_name: " << file_name() << " file_size: " << file_size()
-            << " fh: " << fh() << " dh: " << dh() << " seq_no: " << seq_no()
+            << " fh: " << fh() << " dh: " << dh()
             << " crc: " << crc() << " parent fh: " << parent_fh()
             << " parent size: " << parent_size() << " child fh: " << child_fh();
   for (const auto &it : item_maps_) {
@@ -620,8 +619,6 @@ int File::ShrinkFile(uint64_t offset) {
 
   // 老的文件需要找到子文件
   old_meta->child_fh_ = new_meta->fh_;
-  // seq在老文件中,需要记录下来, 供回收日志时使用
-//  uint64_t tmp_seq_no = seq_no();
 
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());

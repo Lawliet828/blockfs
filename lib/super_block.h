@@ -26,7 +26,6 @@ class SuperBlock : public MetaHandle {
   SuperBlockMeta *meta() {
     return reinterpret_cast<SuperBlockMeta *>(base_addr());
   }
-  void set_seq_no(seq_t seq) noexcept { meta()->seq_no_ = seq; }
   void set_curr_udisk_size(uint64_t curr_udisk_size) noexcept {
     meta()->curr_udisk_size_ = curr_udisk_size;
   }

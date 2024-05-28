@@ -30,8 +30,6 @@ class Directory : public Inode<DirMeta, File>,
   void set_dh(dh_t dh) const noexcept { meta_->dh_ = dh; }
   const dh_t dh() const { return meta_->dh_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
-  const uint64_t seq_no() const { return meta_->seq_no_; }
-  void set_seq_no(uint64_t seq_no) const noexcept { meta_->seq_no_ = seq_no; }
   const uint32_t ChildCount() noexcept;
   const uint32_t DecAckCnt() { return --ack_cnt_; }
   void IncLinkCount() noexcept;

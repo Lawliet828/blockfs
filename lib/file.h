@@ -78,8 +78,6 @@ class File : public Inode<FileMeta, FileBlock>,
   uint32_t crc() const noexcept { return meta_->crc_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
   const bool used() const noexcept { return meta_->used_; }
-  const uint64_t seq_no() const { return meta_->seq_no_; }
-  void set_seq_no(uint64_t seq_no) const noexcept { meta_->seq_no_ = seq_no; }
   void set_fh(int32_t fh) noexcept { meta_->fh_ = fh; }
   int32_t fh() const noexcept { return meta_->fh_; }
   void set_dh(int32_t dh) noexcept { meta_->dh_ = dh; }

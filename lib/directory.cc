@@ -148,8 +148,7 @@ void Directory::ScanDir(std::vector<blockfs_dirent *> &dir_infos) {
 
 void Directory::DumpMeta() {
   LOG(INFO) << "directory info: "
-            << " dh: " << dh() << " dir_name: " << dir_name()
-            << " seq_no: " << seq_no();
+            << " dh: " << dh() << " dir_name: " << dir_name();
 }
 
 bool Directory::WriteMeta() {
