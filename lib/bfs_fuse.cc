@@ -151,7 +151,7 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
     stbuf->st_gid = ::getgid();
 
     struct statvfs vfs;
-    if (FileSystem::Instance()->StatVFS(in_path.c_str(), &vfs) < 0) {
+    if (FileSystem::Instance()->StatVFS(&vfs) < 0) {
       return -errno;
     }
 
@@ -434,14 +434,10 @@ static int mfs_write(const char *path, const char *buf, size_t size,
   return res;
 }
 
-/** Get file system statistics
- *
- * The 'f_favail', 'f_fsid' and 'f_flag' fields are ignored
- */
-static int bfs_statfs(const char *path, struct statvfs *vfs) {
-  LOG(INFO) << "call bfs_statfs file: " << path;
+static int mfs_statfs(const char *path, struct statvfs *vfs) {
+  LOG(INFO) << "call mfs_statfs file: " << path;
 
-  int res = FileSystem::Instance()->StatVFS(path, vfs);
+  int res = FileSystem::Instance()->StatVFS(vfs);
   if (res < 0) return -errno;
 
   return 0;
@@ -1089,7 +1085,7 @@ static const struct fuse_operations kBFSOps = {
     .open = mfs_open,
     .read = mfs_read,
     .write = mfs_write,
-    .statfs = bfs_statfs,
+    .statfs = mfs_statfs,
     .flush = bfs_flush,
     .release = bfs_release,
     .fsync = bfs_fsync,

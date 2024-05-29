@@ -20,34 +20,6 @@ FileSystem *FileSystem::g_instance = new FileSystem();
 
 FileSystem *FileSystem::Instance() { return g_instance; }
 
-const uint64_t FileSystem::GetMaxSupportFileNumber() noexcept {
-  return super_meta()->max_file_num;
-}
-
-const uint64_t FileSystem::GetMaxSupportBlockNumer() noexcept {
-  return super_meta()->max_support_block_num_;
-}
-
-const uint64_t FileSystem::GetFreeBlockNumber() noexcept {
-  return super_meta()->curr_block_num_;
-}
-
-const uint64_t FileSystem::GetBlockSize() noexcept {
-  return super_meta()->block_size_;
-}
-
-const uint64_t FileSystem::GetFreeFileNumber() noexcept {
-  return file_handle()->free_meta_size();
-}
-
-const uint64_t FileSystem::GetMaxFileMetaSize() noexcept {
-  return super_meta()->file_meta_size_;
-}
-
-const uint64_t FileSystem::GetMaxFileNameLength() noexcept {
-  return super_meta()->max_file_name_len_;
-}
-
 /**
  * mount the blockfs filesystem
  *
@@ -183,54 +155,31 @@ int32_t FileSystem::StatPath(const int32_t fd, struct stat* fileinfo) {
   return 0;
 }
 
-int32_t FileSystem::StatVFS(const std::string& path,
-                           struct statvfs* buf) {
+int32_t FileSystem::StatVFS(struct statvfs* buf) {
   // f_bsize: 文件系统块大小
-  buf->f_bsize = GetBlockSize();
-  // f_frsize: 文件系统的片段大小，单位是字节
-  buf->f_frsize = 512;
+  buf->f_bsize = super_meta()->block_size_;
+  // f_frsize: 文件系统的片段大小，单位字节
+  buf->f_frsize = buf->f_bsize;
   // f_blocks: 文件系统数据块总数
-  buf->f_blocks = GetMaxSupportBlockNumer();
+  buf->f_blocks = super_meta()->curr_block_num_;
   // f_bfree: 可用块数
-  buf->f_bfree = GetFreeBlockNumber();
+  buf->f_bfree = block_handle()->GetFreeBlockNum();
   buf->f_bavail = buf->f_bfree;
   // f_files: 文件结点总数
-  buf->f_files = GetMaxSupportFileNumber();
+  buf->f_files = super_meta()->max_file_num;
   // f_ffree: 可用文件结点数
-  buf->f_ffree = GetFreeFileNumber();
+  buf->f_ffree = file_handle()->free_meta_size();
   buf->f_favail = buf->f_ffree;
 
   // f_fsid: 文件系统标识 ID
   buf->f_fsid = 0;
   // f_namemax: 最大文件长度
-  buf->f_namemax = GetMaxFileNameLength();
-  return 0;
-}
-
-int32_t FileSystem::StatVFS(const ino_t fd, struct statvfs* buf) {
-  // f_bsize: 文件系统块大小
-  buf->f_bsize = GetBlockSize();
-  // f_frsize: 分栈大小
-  buf->f_frsize = 0;
-  // f_blocks: 文件系统数据块总数
-  buf->f_blocks = GetMaxSupportBlockNumer();
-  // f_bfree: 可用块数
-  buf->f_bavail = GetFreeBlockNumber();
-  // f_bavail:非超级用户可获取的块数
-  buf->f_blocks = GetMaxSupportBlockNumer();
-  // f_files: 文件结点总数
-  buf->f_files = GetMaxSupportFileNumber();
-  // f_ffree: 可用文件结点数
-  buf->f_ffree = GetFreeFileNumber();
-  // f_favail: 非超级用户的可用文件结点数
-  buf->f_favail = GetMaxSupportFileNumber();
-
-  // f_fsid: 文件系统标识 ID
-  buf->f_fsid = 0;
-  // f_flag: 挂载标记
-  buf->f_flag = 0;
-  // f_namemax: 最大文件长度
-  buf->f_namemax = GetMaxFileNameLength();
+  buf->f_namemax = super_meta()->max_file_name_len_;
+  LOG(DEBUG) << "statvfs f_bsize: " << buf->f_bsize
+             << " f_blocks: " << buf->f_blocks
+             << " f_bfree: " << buf->f_bfree
+             << " f_files: " << buf->f_files
+             << " f_ffree: " << buf->f_ffree;
   return 0;
 }
 

@@ -64,14 +64,6 @@ class FileSystem {
 
   bfs_config_info* mount_config() { return &mount_config_; }
 
-  const uint64_t GetMaxSupportFileNumber() noexcept;
-  const uint64_t GetMaxSupportBlockNumer() noexcept;
-  const uint64_t GetFreeBlockNumber() noexcept;
-  const uint64_t GetBlockSize() noexcept;
-  const uint64_t GetFreeFileNumber() noexcept;
-  const uint64_t GetMaxFileMetaSize() noexcept;
-  const uint64_t GetMaxFileNameLength() noexcept;
-
   // Mount FileSystem
   int32_t MountFileSystem(const std::string &config_path);
   int32_t RemountFileSystem();
@@ -81,9 +73,7 @@ class FileSystem {
   // Stat
   int32_t StatPath(const std::string &path, struct stat *fileinfo);
   int32_t StatPath(const int32_t fd, struct stat *fileinfo);
-  int32_t StatVFS(const std::string &path,
-                  struct statvfs *buf);
-  int32_t StatVFS(const ino_t fd, struct statvfs *buf);
+  int32_t StatVFS(struct statvfs *buf);
 
   int32_t CreateFile(const std::string &path, mode_t mode);
   int32_t RenamePath(const std::string &src,
