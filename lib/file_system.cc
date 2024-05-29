@@ -278,7 +278,7 @@ int32_t FileSystem::RenamePath(const std::string& oldpath,
 
 int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
   if (size < 0) [[unlikely]] {
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return -1;
   }
   LOG(INFO) << "truncate file: " << filename << " len: " << size;

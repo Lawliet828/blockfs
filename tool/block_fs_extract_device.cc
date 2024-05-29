@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "block_fs.h"
 #include "file_system.h"
 #include "logging.h"
 

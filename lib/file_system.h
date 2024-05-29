@@ -9,7 +9,6 @@
 
 #include "aligned_buffer.h"
 #include "block_fs_internal.h"
-#include "block_fs.h"
 #include "block_fs_config.h"
 #include "comm_utils.h"
 #include "bfs_fuse.h"
@@ -135,5 +134,11 @@ class FileSystem {
   bool Format(const std::string &dev_name);
   bool Check(const std::string &dev_name, const std::string &log_level = "DEBUG");
 };
+
+
+inline ssize_t block_fs_read(int fd, void *buf, size_t len) {
+  return FileSystem::Instance()->ReadFile(fd, buf, len);
+}
+
 }
 #endif

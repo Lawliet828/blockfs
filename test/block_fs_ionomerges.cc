@@ -10,7 +10,6 @@
 #include <iostream>
 #include <thread>
 
-#include <block_fs.h>
 #include "file_system.h"
 #include "logging.h"
 using namespace udisk::blockfs;

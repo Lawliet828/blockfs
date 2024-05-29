@@ -1,7 +1,6 @@
 // Copyright (c) 2020 UCloud All rights reserved.
 #include <fcntl.h>
 #include <getopt.h>
-#include <block_fs.h>
 
 #include <chrono>
 #include <deque>

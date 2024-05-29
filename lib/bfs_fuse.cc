@@ -13,7 +13,6 @@
 #include <thread>
 #include <vector>
 
-#include "block_fs.h"
 #include "comm_utils.h"
 #include "file_system.h"
 #include "logging.h"
@@ -284,6 +283,9 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
 static int bfs_truncate(const char *path, off_t newsize,
                         struct fuse_file_info *fi)
 {
+  if (nullptr == path) [[unlikely]] {
+    return -EINVAL;
+  }
   LOG(INFO) << "call bfs_truncate file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
@@ -292,9 +294,9 @@ static int bfs_truncate(const char *path, off_t newsize,
   int res;
 
   if (fi)
-    res = block_fs_ftruncate(fi->fh, newsize);
+    res = FileSystem::Instance()->TruncateFile(fi->fh, newsize);
   else
-    res = block_fs_truncate(in_path.c_str(), newsize);
+    res = FileSystem::Instance()->TruncateFile(in_path.c_str(), newsize);
 
   if (res < 0) return -errno;
 
@@ -813,9 +815,7 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
   else
     fd = fi->fh;
 
-  struct flock fl;
-  // 	res = flock(fi->fh, op);
-  res = block_fs_fcntl(fd, F_SETLK, &fl);
+  res = FileSystem::Instance()->FcntlFile(fd, F_WRLCK);
   if (res < 0) return -errno;
 
   return 0;
@@ -849,7 +849,7 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
 
   int64_t write_size = fuse_buf_size(buf);
   int64_t write_offset = offset;
-  res = block_fs_ftruncate(fd, write_size + write_offset);
+  res = FileSystem::Instance()->TruncateFile(fd, write_size + write_offset);
   if (res < 0) {
     return -errno;
   }
@@ -965,9 +965,7 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   else
     fd = fi->fh;
 
-  struct flock fl;
-  // 	res = flock(fi->fh, op);
-  res = block_fs_fcntl(fd, F_SETLK, &fl);
+  res = FileSystem::Instance()->FcntlFile(fd, F_WRLCK);
   if (res < 0) return -errno;
 
   if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
@@ -997,7 +995,7 @@ static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
   else
     fd = fi->fh;
 
-  res = -block_fs_posix_fallocate(fd, offset, length);
+  res = -FileSystem::Instance()->PosixFallocate(fd, offset, length);
 
   if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
 

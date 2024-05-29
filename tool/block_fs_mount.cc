@@ -5,7 +5,6 @@
 #include <chrono> // std::chrono::seconds
 #include <thread> // std::this_thread::sleep_for
 
-#include "block_fs.h"
 #include "file_system.h"
 #include "logging.h"
 

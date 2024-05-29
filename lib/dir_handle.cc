@@ -176,7 +176,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
       // 检查上一层是否目录是否存在并且为文件
       if (FileSystem::Instance()->file_handle()->GetCreatedFile(parent_path)) {
         LOG(ERROR) << "the same parent path file exist: " << dirname;
-        block_fs_set_errno(ENOTDIR);
+        errno = ENOTDIR;
         return false;
       }
     }

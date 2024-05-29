@@ -1,6 +1,7 @@
 #ifndef LIB_META_DEFINES_H
 #define LIB_META_DEFINES_H
 
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -20,6 +21,18 @@
 #include <vector>
 
 namespace udisk::blockfs {
+
+inline void block_fs_set_errno(int e) { errno = e; }
+
+typedef struct blockfs_dirent {
+  long d_ino;                /* inode number */
+  off_t d_off;               /* offset to this dirent */
+  uint32_t d_reclen;         /* length of this d_name */
+  uint32_t d_type;           /* the type of d_name */
+  uint32_t d_link;           /* link conut */
+  char d_name[NAME_MAX + 1]; /* file name (null-terminated) */
+  time_t d_time_;
+} block_fs_dirent;
 
 const uint64_t K = 1024;
 const uint64_t M = (1024 * K);
