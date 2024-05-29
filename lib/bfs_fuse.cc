@@ -152,7 +152,7 @@ static int bfs_getattr(const char *path, struct stat *sb,
     sb->st_gid = ::getgid();
 
     struct statvfs vfs;
-    if (block_fs_statvfs(in_path.c_str(), &vfs) < 0) {
+    if (FileSystem::Instance()->StatVFS(in_path.c_str(), &vfs) < 0) {
       return -errno;
     }
 
@@ -171,9 +171,9 @@ static int bfs_getattr(const char *path, struct stat *sb,
   // fuse_get_context()->uid
 
   if (fi)
-    res = block_fs_fstat(fi->fh, sb);
+    res = FileSystem::Instance()->StatPath(fi->fh, sb);
   else
-    res = block_fs_stat(in_path.c_str(), sb);
+    res = FileSystem::Instance()->StatPath(in_path.c_str(), sb);
   if (res < 0) return -errno;
 
   return 0;
@@ -267,7 +267,7 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
   /* When we have renameat2() in libc, then we can implement flags */
   if (flags) return -EINVAL;
 
-  res = block_fs_rename(from_path.c_str(), to_path.c_str());
+  res = FileSystem::Instance()->RenamePath(from_path.c_str(), to_path.c_str());
   if (res < 0) return -errno;
 
   return 0;
@@ -439,7 +439,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
 static int bfs_statfs(const char *path, struct statvfs *vfs) {
   LOG(INFO) << "call bfs_statfs file: " << path;
 
-  int res = block_fs_statvfs(path, vfs);
+  int res = FileSystem::Instance()->StatVFS(path, vfs);
   if (res < 0) return -errno;
 
   return 0;
@@ -624,7 +624,7 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     return -EINVAL;
   }
   struct blockfs_dirent *de;
-  while ((de = block_fs_readdir(dp)) != nullptr) {
+  while ((de = FileSystem::Instance()->ReadDirectory(dp)) != nullptr) {
     // struct stat st;
     // memset(&st, 0, sizeof(st));
     // st.st_ino = de->d_ino;
@@ -637,7 +637,7 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     if (flags & FUSE_READDIR_PLUS) {
       int res;
 
-      res = block_fs_stat(de->d_name, &st);
+      res = FileSystem::Instance()->StatPath(de->d_name, &st);
       if (res != -1) {
         fill_flags == FUSE_FILL_DIR_PLUS;
       }

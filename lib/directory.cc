@@ -189,7 +189,7 @@ bool Directory::WriteMeta(dh_t dh) {
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
       FileSystem::Instance()->super_meta()->dir_meta_offset_ + offset);
-  if (unlikely(ret != kBlockFsPageSize)) {
+  if (ret != kBlockFsPageSize) [[unlikely]] {
     LOG(ERROR) << "write directory meta " << dh << "error size:" << ret
                << " need:" << kBlockFsPageSize;
     return false;

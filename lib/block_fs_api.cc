@@ -7,22 +7,6 @@
 
 using namespace udisk::blockfs;
 
-int block_fs_rename(const char *oldpath, const char *newpath) {
-  return FileSystem::Instance()->RenamePath(oldpath, newpath);
-}
-
-int block_fs_stat(const char *valpath, struct stat *buf) {
-  return FileSystem::Instance()->StatPath(valpath, buf);
-}
-
-int block_fs_fstat(int fd, struct stat *buf) {
-  return FileSystem::Instance()->StatPath(fd, buf);
-}
-
-int block_fs_statvfs(const char *path, struct statvfs *buf) {
-  return FileSystem::Instance()->StatVFS(path, buf);
-}
-
 int block_fs_fcntl(int fd, int cmd, ...) {
   switch (cmd) {
     case F_SETFL: {
@@ -48,10 +32,6 @@ int block_fs_fcntl(int fd, int cmd, ...) {
     default:
       return -1;
   }
-}
-
-struct blockfs_dirent *block_fs_readdir(BLOCKFS_DIR *dir) {
-  return FileSystem::Instance()->ReadDirectory(dir);
 }
 
 int block_fs_truncate(const char *valpath, int64_t len) {

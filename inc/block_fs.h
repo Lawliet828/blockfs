@@ -23,24 +23,6 @@ typedef struct blockfs_dirent {
 } block_fs_dirent;
 
 /**
- * Read a directory entry from DIRP.  Return a pointer to a `struct
- * dirent' describing the entry, or NULL for EOF or error.  The
- * storage returned may be overwritten by a later readdir call on the
- * same DIR stream.
-
- * If the Large File Support API is selected we have to use the
- * appropriate interface.
- *
- * This function is a possible cancellation
- * point and therefore not marked with __THROW.
- *
- * \param dir BLOCKFS_DIR opened
- *
- * \return struct dirent* head
- */
-struct blockfs_dirent *block_fs_readdir(udisk::blockfs::BLOCKFS_DIR *dir);
-
-/**
  * Truncate a given file path from offset 0
  *
  * \param valpath File absolute path
@@ -82,44 +64,12 @@ int block_fs_posix_fallocate(int fd, uint64_t offset, uint64_t len);
  */
 ssize_t block_fs_read(int fd, void *buf, size_t len);
 
-/**
- * Get dir or file stat
- *
- * \param path Dir or file path
- * \param buf Buffer of struct stat
- *
- * \return chmod retcode
- */
-int block_fs_stat(const char *valpath, struct stat *buf);
-
-/**
- * Get dir or file stat
- *
- * \param fd Dir or file fd
- * \param buf Buffer of struct stat
- *
- * \return chmod retcode
- */
-int block_fs_fstat(int fd, struct stat *buf);
-
-/**
- * Rename dir or file
- *
- * \param oldpath Old dir or file path
- * \param newpath New dir or file path
- *
- * \return rename retcode
- */
-int block_fs_rename(const char *oldpath, const char *newpath);
-
 typedef struct {
   int32_t fd_;
   int64_t offset_;
 } BLOCKFS_FILE;
 
 int block_fs_fcntl(int fd, int cmd, ...);
-
-int block_fs_statvfs(const char *path, struct statvfs *buf);
 
 void block_fs_set_errno(int e);
 
