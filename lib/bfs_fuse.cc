@@ -625,7 +625,7 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     LOG(ERROR) << "failed to find open directory: " << path;
     return -EINVAL;
   }
-  struct blockfs_dirent *de;
+  block_fs_dirent *de;
   while ((de = FileSystem::Instance()->ReadDirectory(dp)) != nullptr) {
     // struct stat st;
     // memset(&st, 0, sizeof(st));

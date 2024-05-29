@@ -645,7 +645,7 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
 
 // https://download.csdn.net/download/fronteer/4995825
 // https://blog.csdn.net/chenleng8306/article/details/100790301
-blockfs_dirent *DirHandle::ReadDirectory(BLOCKFS_DIR *d) {
+block_fs_dirent *DirHandle::ReadDirectory(BLOCKFS_DIR *d) {
   META_HANDLE_LOCK();
   if (!d->inited_) {
     d->dir_->ScanDir(d->dir_items_);

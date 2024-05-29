@@ -4,10 +4,6 @@
 #include "comm_utils.h"
 #include "meta_defines.h"
 
-// https://blog.csdn.net/lee244868149/article/details/38702367?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-4.nonecase
-// https://blog.csdn.net/wogezheerne/article/details/84994476?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-10.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-10.nonecase
-struct blockfs_dirent;
-
 namespace udisk::blockfs {
 
 class Directory;
@@ -27,11 +23,11 @@ struct BLOCKFS_DIR {
   uint64_t size_;       /* Total valid data in the block  */
   std::mutex mutex_;
   /* Entry item `dir_' corresponds to */
-  std::vector<blockfs_dirent *> dir_items_;
+  std::vector<block_fs_dirent *> dir_items_;
 
   int32_t fd() const noexcept { return fd_; }
   uint32_t entry_num() const noexcept { return dir_items_.size(); }
-  void AddItem(blockfs_dirent *info) noexcept {
+  void AddItem(block_fs_dirent *info) noexcept {
     std::lock_guard<std::mutex> lock(mutex_);
     dir_items_.push_back(info);
   }

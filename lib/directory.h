@@ -45,7 +45,7 @@ class Directory : public Inode<DirMeta, File>,
   bool Suicide();
   bool SuicideNolock();
 
-  void ScanDir(std::vector<blockfs_dirent *> &dir_infos);
+  void ScanDir(std::vector<block_fs_dirent *> &dir_infos);
 
   bool ForceRemoveAllFiles();
   bool AddChildFile(const FilePtr &file);

@@ -24,7 +24,7 @@ namespace udisk::blockfs {
 
 inline void block_fs_set_errno(int e) { errno = e; }
 
-typedef struct blockfs_dirent {
+struct block_fs_dirent {
   long d_ino;                /* inode number */
   off_t d_off;               /* offset to this dirent */
   uint32_t d_reclen;         /* length of this d_name */
@@ -32,40 +32,36 @@ typedef struct blockfs_dirent {
   uint32_t d_link;           /* link conut */
   char d_name[NAME_MAX + 1]; /* file name (null-terminated) */
   time_t d_time_;
-} block_fs_dirent;
+};
 
-const uint64_t K = 1024;
-const uint64_t M = (1024 * K);
-const uint64_t G = (1024 * M);
-const uint64_t T = (1024 * G);
+constexpr uint64_t K = 1024;
+constexpr uint64_t M = (1024 * K);
+constexpr uint64_t G = (1024 * M);
+constexpr uint64_t T = (1024 * G);
 
-#define KB *(1 << 10)
-#define MB *(1 << 20)
-#define GB *(1U << 30)
+constexpr uint32_t kBlockFsMagic = 0xA5201314;
 
-const uint32_t kBlockFsMagic = 0xA5201314;
+constexpr uint64_t kUUIDSize = 64;
+constexpr uint64_t kUXDBMountPrefixMaxLen = 256;
 
-const uint64_t kUUIDSize = 64;
-const uint64_t kUXDBMountPrefixMaxLen = 256;
+constexpr uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
 
-const uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
+constexpr uint64_t kBlockFsPageSize = (4 * K);
+constexpr uint64_t kSuperBlockSize = kBlockFsPageSize;
+constexpr uint64_t kSuperBlockOffset = 0;
+constexpr uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
 
-const uint64_t kBlockFsPageSize = (4 * K);
-const uint64_t kSuperBlockSize = kBlockFsPageSize;
-const uint64_t kSuperBlockOffset = 0;
-const uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
-
-const uint64_t kBlockFsMaxFileNum = 100000;
-const uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
-const uint64_t kBlockFsMaxUDiskSize = (128 * T);
-const uint64_t kBlockFsBlockSize = (16 * M);
-const uint64_t kBlockFsMaxDirNameLen = 768;
-const uint64_t kBlockFsMaxFileNameLen = 64;
-const uint64_t kBlockFsDirMetaSize = (1 * K);
-const uint64_t kBlockFsFileMetaSize = 256;
-const uint64_t kBlockFsFileBlockCapacity = 1000;
-const uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
-const uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
+constexpr uint64_t kBlockFsMaxFileNum = 100000;
+constexpr uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
+constexpr uint64_t kBlockFsMaxUDiskSize = (128 * T);
+constexpr uint64_t kBlockFsBlockSize = (16 * M);
+constexpr uint64_t kBlockFsMaxDirNameLen = 768;
+constexpr uint64_t kBlockFsMaxFileNameLen = 64;
+constexpr uint64_t kBlockFsDirMetaSize = (1 * K);
+constexpr uint64_t kBlockFsFileMetaSize = 256;
+constexpr uint64_t kBlockFsFileBlockCapacity = 1000;
+constexpr uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
+constexpr uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
 typedef uint64_t ino_t;
 typedef int32_t dh_t;

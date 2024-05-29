@@ -114,11 +114,11 @@ const uint32_t Directory::ChildCount() noexcept {
   return (item_maps_.size() + child_dir_maps_.size());
 }
 
-void Directory::ScanDir(std::vector<blockfs_dirent *> &dir_infos) {
+void Directory::ScanDir(std::vector<block_fs_dirent *> &dir_infos) {
   LOG(INFO) << "init scan directory: " << dir_name();
   for (const auto &d : child_dir_maps_) {
     LOG(INFO) << "scan directory: " << d.second->dir_name();
-    blockfs_dirent *info = new blockfs_dirent();
+    block_fs_dirent *info = new block_fs_dirent();
     info->d_ino = d.second->dh();
     info->d_type = DT_DIR;
     // 全路径: 去掉'/', 返回整齐的名字
@@ -136,7 +136,7 @@ void Directory::ScanDir(std::vector<blockfs_dirent *> &dir_infos) {
   for (const auto &item : item_maps_) {
     const FilePtr &file = item.second;
     LOG(INFO) << "scan file: " << file->file_name();
-    blockfs_dirent *info = new blockfs_dirent();
+    block_fs_dirent *info = new block_fs_dirent();
     info->d_ino = file->fh();
     info->d_type = DT_REG;
     ::memcpy(info->d_name, file->file_name().c_str(), file->file_name().size());
