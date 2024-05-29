@@ -133,29 +133,6 @@ FileBlockPtr FileBlockHandle::GetFileBlockLock() {
   return std::make_shared<FileBlock>(index, meta);
 }
 
-bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
-                                       std::vector<FileBlockPtr> *file_blocks) {
-  META_HANDLE_LOCK();
-  if (free_fbhs_.empty() || free_fbhs_.size() < file_block_num) [[unlikely]] {
-    LOG(ERROR) << "file block meta not enough";
-    return false;
-  }
-  file_blocks->clear();
-
-  FileBlockMeta *meta = nullptr;
-  for (uint32_t i = 0; i < file_block_num; ++i) {
-    uint32_t index = free_fbhs_.front();
-    free_fbhs_.pop_front();
-    meta = reinterpret_cast<FileBlockMeta *>(
-        base_addr() +
-        FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
-    assert(meta->used_ == false);
-    assert(meta->used_block_num_ == 0);
-    file_blocks->push_back(std::make_shared<FileBlock>(index, meta));
-  }
-  return true;
-}
-
 void FileBlockHandle::PutFileBlockLock(uint32_t index) {
   META_HANDLE_LOCK();
   PutFileBlockNoLock(index);
@@ -163,28 +140,6 @@ void FileBlockHandle::PutFileBlockLock(uint32_t index) {
 
 void FileBlockHandle::PutFileBlockNoLock(uint32_t index) {
   free_fbhs_.push_back(index);
-}
-
-bool FileBlockHandle::PutFileBlockLock(
-    const std::vector<FileBlockPtr> &file_blocks) {
-  META_HANDLE_LOCK();
-  return PutFileBlockNoLock(file_blocks);
-}
-
-bool FileBlockHandle::PutFileBlockNoLock(
-    const std::vector<FileBlockPtr> &file_blocks) {
-  if (file_blocks.size() == 0) [[unlikely]] {
-    LOG(ERROR) << "file block list empty";
-    return false;
-  }
-  LOG(INFO) << "current file block size: " << free_fbhs_.size();
-  for (uint32_t i = 0; i < file_blocks.size(); ++i) {
-    free_fbhs_.push_back(file_blocks[i]->index());
-    LOG(INFO) << "put file block index: " << file_blocks[i]->index()
-              << " to free meta done";
-  }
-  LOG(INFO) << "current file block size: " << free_fbhs_.size();
-  return true;
 }
 
 }

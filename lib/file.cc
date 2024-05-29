@@ -323,10 +323,10 @@ int File::ExtendFile(uint64_t offset) {
   // 如果最后一个fileblock存在,但是已经满了此次不需要更新这个fileblock元数据
   bool update_last_file_block = false;
   FileBlockPtr last_file_block = nullptr;
-  uint32_t last_file_block_left;
+  bool need_new_file_block = false;
   if (meta_->size_ == 0) {
     assert(item_maps_.size() == 0);
-    last_file_block_left = 0;
+    need_new_file_block = true;
   } else {
     // 找到的最大的file cut的file block
     assert(item_maps_.size() > 0);
@@ -334,24 +334,16 @@ int File::ExtendFile(uint64_t offset) {
     if (nullptr == last_file_block) [[unlikely]] {
       return -1;
     }
-    // 检查是否满了
-    last_file_block_left =
-        kFileBlockCapacity - last_file_block->used_block_num();
-    if (last_file_block_left > 0) update_last_file_block = true;
+    if (last_file_block->is_block_full()) {
+      LOG(FATAL) << file_name() << " file block is full";
+    }
+    need_new_file_block = false;
+    update_last_file_block = true;
   }
-  uint32_t file_block_num;
-  if (last_file_block_left) {
-    file_block_num = 0;
-  } else {
-    file_block_num = 1;
-  }
-  LOG(INFO) << file_name()
-            << " last file block left num: " << last_file_block_left
-            << " left need alloc file block num: " << file_block_num;
 
   // 开始申请资源
   FileBlockPtr file_block = nullptr;
-  if (file_block_num) {
+  if (need_new_file_block) {
     file_block = FileSystem::Instance()->file_block_handle()->GetFileBlockLock();
     if (!file_block) {
       return -1;
@@ -362,7 +354,7 @@ int File::ExtendFile(uint64_t offset) {
     if (!FileSystem::Instance()->block_handle()->GetFreeBlockIdLock(
             num_blocks_needed, &block_ids)) {
       // 此处需要释放fileblock, 回退资源
-      if (file_block_num > 0) {
+      if (need_new_file_block) {
         FileSystem::Instance()->file_block_handle()->PutFileBlockLock(file_block);
       }
       return -1;
@@ -371,7 +363,6 @@ int File::ExtendFile(uint64_t offset) {
 
   // 开始填充fileblock的参数
   uint32_t block_ids_cursor = 0;
-  uint32_t file_block_cursor = 0;
   FileBlockPtr next_file_block = nullptr;
 
   // 存在新申请block的的场景
@@ -419,7 +410,7 @@ int File::ExtendFile(uint64_t offset) {
         !last_file_block->WriteMeta()) {
       return -1;
     }
-    if (file_block)
+    if (file_block) {
       file_block->set_is_temp(this->is_temp());
       if (!file_block->WriteMeta()) {
         return -1;
@@ -520,10 +511,10 @@ int File::ShrinkFile(uint64_t offset) {
   FileMeta *old_meta = meta();
 
   uint32_t block_num = offset / kBlockSize;
-  // 是否是4M对齐的
   uint64_t block_offset = offset % kBlockSize;
 
-  uint32_t file_cut = block_num / kFileBlockCapacity;
+  // uint32_t file_cut = block_num / kFileBlockCapacity;
+  uint32_t file_cut = 0;
   uint32_t file_block_offset = block_num % kFileBlockCapacity;
 
   // 继承临时文件属性
@@ -540,13 +531,12 @@ int File::ShrinkFile(uint64_t offset) {
   // 有可能是为了有多个剩余的block
   // 有可能是为了放最后一个copy的block
   if (file_block_offset > 0 || block_offset > 0) {
-    ++file_block_num;
+    file_block_num = 1;
   }
-  LOG(INFO) << file_name() << " need alloc file block num: " << file_block_num;
-  std::vector<FileBlockPtr> file_blocks;
+  FileBlockPtr file_block = nullptr;
   if (file_block_num > 0) {
-    if (!FileSystem::Instance()->file_block_handle()->GetFileBlockLock(
-            file_block_num, &file_blocks)) {
+    file_block = FileSystem::Instance()->file_block_handle()->GetFileBlockLock();
+    if (!file_block) {
       return -1;
     }
     // 拷贝block_num, 可能还需要单独申请一个
@@ -556,7 +546,7 @@ int File::ShrinkFile(uint64_t offset) {
     FileBlockPtr new_fb = nullptr;
     for (uint32_t i = 0; i < file_block_num; ++i) {
       old_fb = GetMetaItem(i);
-      new_fb = file_blocks[i];
+      new_fb = file_block;
       assert(old_fb->file_cut() == i);
       new_fb->set_used(true);
       new_fb->set_file_cut(old_fb->file_cut());
@@ -601,7 +591,7 @@ int File::ShrinkFile(uint64_t offset) {
       }
       LOG(INFO) << file_name() << " file_block_num: " << file_block_num;
       // 填充到申请最后一个fileblock
-      new_fb = file_blocks[file_block_num - 1];
+      new_fb = file_block;
       new_fb->add_block_id(new_block_id);
     }
   }
@@ -629,9 +619,9 @@ int File::ShrinkFile(uint64_t offset) {
     return -1;
   }
 
-  for (const auto &fb : file_blocks) {
+  if (file_block) {
     // 添加到文件内存的filecut映射中
-    AddFileBlockNoLock(fb);
+    AddFileBlockNoLock(file_block);
   }
 
   // 更新到实际truncate后的size
@@ -642,8 +632,8 @@ int File::ShrinkFile(uint64_t offset) {
     return -1;
   }
   // 写新文件FileBlock的元数据
-  for (const auto &fb : file_blocks) {
-    if (!fb->WriteMeta()) {
+  if (file_block) {
+    if (!file_block->WriteMeta()) {
       return -1;
     }
   }

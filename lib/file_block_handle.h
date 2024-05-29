@@ -24,12 +24,8 @@ class FileBlockHandle : public MetaHandle {
 
   FileBlockPtr GetFileBlockLock();
 
-  bool GetFileBlockLock(uint32_t file_block_num,
-                        std::vector<FileBlockPtr> *file_blocks);
   void PutFileBlockLock(uint32_t index);
   void PutFileBlockNoLock(uint32_t index);
-  bool PutFileBlockLock(const std::vector<FileBlockPtr> &file_blocks);
-  bool PutFileBlockNoLock(const std::vector<FileBlockPtr> &file_blocks);
   bool PutFileBlockLock(const FileBlockPtr &file_block) {
     META_HANDLE_LOCK();
     free_fbhs_.push_back(file_block->index());
