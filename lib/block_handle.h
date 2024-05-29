@@ -39,9 +39,6 @@ class BlockHandle : public MetaHandle {
   bool PutFreeBlockIdLock(uint32_t block_id);
   bool PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids);
 
-  virtual bool InitializeMeta() override {
-    set_max_block_num(FileSystem::Instance()->super_meta()->curr_block_num_);
-    return true;
-  }
+  virtual bool InitializeMeta() override;
 };
 }

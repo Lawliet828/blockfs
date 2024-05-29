@@ -6,6 +6,7 @@
 #include "crc.h"
 #include "file.h"
 #include "file_block.h"
+#include "logging.h"
 #include "meta_handle.h"
 
 namespace udisk::blockfs {
@@ -21,12 +22,19 @@ class FileBlockHandle : public MetaHandle {
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
 
+  FileBlockPtr GetFileBlockLock();
+
   bool GetFileBlockLock(uint32_t file_block_num,
                         std::vector<FileBlockPtr> *file_blocks);
   void PutFileBlockLock(uint32_t index);
   void PutFileBlockNoLock(uint32_t index);
   bool PutFileBlockLock(const std::vector<FileBlockPtr> &file_blocks);
   bool PutFileBlockNoLock(const std::vector<FileBlockPtr> &file_blocks);
+  bool PutFileBlockLock(const FileBlockPtr &file_block) {
+    META_HANDLE_LOCK();
+    free_fbhs_.push_back(file_block->index());
+    return true;
+  }
 
   const uint32_t GetFreeMetaNum() const { return free_fbhs_.size(); }
 };

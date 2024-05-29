@@ -5,6 +5,11 @@
 
 namespace udisk::blockfs {
 
+bool BlockHandle::InitializeMeta() {
+  set_max_block_num(FileSystem::Instance()->super_meta()->curr_block_num_);
+  return true;
+}
+
 // 新增加的block id加到资源池, 总的udisk size做了限制,
 // 所以传入的new_max_block_num个数肯定是受到限制的
 void BlockHandle::set_max_block_num(uint32_t new_max_block_num) noexcept {

@@ -2,7 +2,6 @@
 
 #include "crc.h"
 #include "file_system.h"
-#include "logging.h"
 
 namespace udisk::blockfs {
 
@@ -115,6 +114,23 @@ bool FileBlockHandle::FormatAllMeta() {
   }
   LOG(INFO) << "write all file block meta success";
   return true;
+}
+
+FileBlockPtr FileBlockHandle::GetFileBlockLock() {
+  META_HANDLE_LOCK();
+  if (free_fbhs_.empty()) [[unlikely]] {
+    LOG(ERROR) << "file block is exhausted";
+    return nullptr;
+  }
+
+  uint32_t index = free_fbhs_.front();
+  free_fbhs_.pop_front();
+  FileBlockMeta *meta = reinterpret_cast<FileBlockMeta *>(
+      base_addr() +
+      FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
+  assert(meta->used_ == false);
+  assert(meta->used_block_num_ == 0);
+  return std::make_shared<FileBlock>(index, meta);
 }
 
 bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
