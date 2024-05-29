@@ -25,7 +25,7 @@ class Inode {
 
  public:
   Inode() {}
-  Inode(MetaName *meta) : meta_(meta), mutex_() {}
+  Inode(MetaName *meta) : meta_(meta) {}
   virtual ~Inode() {}
 
   void set_meta(MetaName *meta) noexcept { meta_ = meta; }
@@ -48,8 +48,6 @@ class Inode {
   virtual void stat(struct stat *buf) { return; }
   virtual int rename(const std::string &to) { return 0; }
 
-  virtual void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) {
-  }
   virtual bool UpdateMeta() { return false; }
   virtual bool WriteMeta() { return true; }
   virtual void DumpMeta() {}

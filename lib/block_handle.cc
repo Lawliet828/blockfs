@@ -5,11 +5,6 @@
 
 namespace udisk::blockfs {
 
-bool BlockHandle::InitializeMeta() {
-  set_max_block_num(FileSystem::Instance()->super_meta()->curr_block_num_);
-  return true;
-}
-
 // 新增加的block id加到资源池, 总的udisk size做了限制,
 // 所以传入的new_max_block_num个数肯定是受到限制的
 void BlockHandle::set_max_block_num(uint32_t new_max_block_num) noexcept {
@@ -42,12 +37,7 @@ bool BlockHandle::GetSpecificBlockId(uint32_t block_id) {
 bool BlockHandle::GetFreeBlockIdLock(uint32_t block_id_num,
                                      std::vector<uint32_t> *block_ids) {
   META_HANDLE_LOCK();
-  return GetFreeBlockIdNoLock(block_id_num, block_ids);
-}
-
-bool BlockHandle::GetFreeBlockIdNoLock(uint32_t block_id_num,
-                                       std::vector<uint32_t> *block_ids) {
-  if (block_id_pool_.size() < block_id_num) {
+  if (block_id_pool_.size() < block_id_num) [[unlikely]] {
     LOG(ERROR) << "block id not enough, left: " << block_id_pool_.size()
                << " wanted: " << block_id_num;
     return false;
@@ -73,10 +63,6 @@ bool BlockHandle::PutFreeBlockIdLock(uint32_t block_id) {
 
 bool BlockHandle::PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids) {
   META_HANDLE_LOCK();
-  return PutFreeBlockIdNoLock(block_ids);
-}
-
-bool BlockHandle::PutFreeBlockIdNoLock(const std::vector<uint32_t> &block_ids) {
   if (block_ids.size() == 0) [[unlikely]] {
     LOG(ERROR) << "block id list empty";
     return false;

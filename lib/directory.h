@@ -64,7 +64,7 @@ class Directory : public Inode<DirMeta, File>,
   static void ClearMeta(dh_t dh) noexcept;
   bool WriteMeta() override;
   static bool WriteMeta(dh_t dh);
-  void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) override;
+  void UpdateTimeStamp(bool a = false, bool m = false, bool c = false);
 };
 typedef std::shared_ptr<Directory> DirectoryPtr;
 

@@ -123,7 +123,7 @@ class File : public Inode<FileMeta, FileBlock>,
   void stat(struct stat *buf) override;
   int rename(const std::string &to) override;
 
-  void UpdateTimeStamp(bool a = false, bool m = false, bool c = false) override;
+  void UpdateTimeStamp();
   bool UpdateMeta() override;
 
   // open file functions

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <mutex>
 
@@ -160,7 +161,7 @@ int File::rename(const std::string &to) {
         std::string file_name = GetFileName(to);
         set_file_name(file_name);
         set_dh(new_dir->dh());
-        UpdateTimeStamp(false, true, true);
+        UpdateTimeStamp();
 
         // 添加新的文件映射
         FileSystem::Instance()->file_handle()->AddFileNoLock(file);
@@ -325,7 +326,6 @@ int File::ExtendFile(uint64_t offset) {
   uint32_t last_file_block_left;
   if (meta_->size_ == 0) {
     assert(item_maps_.size() == 0);
-    // 需要全额申请block的个数
     last_file_block_left = 0;
   } else {
     // 找到的最大的file cut的file block
@@ -688,14 +688,15 @@ int File::posix_fallocate(uint64_t offset, uint64_t size) {
 
 int File::fsync() { return FileSystem::Instance()->dev()->Fsync(); }
 
-void File::UpdateTimeStamp(bool a, bool m, bool c) {
-  TimeStamp ts = TimeStamp::now();
-  int64_t microSecondsSinceEpoch = ts.microSecondsSinceEpoch();
-  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch /
-                                       TimeStamp::kMicroSecondsPerSecond);
-  if (a) set_atime(seconds);
-  if (m) set_mtime(seconds);
-  if (c) set_ctime(seconds);
+void File::UpdateTimeStamp() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+
+  set_mtime(seconds);
+  set_ctime(seconds);
 
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
                       FileSystem::Instance()->super_meta()->file_meta_size_ -
@@ -758,10 +759,7 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
                  << " read file from offset to end, file size:"
                  << file_->file_size() << " offset: " << append_pos;
   }
-  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
-    file_->UpdateTimeStamp(true, false, false);
-    return true;
-  });
+
   FileReader reader =
       FileReader(shared_from_this(), buf, need_read_size, append_pos, false);
   int64_t ret = reader.ReadData();
@@ -785,10 +783,8 @@ int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
     }
   }
 
-  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
-    file_->UpdateTimeStamp(false, true, true);
-    return true;
-  });
+  file_->UpdateTimeStamp();
+
   FileWriter writer =
       FileWriter(shared_from_this(), buffer, size, append_pos, false);
   int64_t ret = writer.WriteData();
@@ -1021,10 +1017,7 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
                  << " read file from offset to end, file size:"
                  << file_->file_size() << " offset: " << offset;
   }
-  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
-    file_->UpdateTimeStamp(true, false, false);
-    return true;
-  });
+
   FileReader reader =
       FileReader(shared_from_this(), buf, need_read_size, offset, false);
   int64_t ret = reader.ReadData();
@@ -1053,10 +1046,8 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
     }
   }
 
-  FileSystem::Instance()->file_handle()->RunInMetaGuard([this] {
-    file_->UpdateTimeStamp(false, true, true);
-    return true;
-  });
+  file_->UpdateTimeStamp();
+
   // 目前不能以direct方式打开, 因为如果以direct方式打开, 必须要扇区对齐写入
   FileWriter writer = FileWriter(shared_from_this(), buffer, size, offset, false);
   int64_t ret = writer.WriteData();

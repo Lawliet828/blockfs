@@ -120,7 +120,7 @@ bool FileBlockHandle::FormatAllMeta() {
 bool FileBlockHandle::GetFileBlockLock(uint32_t file_block_num,
                                        std::vector<FileBlockPtr> *file_blocks) {
   META_HANDLE_LOCK();
-  if (unlikely(free_fbhs_.empty() || free_fbhs_.size() < file_block_num)) {
+  if (free_fbhs_.empty() || free_fbhs_.size() < file_block_num) [[unlikely]] {
     LOG(ERROR) << "file block meta not enough";
     return false;
   }
@@ -157,7 +157,7 @@ bool FileBlockHandle::PutFileBlockLock(
 
 bool FileBlockHandle::PutFileBlockNoLock(
     const std::vector<FileBlockPtr> &file_blocks) {
-  if (unlikely(file_blocks.size() == 0)) {
+  if (file_blocks.size() == 0) [[unlikely]] {
     LOG(ERROR) << "file block list empty";
     return false;
   }
