@@ -72,10 +72,6 @@ static const seq_t kReservedUnusedSeq = 0;  // 0 is reserved sequence
 static const seq_t kMinUnCommittedSeq = 1;  // 1 is always committed
 static const seq_t kMaxUnCommittedSeq = UINT64_MAX;
 
-static const int32_t kJournalUnusedIndex = -1;
-static const int32_t kMinJournalIndex = 0;
-static const int32_t kMaxJournalIndex = 4095;
-
 /* 文件系统的超级块
  * 大小: 4K
  * 作用: 记录文件系统的一些规格参数
@@ -84,10 +80,10 @@ static const int32_t kMaxJournalIndex = 4095;
 union SuperBlockMeta {
   struct {
     uint32_t crc_;
-    char uuid_[kUUIDSize];  // bfs uuid -> /dev/vdb
+    char uuid_[kUUIDSize];  // mfs uuid -> /dev/vdc
     uint32_t magic_;                  // bfs magic
     seq_t seq_no_;                    // bfs sequenece
-    // bfs consts
+    // mfs consts
     uint64_t max_file_num;             // max supported dirs or files 10w
     uint64_t max_support_udisk_size_;  // max supported udisk size 128T
     uint64_t max_file_block_num;       // max supported file block(128T)

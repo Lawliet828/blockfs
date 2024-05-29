@@ -118,8 +118,8 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58514 20210202 14:51:31.991903Z][INFO][lib/block_fs_fuse.cc:916] FUSE_CAP_PARALLEL_DIROPS
 [58514 20210202 14:51:31.991909Z][INFO][lib/block_fs_fuse.cc:917] FUSE_CAP_POSIX_ACL
 
-[58515 20210202 14:51:37.200378Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
-[58514 20210202 14:51:38.902754Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
+[58515 20210202 14:51:37.200378Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
+[58514 20210202 14:51:38.902754Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
 [58515 20210202 14:51:39.385198Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/
 [58515 20210202 14:51:39.385208Z][INFO][lib/super_block.cc:235] check target path: /mnt/mysql/data/ mount point: /mnt/mysql/data/
 [58515 20210202 14:51:39.385212Z][ERROR][lib/super_block.cc:262] file cannot endwith dir separator: /mnt/mysql/data/
@@ -128,14 +128,14 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58514 20210202 14:51:40.925775Z][INFO][lib/dir_handle.cc:615] open directory /mnt/mysql/data/
 [58514 20210202 14:51:40.925787Z][INFO][lib/fd_handle.cc:34] current fd pool size: 400000
 [58514 20210202 14:51:40.925793Z][INFO][lib/fd_handle.cc:37] current fd: 0 pool size: 399999
-[58515 20210202 14:51:40.925942Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
+[58515 20210202 14:51:40.925942Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
 [58514 20210202 14:51:40.926073Z][INFO][lib/block_fs_fuse.cc:808] call bfs_readdir: /
 [58514 20210202 14:51:40.926085Z][INFO][lib/block_fs_fuse.cc:817] readdir: /mnt/mysql/data/
 [58514 20210202 14:51:40.926089Z][INFO][lib/directory.cc:103] init scan directory: /mnt/mysql/data/
 [58514 20210202 14:51:40.926099Z][INFO][lib/directory.cc:123] scan file: 1.log
 [58514 20210202 14:51:40.926125Z][INFO][lib/directory.cc:50] 1612248700 2021-02-02 14:51:40
-[58515 20210202 14:51:40.926246Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /
-[58514 20210202 14:51:40.926782Z][INFO][lib/block_fs_fuse.cc:126] call bfs_getattr file: /1.log
+[58515 20210202 14:51:40.926246Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
+[58514 20210202 14:51:40.926782Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /1.log
 [58514 20210202 14:51:40.926790Z][INFO][lib/file_store_udisk.cc:318] stat path: /mnt/mysql/data/1.log
 [58514 20210202 14:51:40.926793Z][INFO][lib/file_store_udisk.cc:327] stat path: /mnt/mysql/data/1.log
 [58514 20210202 14:51:40.926796Z][INFO][lib/file_handle.cc:694] get created file name: /mnt/mysql/data/1.log

@@ -132,23 +132,23 @@ void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
  * `fi` will always be nullptr if the file is not currently open, but
  * may also be nullptr if the file is open.
  */
-static int bfs_getattr(const char *path, struct stat *sb,
+static int mfs_getattr(const char *path, struct stat *stbuf,
                        struct fuse_file_info *fi)
 {
-  LOG(INFO) << "call bfs_getattr file: " << path;
+  LOG(INFO) << "call mfs_getattr file: " << path;
 
   int res;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
 
-  ::memset(sb, 0, sizeof(struct stat));
+  ::memset(stbuf, 0, sizeof(struct stat));
 
   if (::strcmp(path, "/") == 0) {
-    sb->st_mode = S_IFDIR | 0755;
-    sb->st_nlink = 2;
-    sb->st_uid = ::getuid();
-    sb->st_gid = ::getgid();
+    stbuf->st_mode = S_IFDIR | 0755;
+    stbuf->st_nlink = 2;
+    stbuf->st_uid = ::getuid();
+    stbuf->st_gid = ::getgid();
 
     struct statvfs vfs;
     if (FileSystem::Instance()->StatVFS(in_path.c_str(), &vfs) < 0) {
@@ -156,12 +156,12 @@ static int bfs_getattr(const char *path, struct stat *sb,
     }
 
     time_t now = ::time(NULL);
-    sb->st_size = 1024;
-    sb->st_blksize = vfs.f_bsize;
-    sb->st_blocks = 1;
-    sb->st_atime = now;
-    sb->st_mtime = now;
-    sb->st_ctime = now;
+    stbuf->st_size = 1024;
+    stbuf->st_blksize = vfs.f_bsize;
+    stbuf->st_blocks = 1;
+    stbuf->st_atime = now;
+    stbuf->st_mtime = now;
+    stbuf->st_ctime = now;
 
     return 0;
   }
@@ -170,9 +170,9 @@ static int bfs_getattr(const char *path, struct stat *sb,
   // fuse_get_context()->uid
 
   if (fi)
-    res = FileSystem::Instance()->StatPath(fi->fh, sb);
+    res = FileSystem::Instance()->StatPath(fi->fh, stbuf);
   else
-    res = FileSystem::Instance()->StatPath(in_path.c_str(), sb);
+    res = FileSystem::Instance()->StatPath(in_path.c_str(), stbuf);
   if (res < 0) return -errno;
 
   return 0;
@@ -1075,7 +1075,7 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
 
 static const struct fuse_operations kBFSOps = {
     // .lookup = mfs_lookup,
-    .getattr = bfs_getattr,
+    .getattr = mfs_getattr,
     .readlink = nullptr,
     .mknod = bfs_mknod,
     .mkdir = bfs_mkdir,
