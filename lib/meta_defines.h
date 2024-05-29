@@ -59,7 +59,7 @@ constexpr uint64_t kBlockFsMaxDirNameLen = 768;
 constexpr uint64_t kBlockFsMaxFileNameLen = 64;
 constexpr uint64_t kBlockFsDirMetaSize = (1 * K);
 constexpr uint64_t kBlockFsFileMetaSize = 256;
-constexpr uint64_t kBlockFsFileBlockCapacity = 1000;
+constexpr uint64_t kFileBlockCapacity = 1000;
 constexpr uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 constexpr uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
@@ -88,7 +88,7 @@ union SuperBlockMeta {
     uint64_t max_support_udisk_size_;  // max supported udisk size 128T
     uint64_t max_file_block_num;       // max supported file block(128T)
     uint64_t max_support_block_num_;   // max supported block num(128T)
-    uint64_t block_size_;              // 16M, bfs min block size
+    uint64_t block_size_;              // 4M, mfs block size
     uint64_t max_dir_name_len_;        // 64B, max dir name length
     uint64_t max_file_name_len_;       // 64B, max file name length
     uint64_t dir_meta_size_;           // 1K, per directory meta size
@@ -109,7 +109,7 @@ union SuperBlockMeta {
     uint64_t block_data_start_offset_;  // the offset of data block
 
     // variable according to the udisk device size
-    uint64_t curr_udisk_size_;  // current udisk size (device size)
+    uint64_t device_size;  // current udisk size (device size)
     uint64_t curr_block_num_;   // current udisk supported block number
 
     // The mount point opened by each instance of UXDB,
@@ -183,7 +183,7 @@ union FileBlockMeta {
     uint32_t used_block_num_;
     bool used_;
     bool is_temp_;
-    uint32_t block_id_[kBlockFsFileBlockCapacity];
+    uint32_t block_id_[kFileBlockCapacity];
   } __attribute__((packed));
   char reserved_[kBlockFsFileBlockMetaSize];
 

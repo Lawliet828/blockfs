@@ -9,7 +9,7 @@ namespace udisk::blockfs {
 class BlockHandle : public MetaHandle {
  private:
   // 当前支持最大的block的个数
-  // 总的udisk的容量减去元数据的空间后剩余的16M的个数
+  // 总的udisk的容量减去元数据的空间后剩余的4M的个数
   uint32_t max_block_num_ = 0;
   std::unordered_set<uint32_t> block_id_pool_;
 

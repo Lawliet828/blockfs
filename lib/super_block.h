@@ -6,10 +6,7 @@
 #include "meta_defines.h"
 #include "meta_handle.h"
 
-using namespace udisk::blockfs;
-
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 class SuperBlock : public MetaHandle {
  private:
@@ -26,10 +23,6 @@ class SuperBlock : public MetaHandle {
   SuperBlockMeta *meta() {
     return reinterpret_cast<SuperBlockMeta *>(base_addr());
   }
-  void set_curr_udisk_size(uint64_t curr_udisk_size) noexcept {
-    meta()->curr_udisk_size_ = curr_udisk_size;
-  }
-  uint64_t get_curr_udisk_size() noexcept { return meta()->curr_udisk_size_; }
 
   bool set_uxdb_mount_point(const std::string &path);
   std::string uxdb_mount_point() noexcept { return meta()->uxdb_mount_point_; }
@@ -40,6 +33,5 @@ class SuperBlock : public MetaHandle {
   bool CheckMountPoint(const std::string &path, bool isFile = false);
   bool WriteMeta();
 };
-}  // namespace blockfs
-}  // namespace udisk
+}
 #endif

@@ -124,7 +124,7 @@ uint32_t File::GetNextFileCut() noexcept {
   }
   uint32_t max_file_cut = item_maps_.size() - 1;
   FileBlockPtr file_block = GetFileBlock(max_file_cut);
-  if (file_block->used_block_num() == kBlockFsFileBlockCapacity) {
+  if (file_block->used_block_num() == kFileBlockCapacity) {
     return max_file_cut + 1;
   } else {
     return max_file_cut;
@@ -289,22 +289,19 @@ FileBlockPtr File::GetFileBlock(int32_t file_cut) {
 }
 
 int File::ExtendFile(uint64_t offset) {
-  if (unlikely(offset >
-               FileSystem::Instance()->super_meta()->curr_udisk_size_)) {
+  if (offset > FileSystem::Instance()->super_meta()->device_size) [[unlikely]] {
     LOG(ERROR) << file_name() << " truncate offset: " << offset
                << " cannot exceed free uidsk size: "
-               << FileSystem::Instance()->super_meta()->curr_udisk_size_;
+               << FileSystem::Instance()->super_meta()->device_size;
     return -1;
   }
   // 计算需要扩大偏移的位置
-  uint64_t need_expand = offset - meta_->size_;
-  LOG(INFO) << file_name() << " need expand size: " << need_expand
+  uint64_t expand_size = offset - meta_->size_;
+  LOG(INFO) << file_name() << " need expand size: " << expand_size
             << " offset: " << offset << " current size: " << meta_->size_;
 
   // 1. Count last block space left
   uint64_t last_block_left;
-  // if the current file size is block aligned
-  // full application for additional space
   if (meta_->size_ % kBlockSize == 0) {
     last_block_left = 0;
   } else {
@@ -312,14 +309,14 @@ int File::ExtendFile(uint64_t offset) {
     last_block_left = kBlockSize - meta_->size_ % kBlockSize;
   }
 
-  uint32_t block_num;
-  if (need_expand <= last_block_left) {
-    block_num = 0;
+  uint32_t num_blocks_needed;
+  if (expand_size <= last_block_left) {
+    num_blocks_needed = 0;
   } else {
-    block_num = ALIGN_UP((need_expand - last_block_left), kBlockSize);
+    num_blocks_needed = ALIGN_UP((expand_size - last_block_left), kBlockSize);
   }
   LOG(INFO) << file_name() << " last block left: " << last_block_left
-            << " need alloc block num: " << block_num;
+            << " need alloc block num: " << num_blocks_needed;
 
   // 计算需要申请fileblock的个数
   // 如果最后一个fileblock存在,但是已经满了此次不需要更新这个fileblock元数据
@@ -334,20 +331,20 @@ int File::ExtendFile(uint64_t offset) {
     // 找到的最大的file cut的file block
     assert(item_maps_.size() > 0);
     last_file_block = GetFileBlock(item_maps_.size() - 1);
-    if (unlikely(nullptr == last_file_block)) {
+    if (nullptr == last_file_block) [[unlikely]] {
       return -1;
     }
     // 检查是否满了
     last_file_block_left =
-        kBlockFsFileBlockCapacity - last_file_block->used_block_num();
+        kFileBlockCapacity - last_file_block->used_block_num();
     if (last_file_block_left > 0) update_last_file_block = true;
   }
   uint32_t file_block_num;
-  if (block_num < last_file_block_left) {
+  if (num_blocks_needed < last_file_block_left) {
     file_block_num = 0;
   } else {
     file_block_num =
-        ALIGN_UP((block_num - last_file_block_left), kBlockFsFileBlockCapacity);
+        ALIGN_UP((num_blocks_needed - last_file_block_left), kFileBlockCapacity);
   }
   LOG(INFO) << file_name()
             << " last file block left num: " << last_file_block_left
@@ -362,9 +359,9 @@ int File::ExtendFile(uint64_t offset) {
     }
   }
   std::vector<uint32_t> block_ids;
-  if (block_num > 0) {
+  if (num_blocks_needed > 0) {
     if (!FileSystem::Instance()->block_handle()->GetFreeBlockIdLock(
-            block_num, &block_ids)) {
+            num_blocks_needed, &block_ids)) {
       if (file_block_num > 0) {
         FileSystem::Instance()->file_block_handle()->PutFileBlockLock(
             file_blocks);
@@ -517,25 +514,23 @@ int File::RecycleParentFh(int32_t fh, bool immediately) {
   return 0;
 }
 
-void File::CopyOldFileBlock() {}
-
 // truncate变小的场景 需要新申请文件fh继承来自老的fh
 int File::ShrinkFile(uint64_t offset) {
   // 先保证申请fh成功, 并且如果需要涉及到block的申请和拷贝
   // TODO: 可以先使用临时的meta保证不被写入到磁盘上去
   FileMeta *new_meta =
       FileSystem::Instance()->file_handle()->NewFreeFileMeta(dh(), file_name());
-  if (unlikely(!new_meta)) {
+  if (!new_meta) [[unlikely]] {
     return -1;
   }
   FileMeta *old_meta = meta();
 
   uint32_t block_num = offset / kBlockSize;
-  // 是否是16M对齐的
+  // 是否是4M对齐的
   uint64_t block_offset = offset % kBlockSize;
 
-  uint32_t file_cut = block_num / kBlockFsFileBlockCapacity;
-  uint32_t file_block_offset = block_num % kBlockFsFileBlockCapacity;
+  uint32_t file_cut = block_num / kFileBlockCapacity;
+  uint32_t file_block_offset = block_num % kFileBlockCapacity;
 
   // 继承临时文件属性
   new_meta->is_temp_ = old_meta->is_temp_;
@@ -579,7 +574,7 @@ int File::ShrinkFile(uint64_t offset) {
         break;
       }
 
-      for (uint32_t j = 0; j < kBlockFsFileBlockCapacity; ++j) {
+      for (uint32_t j = 0; j < kFileBlockCapacity; ++j) {
         LOG(INFO) << file_name() << " now copy parent block index: " << i
                   << " block id: " << old_fb->meta()->block_id_[j];
         new_fb->add_block_id(old_fb->meta()->block_id_[j]);
@@ -622,7 +617,7 @@ int File::ShrinkFile(uint64_t offset) {
 
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());
-  if (unlikely(!dir)) {
+  if (!dir) [[unlikely]] {
     return -1;
   }
   // 删除之前的meta的fh映射
@@ -673,7 +668,6 @@ int File::ShrinkFile(uint64_t offset) {
 
 int File::ftruncate(uint64_t offset) {
   std::lock_guard<std::mutex> lock(mutex_);
-  // assert(offset % 512 == 0);
   LOG(INFO) << "file name: " << file_name() << " size: " << meta_->size_
             << " ftruncate offset: " << offset;
   if (offset > file_size()) {
@@ -857,7 +851,7 @@ void OpenFile::FileReader::Transform2Block() {
     }
     // 按照block的粒度读取, 处理完一个block即block索引增加
     // 跨越到下一个fileblock需要重新获取
-    if (++block_index_in_file_block == kBlockFsFileBlockCapacity) {
+    if (++block_index_in_file_block == kFileBlockCapacity) {
       file_block = file->GetFileBlock(++file_cut_in_file);
       block_index_in_file_block = 0;
     }
@@ -963,7 +957,7 @@ void OpenFile::FileWriter::Transform2Block() {
       break;
     }
     // 跨越到下一个fileblock需要重新获取
-    if (++block_index_in_file_block == kBlockFsFileBlockCapacity) {
+    if (++block_index_in_file_block == kFileBlockCapacity) {
       file_block = file->GetFileBlock(++file_cut_in_file);
       block_index_in_file_block = 0;
     }

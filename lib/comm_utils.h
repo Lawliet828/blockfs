@@ -12,10 +12,6 @@ namespace udisk::blockfs {
 // #define ALIGN_UP(size, align) (((size) + (align - 1)) & (~(align - 1)))
 #define ROUND_UP(size, align) ((((size) + (align - 1)) / (align)) * (align))
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
-
 std::string GetFileName(const std::string &path);
 std::string GetDirName(const std::string &path);
 std::string GetParentDirName(const std::string &path);

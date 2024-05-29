@@ -54,7 +54,6 @@ class File : public Inode<FileMeta, FileBlock>,
   int ExtendFile(uint64_t offset);
   bool CopyData(uint32_t src_block_id, uint32_t dst_block_id, uint64_t offset,
                 uint64_t len);
-  void CopyOldFileBlock();
   int RecycleParentFh(int32_t fh, bool immediately = false);
   int ShrinkFile(uint64_t offset);
 
@@ -158,10 +157,10 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
       int32_t num_blocks_front = offset / kBlockSize;
 
       // 2. Count in which file cut
-      file_block_index = num_blocks_front / kBlockFsFileBlockCapacity;
+      file_block_index = num_blocks_front / kFileBlockCapacity;
 
       // 3. Count in which block index
-      block_index_in_file_block = num_blocks_front % kBlockFsFileBlockCapacity;
+      block_index_in_file_block = num_blocks_front % kFileBlockCapacity;
 
       // 4. Count block offset in final block
       block_offset_in_block = offset % kBlockSize;

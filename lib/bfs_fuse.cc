@@ -280,13 +280,13 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
  * Unless FUSE_CAP_HANDLE_KILLPRIV is disabled, this method is
  * expected to reset the setuid and setgid bits.
  */
-static int bfs_truncate(const char *path, off_t newsize,
+static int mfs_truncate(const char *path, off_t size,
                         struct fuse_file_info *fi)
 {
-  if (nullptr == path) [[unlikely]] {
+  if (nullptr == path || size < 0) [[unlikely]] {
     return -EINVAL;
   }
-  LOG(INFO) << "call bfs_truncate file: " << path;
+  LOG(INFO) << "call mfs_truncate file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -294,9 +294,9 @@ static int bfs_truncate(const char *path, off_t newsize,
   int res;
 
   if (fi)
-    res = FileSystem::Instance()->TruncateFile(fi->fh, newsize);
+    res = FileSystem::Instance()->TruncateFile(fi->fh, size);
   else
-    res = FileSystem::Instance()->TruncateFile(in_path.c_str(), newsize);
+    res = FileSystem::Instance()->TruncateFile(in_path.c_str(), size);
 
   if (res < 0) return -errno;
 
@@ -1081,7 +1081,7 @@ static const struct fuse_operations kBFSOps = {
     .rename = bfs_rename,
     .link = nullptr,
     .chown = nullptr,
-    .truncate = bfs_truncate,
+    .truncate = mfs_truncate,
     .open = mfs_open,
     .read = mfs_read,
     .write = mfs_write,

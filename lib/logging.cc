@@ -42,6 +42,10 @@ typedef struct {
   std::string name_;
 } LevelName;
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#endif
+
 static LevelName kLevelTable[] = {{TRACE, "TRACE"},
                                   {DEBUG, "DEBUG"},
                                   {INFO, "INFO"},

@@ -226,10 +226,6 @@ int32_t FileSystem::RenamePath(const std::string& oldpath,
 }
 
 int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
-  if (size < 0) [[unlikely]] {
-    errno = EINVAL;
-    return -1;
-  }
   LOG(INFO) << "truncate file: " << filename << " len: " << size;
   FilePtr file = file_handle()->GetCreatedFile(filename);
   if (!file) {
@@ -240,15 +236,11 @@ int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
 }
 
 int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
-  if (size < 0) [[unlikely]] {
-    errno = EINVAL;
-    return -1;
-  }
   LOG(INFO) << "truncate file fd: " << fd << " len: " << size;
   // 两个操作在一个锁范围
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
-  if (!open_file) {
-    // errno = ENOENT;
+  if (!open_file) [[unlikely]] {
+    errno = ENOENT;
     return -1;
   }
   return open_file->file()->ftruncate(size);
@@ -433,9 +425,9 @@ bool FileSystem::FormatFSData() {
   uint64_t zero_data_offset = super_meta()->block_data_start_offset_;
   uint64_t zero_data_len = zero_buffer_len;
   while (true) {
-    if (unlikely(super_meta()->curr_udisk_size_ <
+    if (unlikely(super_meta()->device_size <
                  (zero_data_offset + zero_buffer_len))) {
-      zero_data_len = super_meta()->curr_udisk_size_ - zero_data_offset;
+      zero_data_len = super_meta()->device_size - zero_data_offset;
     }
     ret = dev()->PwriteDirect(buffer->data(), zero_data_len, zero_data_offset);
     if (ret != static_cast<int64_t>(zero_data_len)) {
@@ -443,7 +435,7 @@ bool FileSystem::FormatFSData() {
       return false;
     }
     zero_data_offset += zero_data_len;
-    if (unlikely(zero_data_offset == super_meta()->curr_udisk_size_)) {
+    if (unlikely(zero_data_offset == super_meta()->device_size)) {
       break;
     }
   }

@@ -43,12 +43,12 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   uint32_t used_block_num() const noexcept { return meta_->used_block_num_; }
 
   const uint32_t get_block_id(const uint32_t block_index) const noexcept {
-    assert(block_index < kBlockFsFileBlockCapacity);
+    assert(block_index < kFileBlockCapacity);
     return meta_->block_id_[block_index];
   }
 
   void add_block_id(uint32_t block_index, uint32_t block_id) {
-    if (!is_block_full() && block_index < kBlockFsFileBlockCapacity) {
+    if (!is_block_full() && block_index < kFileBlockCapacity) {
       meta_->block_id_[block_index] = block_id;
       ++meta_->used_block_num_;
     }
@@ -62,7 +62,7 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   }
 
   bool is_block_full() const noexcept {
-    return (meta_->used_block_num_ == kBlockFsFileBlockCapacity);
+    return (meta_->used_block_num_ == kFileBlockCapacity);
   }
 
   void DumpMeta();

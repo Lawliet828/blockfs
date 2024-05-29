@@ -84,7 +84,7 @@ bool SuperBlock::FormatAllMeta() {
   uint64_t tmpNum1 = meta->max_file_num - 1;
   uint64_t tmpSize1 = tmpNum1 * meta->file_block_meta_size_;
   uint64_t tmpNum2 = ALIGN_UP(meta->max_support_udisk_size_ - tmpSize1,
-                              (meta->block_size_ * kBlockFsFileBlockCapacity));
+                              (meta->block_size_ * kFileBlockCapacity));
 
   uint64_t tmpSize2 = tmpNum2 * meta->file_block_meta_size_;
   meta->file_block_meta_total_size_ = tmpSize1 + tmpSize2;
@@ -95,13 +95,13 @@ bool SuperBlock::FormatAllMeta() {
   meta->block_data_start_offset_ =
       meta->file_block_meta_offset_ + meta->file_block_meta_total_size_;
 
-  // 元数据区域大小保证16M对齐,也就是数据区域的起始位置是16M对齐的
+  // 元数据区域大小保证4M对齐,也就是数据区域的起始位置是4M对齐的
   meta->block_data_start_offset_ =
       ROUND_UP(meta->block_data_start_offset_, kBlockSize);
 
-  meta->curr_udisk_size_ = FileSystem::Instance()->dev()->dev_size();
+  meta->device_size = FileSystem::Instance()->dev()->dev_size();
   uint64_t free_udisk_size =
-      meta->curr_udisk_size_ - meta->block_data_start_offset_;
+      meta->device_size - meta->block_data_start_offset_;
   meta->curr_block_num_ = free_udisk_size / kBlockSize;
 
   // 最大支持12T的block个数
@@ -257,7 +257,7 @@ void SuperBlock::Dump() noexcept {
             << "file_block_meta_offset: " << meta()->file_block_meta_offset_
             << "\n"
             << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
-            << "curr_udisk_size: " << meta()->curr_udisk_size_ << "\n"
+            << "device_size: " << meta()->device_size << "\n"
             << "curr_block_num_: " << meta()->curr_block_num_ << "\n"
             << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
 }
