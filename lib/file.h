@@ -135,6 +135,7 @@ class File : public Inode<FileMeta, FileBlock>,
   template <typename... Args>
   int fcntl(int cmd, Args &&... args);
 };
+typedef std::shared_ptr<File> FilePtr;
 
 class OpenFile : public std::enable_shared_from_this<OpenFile> {
  private:

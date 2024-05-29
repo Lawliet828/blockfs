@@ -8,7 +8,6 @@
 #include <string>
 
 #include "aligned_buffer.h"
-#include "block_fs_internal.h"
 #include "block_fs_config.h"
 #include "comm_utils.h"
 #include "bfs_fuse.h"

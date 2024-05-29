@@ -158,7 +158,7 @@ int32_t FileSystem::StatPath(const int32_t fd, struct stat* fileinfo) {
 int32_t FileSystem::StatVFS(struct statvfs* buf) {
   // f_bsize: 文件系统块大小
   buf->f_bsize = super_meta()->block_size_;
-  // f_frsize: 文件系统的片段大小，单位字节
+  // f_frsize: 单位字节, df命令中的块大小
   buf->f_frsize = buf->f_bsize;
   // f_blocks: 文件系统数据块总数
   buf->f_blocks = super_meta()->curr_block_num_;
