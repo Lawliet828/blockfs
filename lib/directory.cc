@@ -14,7 +14,7 @@ void Directory::stat(struct stat *buf) {
     buf->st_uid = ::getuid();            /* user ID of owner */
     buf->st_gid = ::getgid();            /* group ID of owner */
     buf->st_rdev = 0;                    /* device ID (if special file) */
-    buf->st_blksize = kBlockFsBlockSize; /* blocksize for file system I/O */
+    buf->st_blksize = kBlockSize; /* blocksize for file system I/O */
     buf->st_blocks = 0;                  /* number of 512B blocks allocated */
     buf->st_atime = atime();             /* time of last access */
     buf->st_mtime = mtime();             /* time of last modification */

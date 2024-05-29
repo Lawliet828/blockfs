@@ -51,7 +51,7 @@ bool SuperBlock::FormatAllMeta() {
   meta->magic_ = kBlockFsMagic;
   meta->max_file_num = kBlockFsMaxFileNum;
   meta->max_support_udisk_size_ = kBlockFsMaxUDiskSize;
-  meta->block_size_ = kBlockFsBlockSize;
+  meta->block_size_ = kBlockSize;
   meta->max_dir_name_len_ = kBlockFsMaxDirNameLen;
   meta->max_file_name_len_ = kBlockFsMaxFileNameLen;
   meta->dir_meta_size_ = kBlockFsDirMetaSize;
@@ -97,17 +97,17 @@ bool SuperBlock::FormatAllMeta() {
 
   // 元数据区域大小保证16M对齐,也就是数据区域的起始位置是16M对齐的
   meta->block_data_start_offset_ =
-      ROUND_UP(meta->block_data_start_offset_, kBlockFsBlockSize);
+      ROUND_UP(meta->block_data_start_offset_, kBlockSize);
 
   meta->curr_udisk_size_ = FileSystem::Instance()->dev()->dev_size();
   uint64_t free_udisk_size =
       meta->curr_udisk_size_ - meta->block_data_start_offset_;
-  meta->curr_block_num_ = free_udisk_size / kBlockFsBlockSize;
+  meta->curr_block_num_ = free_udisk_size / kBlockSize;
 
   // 最大支持12T的block个数
   meta->max_support_block_num_ =
       (meta->max_support_udisk_size_ - meta->block_data_start_offset_) /
-      kBlockFsBlockSize;
+      kBlockSize;
 
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                      kSuperBlockSize - sizeof(meta->crc_));

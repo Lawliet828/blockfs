@@ -155,7 +155,7 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
     // according to the file read and write position
     FileOffset(const int64_t offset) {
       // 1. Count how many blocks are in front of the file
-      int32_t num_blocks_front = offset / kBlockFsBlockSize;
+      int32_t num_blocks_front = offset / kBlockSize;
 
       // 2. Count in which file cut
       file_block_index = num_blocks_front / kBlockFsFileBlockCapacity;
@@ -164,7 +164,7 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
       block_index_in_file_block = num_blocks_front % kBlockFsFileBlockCapacity;
 
       // 4. Count block offset in final block
-      block_offset_in_block = offset % kBlockFsBlockSize;
+      block_offset_in_block = offset % kBlockSize;
 
       LOG(INFO) << "current offset: " << offset
                 << " file_block_index: " << file_block_index

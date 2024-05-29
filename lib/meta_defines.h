@@ -46,7 +46,7 @@ constexpr uint64_t kUXDBMountPrefixMaxLen = 256;
 
 constexpr uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
 
-constexpr uint64_t kBlockFsPageSize = (4 * K);
+constexpr uint64_t kBlockFsPageSize = 4 * K;
 constexpr uint64_t kSuperBlockSize = kBlockFsPageSize;
 constexpr uint64_t kSuperBlockOffset = 0;
 constexpr uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
@@ -54,7 +54,7 @@ constexpr uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
 constexpr uint64_t kBlockFsMaxFileNum = 100000;
 constexpr uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
 constexpr uint64_t kBlockFsMaxUDiskSize = (128 * T);
-constexpr uint64_t kBlockFsBlockSize = (16 * M);
+constexpr uint64_t kBlockSize = 4 * M;
 constexpr uint64_t kBlockFsMaxDirNameLen = 768;
 constexpr uint64_t kBlockFsMaxFileNameLen = 64;
 constexpr uint64_t kBlockFsDirMetaSize = (1 * K);

@@ -20,8 +20,6 @@
 
 namespace udisk::blockfs {
 
-class Directory;
-
 enum MetaHandleType {
   kSuperBlockHandle,
   kFDHandle,

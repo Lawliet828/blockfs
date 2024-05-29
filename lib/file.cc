@@ -76,7 +76,7 @@ ParentFile::~ParentFile() {
 
 bool ParentFile::Recycle() {
   // block_num后面的都需要回收
-  uint32_t block_num = offset_ / kBlockFsBlockSize;
+  uint32_t block_num = offset_ / kBlockSize;
   // 释放blockid
   uint32_t block_id_index = 0;
 
@@ -189,7 +189,7 @@ const uint32_t File::GetBlockNumber() const noexcept {
 
 void File::stat(struct stat *buf) {
   FileSystem::Instance()->file_handle()->RunInMetaGuard([this, buf] {
-    uint64_t numer_of_block_512 = GetBlockNumber() * kBlockFsBlockSize / 512;
+    uint64_t numer_of_block_512 = GetBlockNumber() * kBlockSize / 512;
     /* initialize all the values */
     buf->st_dev = 0;                     /* ID of device containing file */
     buf->st_ino = fh();                  /* inode number */
@@ -198,7 +198,7 @@ void File::stat(struct stat *buf) {
     buf->st_uid = ::getuid();            /* user ID of owner */
     buf->st_gid = ::getgid();            /* group ID of owner */
     buf->st_rdev = 0;                    /* device ID (if special file) */
-    buf->st_blksize = kBlockFsBlockSize; /* blocksize for file system I/O */
+    buf->st_blksize = kBlockSize; /* blocksize for file system I/O */
     buf->st_blocks = numer_of_block_512; /* number of 512B blocks allocated */
     buf->st_atime = atime();             /* time of last access */
     buf->st_mtime = mtime();             /* time of last modification */
@@ -305,18 +305,18 @@ int File::ExtendFile(uint64_t offset) {
   uint64_t last_block_left;
   // if the current file size is block aligned
   // full application for additional space
-  if (meta_->size_ % kBlockFsBlockSize == 0) {
+  if (meta_->size_ % kBlockSize == 0) {
     last_block_left = 0;
   } else {
     // 去掉最后一个block的剩余空间
-    last_block_left = kBlockFsBlockSize - meta_->size_ % kBlockFsBlockSize;
+    last_block_left = kBlockSize - meta_->size_ % kBlockSize;
   }
 
   uint32_t block_num;
   if (need_expand <= last_block_left) {
     block_num = 0;
   } else {
-    block_num = ALIGN_UP((need_expand - last_block_left), kBlockFsBlockSize);
+    block_num = ALIGN_UP((need_expand - last_block_left), kBlockSize);
   }
   LOG(INFO) << file_name() << " last block left: " << last_block_left
             << " need alloc block num: " << block_num;
@@ -530,9 +530,9 @@ int File::ShrinkFile(uint64_t offset) {
   }
   FileMeta *old_meta = meta();
 
-  uint32_t block_num = offset / kBlockFsBlockSize;
+  uint32_t block_num = offset / kBlockSize;
   // 是否是16M对齐的
-  uint64_t block_offset = offset % kBlockFsBlockSize;
+  uint64_t block_offset = offset % kBlockSize;
 
   uint32_t file_cut = block_num / kBlockFsFileBlockCapacity;
   uint32_t file_block_offset = block_num % kBlockFsFileBlockCapacity;
@@ -540,9 +540,9 @@ int File::ShrinkFile(uint64_t offset) {
   // 继承临时文件属性
   new_meta->is_temp_ = old_meta->is_temp_;
   new_meta->parent_fh_ = old_meta->fh_;
-  new_meta->parent_size_ = block_num * kBlockFsBlockSize;
+  new_meta->parent_size_ = block_num * kBlockSize;
   // 先赋值继承父文件的size,如果需要单独申请 一个block,做单独的申请
-  new_meta->size_ = block_num * kBlockFsBlockSize;
+  new_meta->size_ = block_num * kBlockSize;
 
   // 新申请FileBlock把blockid拷贝过来
   // 开始申请资源
@@ -825,12 +825,12 @@ void OpenFile::FileReader::Transform2Block() {
     if (block_offset_in_block > 0) {
       block_read_offset = block_offset_in_block;
       block_read_size = std::min(
-          size_, (uint64_t)(kBlockFsBlockSize - block_offset_in_block));
+          size_, (uint64_t)(kBlockSize - block_offset_in_block));
       block_offset_in_block = 0;
     } else {
       block_read_offset = 0;
       block_read_size =
-          std::min(size_ - curr_read_count, (uint64_t)kBlockFsBlockSize);
+          std::min(size_ - curr_read_count, (uint64_t)kBlockSize);
     }
     // 计算当前block在udisk分区上的偏移
     uint64_t udisk_offset =
@@ -933,12 +933,12 @@ void OpenFile::FileWriter::Transform2Block() {
     if (block_offset_in_block > 0) {
       block_write_offset = block_offset_in_block;
       block_write_size = std::min(
-          size_, (uint64_t)(kBlockFsBlockSize - block_offset_in_block));
+          size_, (uint64_t)(kBlockSize - block_offset_in_block));
       block_offset_in_block = 0;
     } else {
       block_write_offset = 0;
       block_write_size =
-          std::min(size_ - curr_write_count, (uint64_t)kBlockFsBlockSize);
+          std::min(size_ - curr_write_count, (uint64_t)kBlockSize);
     }
     uint64_t udisk_offset =
         FileSystem::Instance()->super_meta()->block_data_start_offset_ +
