@@ -319,33 +319,30 @@ int File::ExtendFile(uint64_t offset) {
   LOG(INFO) << file_name() << " last block left: " << last_block_left
             << " need alloc block num: " << num_blocks_needed;
 
-  // 计算需要申请fileblock的个数
-  FileBlockPtr last_file_block = nullptr;
+  // 是否需要申请fileblock
+  FileBlockPtr file_block = nullptr;
   bool need_new_file_block = false;
   if (meta_->size_ == 0) {
     assert(item_maps_.size() == 0);
-    need_new_file_block = true;
-  } else {
-    // 找到的最大的file cut的file block
-    assert(item_maps_.size() > 0);
-    last_file_block = GetFileBlock(item_maps_.size() - 1);
-    if (nullptr == last_file_block) [[unlikely]] {
-      return -1;
-    }
-    if (last_file_block->is_block_full()) {
-      LOG(FATAL) << file_name() << " file block is full";
-    }
-    need_new_file_block = false;
-  }
-
-  // 开始申请资源
-  FileBlockPtr file_block = nullptr;
-  if (need_new_file_block) {
     file_block = FileSystem::Instance()->file_block_handle()->GetFileBlockLock();
     if (!file_block) {
       return -1;
     }
+    need_new_file_block = true;
+  } else {
+    // 找到的最大的file cut的file block
+    assert(item_maps_.size() > 0);
+    file_block = GetFileBlock(item_maps_.size() - 1);
+    if (nullptr == file_block) [[unlikely]] {
+      return -1;
+    }
+    if (file_block->is_block_full()) {
+      LOG(ERROR) << file_name() << " file block is full";
+      return -1;
+    }
+    need_new_file_block = false;
   }
+
   std::vector<uint32_t> block_ids;
   if (num_blocks_needed > 0) {
     if (!FileSystem::Instance()->block_handle()->GetFreeBlockIdLock(
@@ -357,45 +354,29 @@ int File::ExtendFile(uint64_t offset) {
       return -1;
     }
   }
+  if (need_new_file_block) {
+    file_block->set_used(true);
+    file_block->set_file_cut(GetNextFileCut());
+    file_block->set_fh(meta_->fh_);
+    file_block->set_is_temp(this->is_temp());
+  }
 
   // 开始填充fileblock的参数
   uint32_t block_ids_cursor = 0;
-  FileBlockPtr next_file_block = nullptr;
-
   // 存在新申请block的的场景
   while (block_ids_cursor < block_ids.size()) {
-    // 如果文件已经存在fileblock, 先填充更新上次的file block
-    if (last_file_block && !last_file_block->is_block_full()) {
+    if (file_block && !file_block->is_block_full()) {
       // 如果fileblock没有填满,并且blockid还没填充使用完
-      LOG(INFO) << file_name() << " fill last file block, used_block_num: "
-                << last_file_block->used_block_num()
+      LOG(INFO) << file_name() << " fill file block, used_block_num: "
+                << file_block->used_block_num()
                 << " block id: " << block_ids[block_ids_cursor];
-      last_file_block->add_block_id(block_ids[block_ids_cursor++]);
-      LOG(INFO) << file_name() << " fill last file block, used_block_num: "
-                << last_file_block->used_block_num() << " left block ids num: "
+      file_block->add_block_id(block_ids[block_ids_cursor++]);
+      LOG(INFO) << file_name() << " fill file block, used_block_num: "
+                << file_block->used_block_num() << " left block ids num: "
                 << (block_ids.size() - block_ids_cursor);
     } else {
-      if (!next_file_block) {
-        next_file_block = file_block;
-        uint32_t next_file_cut = GetNextFileCut();
-        LOG(INFO) << file_name() << " next file cut: " << next_file_cut;
-        next_file_block->set_used(true);
-        next_file_block->set_file_cut(next_file_cut);
-        next_file_block->set_fh(meta_->fh_);
-      }
-      if (!next_file_block->is_block_full()) {
-        LOG(INFO) << file_name() << " fill file block, used_block_num: "
-                  << next_file_block->used_block_num()
-                  << " block id: " << block_ids[block_ids_cursor];
-        next_file_block->add_block_id(block_ids[block_ids_cursor++]);
-        LOG(INFO) << file_name() << " fill file block, used_block_num: "
-                  << next_file_block->used_block_num();
-      } else {
-        LOG(ERROR) << file_name() << " file block is full";
-      }
-
-      LOG(INFO) << file_name() << " left block ids num: "
-                << (block_ids.size() - block_ids_cursor);
+      LOG(ERROR) << file_name() << " file block is full";
+      return -1;
     }
   }
 
@@ -403,15 +384,10 @@ int File::ExtendFile(uint64_t offset) {
   // 新增了block才会涉及到fileblock的更新
   // 否则就是在原来的block的基础上更新下文件offset即可
   if (block_ids.size() > 0) {
-    if (last_file_block &&
-        !last_file_block->WriteMeta()) {
+    if (!file_block->WriteMeta()) {
       return -1;
     }
-    if (file_block) {
-      file_block->set_is_temp(this->is_temp());
-      if (!file_block->WriteMeta()) {
-        return -1;
-      }
+    if (need_new_file_block) {
       // 更新文件内存中fileblock信息
       AddFileBlockNoLock(file_block);
     }
