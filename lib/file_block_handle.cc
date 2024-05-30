@@ -28,7 +28,6 @@ bool FileBlockHandle::InitializeMeta() {
                  << " used: " << meta->used_ << "\n"
                  << " seq_no: " << meta->seq_no_ << "\n"
                  << " fh: " << meta->fh_ << "\n"
-                 << " file_cut: " << meta->file_cut_ << "\n"
                  << " padding: " << meta->padding_ << "\n"
                  << " used_block_num:" << meta->used_block_num_;
       for (uint32_t i = 0; i < meta->used_block_num_; ++i) {
@@ -53,7 +52,6 @@ bool FileBlockHandle::InitializeMeta() {
       if (!file) [[unlikely]] {
         LOG(ERROR) << "file block meta: " << index
                    << " invalid for fh: " << meta->fh_
-                   << " file_cut: " << meta->file_cut_
                    << " is_temp: " << meta->is_temp_
                    << " used_block_num: " << meta->used_block_num_;
         for (uint32_t i = 0; i < meta->used_block_num_; ++i) {
@@ -77,7 +75,6 @@ bool FileBlockHandle::InitializeMeta() {
       PutFileBlockNoLock(index);
     }
   }
-  LOG(DEBUG) << "read file block meta success, free num:" << GetFreeMetaNum();
   return true;
 }
 

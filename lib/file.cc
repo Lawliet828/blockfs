@@ -320,8 +320,6 @@ int File::ExtendFile(uint64_t offset) {
             << " need alloc block num: " << num_blocks_needed;
 
   // 计算需要申请fileblock的个数
-  // 如果最后一个fileblock存在,但是已经满了此次不需要更新这个fileblock元数据
-  bool update_last_file_block = false;
   FileBlockPtr last_file_block = nullptr;
   bool need_new_file_block = false;
   if (meta_->size_ == 0) {
@@ -338,7 +336,6 @@ int File::ExtendFile(uint64_t offset) {
       LOG(FATAL) << file_name() << " file block is full";
     }
     need_new_file_block = false;
-    update_last_file_block = true;
   }
 
   // 开始申请资源
@@ -406,7 +403,7 @@ int File::ExtendFile(uint64_t offset) {
   // 新增了block才会涉及到fileblock的更新
   // 否则就是在原来的block的基础上更新下文件offset即可
   if (block_ids.size() > 0) {
-    if (update_last_file_block && last_file_block &&
+    if (last_file_block &&
         !last_file_block->WriteMeta()) {
       return -1;
     }

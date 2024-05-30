@@ -31,8 +31,6 @@ class FileBlockHandle : public MetaHandle {
     free_fbhs_.push_back(file_block->index());
     return true;
   }
-
-  const uint32_t GetFreeMetaNum() const { return free_fbhs_.size(); }
 };
 }
 #endif
