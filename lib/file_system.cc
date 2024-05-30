@@ -267,16 +267,6 @@ int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
   return open_file->read(buf, len, open_file->append_pos());
 }
 
-int64_t FileSystem::WriteFile(int32_t fd, const void* buf, size_t len) {
-  LOG(INFO) << "write file fd: " << fd;
-  OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
-  if (!open_file) {
-    errno = ENOENT;
-    return -1;
-  }
-  return open_file->write(buf, len, open_file->append_pos());
-}
-
 int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
   LOG(INFO) << "pread file fd: " << fd << " len: " << len << " offset: "
             << offset;
@@ -308,16 +298,6 @@ off_t FileSystem::SeekFile(ino_t fd, off_t offset, int whence) {
     return -1;
   }
   return open_file->lseek(offset, whence);
-}
-
-int32_t FileSystem::FcntlFile(int32_t fd, int32_t set_flag) {
-  OpenFilePtr open_file = FileSystem::Instance()->file_handle()->GetOpenFile(fd);
-  if (!open_file) {
-    // errno = ENOENT;
-    return -1;
-  }
-  open_file->set_open_flags(set_flag);
-  return 0;
 }
 
 int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {

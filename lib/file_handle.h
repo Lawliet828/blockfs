@@ -108,7 +108,7 @@ class FileHandle : public MetaHandle {
   FilePtr CreateFile(const std::string &filename, mode_t mode,
                      bool tmpfile = false);
   int UnlinkFile(const int32_t fh);
-  int UnlinkFileNolock(const int32_t fh);
+  int UnlinkFileNolock(const ino_t fh);
 
  public:
   bool UpdateMeta() override;

@@ -467,7 +467,7 @@ int FileHandle::UnlinkFile(const int32_t fh) {
   return UnlinkFileNolock(fh);
 }
 
-int FileHandle::UnlinkFileNolock(const int fh) {
+int FileHandle::UnlinkFileNolock(const ino_t fh) {
   LOG(INFO) << "unlink file handle: " << fh;
   FilePtr file = GetCreatedFileNoLock(fh);
   if (!file) {

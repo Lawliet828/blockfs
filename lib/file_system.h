@@ -81,12 +81,10 @@ class FileSystem {
   int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len);
 
   int64_t ReadFile(int32_t fd, void *buf, size_t len);
-  int64_t WriteFile(int32_t fd, const void *buf, size_t len);
   int64_t PreadFile(ino_t fd, void *buf, size_t len, off_t offset);
   int64_t PwriteFile(ino_t fd, const void *buf, size_t len,
                      off_t offset);
   off_t SeekFile(ino_t fd, off_t offset, int whence);
-  int32_t FcntlFile(int32_t fd, int32_t set_flag);
   int32_t FcntlFile(int32_t fd, int16_t lock_type);
 
   void DumpFileMeta(const std::string &path);

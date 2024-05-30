@@ -850,15 +850,12 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
     return -errno;
   }
 
-  res = FileSystem::Instance()->SeekFile(fd, write_offset, SEEK_SET);
-  if (res < 0) return -errno;
-
   struct fuse_buf *buffer;
   for (size_t i = 0; i < buf->count; ++i) {
     buffer = &buf->buf[i];
     LOG(INFO) << "buffer fd: " << buffer->fd << " mem: " << buffer->mem
               << " size: " << buffer->size << " pos: " << buffer->pos;
-    write_size = FileSystem::Instance()->WriteFile(fd, buf->buf[i].mem, buffer->size);
+    write_size = FileSystem::Instance()->PwriteFile(fd, buf->buf[i].mem, buffer->size, write_offset);
     if (write_size < 0) {
       return -errno;
     }

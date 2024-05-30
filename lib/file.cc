@@ -154,14 +154,18 @@ int File::rename(const std::string &to) {
         if (!old_dir->RemoveChildFile(file)) {
           return false;
         }
-        if (unlikely(!FileSystem::Instance()->file_handle()->RemoveFileNoLock(file))) {
+        if (!FileSystem::Instance()->file_handle()->RemoveFileNoLock(file)) [[unlikely]] {
           return false;
         }
 
         std::string file_name = GetFileName(to);
         set_file_name(file_name);
         set_dh(new_dir->dh());
-        UpdateTimeStamp();
+        auto now = std::chrono::system_clock::now();
+        auto duration = now.time_since_epoch();
+        int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+        time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+        UpdateTimeStamp(seconds);
 
         // 添加新的文件映射
         FileSystem::Instance()->file_handle()->AddFileNoLock(file);
@@ -645,12 +649,8 @@ int File::posix_fallocate(uint64_t offset, uint64_t size) {
 
 int File::fsync() { return FileSystem::Instance()->dev()->Fsync(); }
 
-void File::UpdateTimeStamp() {
+void File::UpdateTimeStamp(time_t seconds) {
   std::lock_guard<std::mutex> lock(mutex_);
-  auto now = std::chrono::system_clock::now();
-  auto duration = now.time_since_epoch();
-  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
 
   set_mtime(seconds);
   set_ctime(seconds);
@@ -720,31 +720,6 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
   FileReader reader =
       FileReader(shared_from_this(), buf, need_read_size, append_pos, false);
   int64_t ret = reader.ReadData();
-  return ret;
-}
-
-int64_t OpenFile::write(const void *buf, uint64_t size, uint64_t append_pos) {
-  std::unique_lock lock(rw_lock_);
-  LOG(INFO) << "file name: " << file_->file_name()
-            << ", file size: " << file_->file_size() << ", write size: " << size
-            << ", offset: " << append_pos;
-  void *buffer = const_cast<void *>(buf);
-  if (size == 0) [[unlikely]] {
-    return 0;
-  }
-
-  if ((append_pos + size) > file_->file_size()) {
-    LOG(WARNING) << file_->file_name() << " write exceed file size";
-    if (file_->ftruncate(append_pos + size) < 0) {
-      return -1;
-    }
-  }
-
-  file_->UpdateTimeStamp();
-
-  FileWriter writer =
-      FileWriter(shared_from_this(), buffer, size, append_pos, false);
-  int64_t ret = writer.WriteData();
   return ret;
 }
 
@@ -995,7 +970,7 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
   }
 
   if ((offset + size) > file_->file_size()) {
-    LOG(WARNING) << file_->file_name() << " pwrite exceed file size,"
+    LOG(INFO) << file_->file_name() << " pwrite exceed file size,"
                  << " file size: " << file_->file_size()
                  << " write offset: " << offset << " write size: " << size;
     if (file_->ftruncate(offset + size) < 0) {
@@ -1003,7 +978,14 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
     }
   }
 
-  file_->UpdateTimeStamp();
+  // 减少时间戳更新的次数
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+  if (seconds % 2 == 0) {
+    file_->UpdateTimeStamp(seconds);
+  }
 
   // 目前不能以direct方式打开, 因为如果以direct方式打开, 必须要扇区对齐写入
   FileWriter writer = FileWriter(shared_from_this(), buffer, size, offset, false);

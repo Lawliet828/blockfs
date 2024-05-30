@@ -123,16 +123,13 @@ class File : public Inode<FileMeta, FileBlock>,
   void stat(struct stat *buf) override;
   int rename(const std::string &to) override;
 
-  void UpdateTimeStamp();
+  void UpdateTimeStamp(time_t seconds);
   bool UpdateMeta() override;
 
   // open file functions
   int ftruncate(uint64_t offset);
   int posix_fallocate(uint64_t offset, uint64_t size);
   int fsync();
-
-  template <typename... Args>
-  int fcntl(int cmd, Args &&... args);
 };
 typedef std::shared_ptr<File> FilePtr;
 
@@ -140,8 +137,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
  private:
   FilePtr file_;            /* current open file pointer */
   int32_t open_fd_ = -1;    /* current open file descriptor */
-  mode_t open_mode_ = 0;    /* current open mode */
-  int32_t open_flags_ = 0;  /* current open file flag */
   uint64_t append_pos_ = 0; /* current open file offset */
   std::shared_mutex rw_lock_;
  private:
@@ -231,8 +226,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
  public:
   OpenFile(const FilePtr &file) : file_(file) {}
   ~OpenFile() = default;
-  void set_open_flags(int32_t flag) noexcept { open_flags_ |= flag; }
-  int32_t open_flags() const noexcept { return open_flags_; }
   uint64_t append_pos() const noexcept { return append_pos_; }
   void set_append_pos(uint64_t offset) noexcept { append_pos_ = offset; }
 
@@ -241,7 +234,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   off_t lseek(off_t offset, int whence);
 
   int64_t read(void *buf, uint64_t size, uint64_t append_pos);
-  int64_t write(const void *buf, uint64_t size, uint64_t append_pos);
   int64_t pread(void *buf, uint64_t size, uint64_t offset);
   int64_t pwrite(const void *buf, uint64_t size, uint64_t offset);
 
