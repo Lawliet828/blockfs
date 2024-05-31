@@ -341,7 +341,7 @@ int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
  */
 bool FileSystem::Initialize() {
   if (!remount_) {
-    device_ = new BlockDevice();
+    device_ = new Device();
     shm_manager_ = new ShmManager();
   }
   handle_vector_[kSuperBlockHandle] = new SuperBlock();

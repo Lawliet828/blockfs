@@ -4,7 +4,7 @@
 
 #include <shared_mutex>
 
-#include "block_device.h"
+#include "device.h"
 #include "inode.h"
 #include "logging.h"
 
@@ -138,26 +138,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   uint64_t append_pos_ = 0; /* current open file offset */
   std::shared_mutex rw_lock_;
  private:
-  struct FileOffset {
-    int32_t file_block_index = 0;          /* in which file cut */
-    int32_t block_index_in_file_block = 0; /* in which block index */
-    uint64_t block_offset_in_block = 0;    /* offset located in final block */
-
-    // Find the read and write offset information
-    // according to the file read and write position
-    FileOffset(const int64_t offset) {
-      // Count in which block index
-      block_index_in_file_block = offset / kBlockSize;
-
-      // Count block offset in final block
-      block_offset_in_block = offset % kBlockSize;
-
-      LOG(INFO) << "current offset: " << offset
-                << " file_block_index: " << file_block_index
-                << " block_index_in_file_block: " << block_index_in_file_block
-                << " block_offset_in_block: " << block_offset_in_block;
-    }
-  };
   // Transform info of block read or write
   struct BlockData {
     uint8_t *extern_buffer;  // 读或者写buffer的地址,如果超过block会转换
@@ -177,8 +157,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
 
    private:
     std::vector<BlockData> read_blocks_;
-    // Transform to read discrete block data
-    void Transform2Block();
     int64_t ReadBlockData(BlockData *block);
 
    public:
@@ -189,7 +167,6 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
           size_(size),
           offset_(offset),
           direct_(direct) {
-      Transform2Block();
     }
     ~FileReader() = default;
     int64_t ReadData();

@@ -2,7 +2,7 @@
 #ifndef LIB_BLOCK_HANDLE_H
 #define LIB_BLOCK_HANDLE_H
 
-#include "block_device.h"
+#include "device.h"
 #include "crc.h"
 #include "file.h"
 #include "file_block.h"

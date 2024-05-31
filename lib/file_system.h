@@ -35,7 +35,7 @@ class FileSystem {
   bfs_config_info mount_config_;
   bool remount_ = false;
 
-  BlockDevice *device_;
+  Device *device_;
   ShmManager *shm_manager_;
 
   MetaHandle *handle_vector_[kMetaHandleSize];
@@ -89,7 +89,7 @@ class FileSystem {
 
   void DumpFileMeta(const std::string &path);
 
-  BlockDevice *dev() { return device_; }
+  Device *dev() { return device_; }
 
   MetaHandle *GetMetaHandle(MetaHandleType type) {
     return handle_vector_[type];

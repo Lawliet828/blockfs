@@ -6,7 +6,7 @@
 
 namespace udisk::blockfs {
 
-class BlockDevice {
+class Device {
  private:
   std::string dev_name_;
   int32_t dev_fd_direct_ = -1;
@@ -15,8 +15,8 @@ class BlockDevice {
   uint32_t sector_size_ = 0;
 
  public:
-  BlockDevice() {}
-  virtual ~BlockDevice();
+  Device() {}
+  virtual ~Device();
   std::string dev_name() const { return dev_name_; }
   uint64_t dev_size() const { return dev_size_; }
   uint32_t block_size() const { return sector_size_; }

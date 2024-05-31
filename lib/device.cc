@@ -1,4 +1,4 @@
-#include "block_device.h"
+#include "device.h"
 
 #include <fcntl.h>
 #include <limits.h>
@@ -60,9 +60,9 @@ ssize_t pwriteFull(int fd, const void* buf, size_t count, off_t offset) {
   return wrapFull(pwrite, fd, const_cast<void*>(buf), count, offset);
 }
 
-BlockDevice::~BlockDevice() { Close(); }
+Device::~Device() { Close(); }
 
-bool BlockDevice::IsBlkDev() {
+bool Device::IsBlkDev() {
   struct stat file_stat;
   if (::stat(dev_name_.c_str(), &file_stat)) {
     LOG(ERROR) << "failed to stat: " << dev_name_ << ", error: " << strerror(errno);
@@ -71,7 +71,7 @@ bool BlockDevice::IsBlkDev() {
   return S_ISBLK(file_stat.st_mode);
 }
 
-bool BlockDevice::BlkDevGetSize() {
+bool Device::BlkDevGetSize() {
 #ifdef BLKGETSIZE64
   if (::ioctl(dev_fd_direct_, BLKGETSIZE64, &dev_size_)) {
     LOG(ERROR) << "failed to BLKGETSIZE: " << dev_name_;
@@ -102,7 +102,7 @@ bool BlockDevice::BlkDevGetSize() {
  * This is the smallest unit the storage device can
  * address. It is typically 512 bytes.
  */
-bool BlockDevice::BlkDevGetSectorSize() {
+bool Device::BlkDevGetSectorSize() {
   if (::ioctl(dev_fd_direct_, BLKSSZGET, &sector_size_) < 0) {
     LOG(ERROR) << "failed to get dev block size: " << dev_name_;
     return false;
@@ -111,7 +111,7 @@ bool BlockDevice::BlkDevGetSectorSize() {
   return true;
 }
 
-bool BlockDevice::Open(const std::string &dev_name) {
+bool Device::Open(const std::string &dev_name) {
   if (dev_name.empty() || dev_name == kBlockDeviceSda ||
       dev_name == kBlockDeviceVda || dev_name == kBlockDeviceCurrent ||
       dev_name == kBlockDeviceParent) {
@@ -150,7 +150,7 @@ bool BlockDevice::Open(const std::string &dev_name) {
   return true;
 }
 
-void BlockDevice::Close() {
+void Device::Close() {
   if (dev_fd_cache_ > 0) {
     Fsync();
     ::close(dev_fd_cache_);
@@ -164,7 +164,7 @@ void BlockDevice::Close() {
   LOG(DEBUG) << "close block device " << dev_name_;
 }
 
-int BlockDevice::Fsync() {
+int Device::Fsync() {
   int ret;
   if (dev_fd_direct_ > 0) {
     ret = ::fsync(dev_fd_direct_);
@@ -183,7 +183,7 @@ int BlockDevice::Fsync() {
   return 0;
 }
 
-int64_t BlockDevice::PreadCache(void *buf, uint64_t len, off_t offset) {
+int64_t Device::PreadCache(void *buf, uint64_t len, off_t offset) {
   if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length), "
                << "offset: " << offset << " length: " << len
@@ -193,7 +193,7 @@ int64_t BlockDevice::PreadCache(void *buf, uint64_t len, off_t offset) {
   return preadFull(dev_fd_cache_, buf, len, offset);
 }
 
-int64_t BlockDevice::PwriteCache(void *buf, uint64_t len, off_t offset) {
+int64_t Device::PwriteCache(void *buf, uint64_t len, off_t offset) {
   if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length),"
                << " offset: " << offset << " length: " << len
@@ -203,7 +203,7 @@ int64_t BlockDevice::PwriteCache(void *buf, uint64_t len, off_t offset) {
   return pwriteFull(dev_fd_cache_, buf, len, offset);
 }
 
-int64_t BlockDevice::PreadDirect(void *buf, uint64_t len, off_t offset) {
+int64_t Device::PreadDirect(void *buf, uint64_t len, off_t offset) {
   if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length), "
                << "offset: " << offset << " length: " << len
@@ -213,7 +213,7 @@ int64_t BlockDevice::PreadDirect(void *buf, uint64_t len, off_t offset) {
   return preadFull(dev_fd_direct_, buf, len, offset);
 }
 
-int64_t BlockDevice::PwriteDirect(void *buf, uint64_t len, off_t offset) {
+int64_t Device::PwriteDirect(void *buf, uint64_t len, off_t offset) {
   if ((offset + len) > dev_size_) [[unlikely]] {
     LOG(ERROR) << "device size is less than (offset + length),"
                << " offset: " << offset << " length: " << len

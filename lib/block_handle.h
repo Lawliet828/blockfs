@@ -1,6 +1,6 @@
 #pragma once
 
-#include "block_device.h"
+#include "device.h"
 #include "meta_handle.h"
 
 namespace udisk::blockfs {
@@ -18,7 +18,7 @@ class BlockHandle : public MetaHandle {
   BlockHandle(const uint32_t max_block_num) {
     set_max_block_num(max_block_num);
   }
-  ~BlockHandle() {}
+  ~BlockHandle() = default;
 
   const uint32_t max_block_num() const noexcept { return max_block_num_; }
 

@@ -4,7 +4,7 @@
 
 #include <functional>
 
-#include "block_device.h"
+#include "device.h"
 #include "file.h"
 #include "meta_handle.h"
 

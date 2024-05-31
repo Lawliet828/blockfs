@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
   return 0;
 #endif
 
-  BlockDevice *dev = new BlockDevice();
+  Device *dev = new Device();
   if (!dev->Open("/dev/vdc1")) {
     return -1;
   }

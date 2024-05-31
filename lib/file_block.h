@@ -4,7 +4,7 @@
 
 #include <assert.h>
 
-#include "block_device.h"
+#include "device.h"
 
 namespace udisk::blockfs {
 

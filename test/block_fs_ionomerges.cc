@@ -23,7 +23,7 @@ struct IoRequest {
 class IoThread {
  private:
   bool started_ = true;
-  BlockDevice *dev_;
+  Device *dev_;
   std::mutex mutex_;
   std::condition_variable cond_;
   std::deque<IoRequest> io_tasks_;
@@ -58,7 +58,7 @@ class IoThread {
 
  public:
   //  https://www.runoob.com/w3cnote/cpp-std-thread.html
-  IoThread(BlockDevice *dev)
+  IoThread(Device *dev)
       : dev_(dev), thread_(std::bind(&IoThread::ThreadTask, this)) {}
   void StartTask() { thread_.detach(); }
   void AddIoReguest(const IoRequest &task) {
@@ -71,7 +71,7 @@ class IoThread {
 
 class BlockFsTest {
  private:
-  BlockDevice *dev_;
+  Device *dev_;
   uint64_t run_io_num_ = 0;
   uint32_t io_thread_num_ = 8;
   std::vector<IoThread *> io_threads_;
@@ -87,7 +87,7 @@ BlockFsTest::BlockFsTest() {}
 BlockFsTest::~BlockFsTest() {}
 
 void BlockFsTest::DoIoNoMergeTest() {
-  dev_ = new BlockDevice();
+  dev_ = new Device();
 
   LOG(INFO) << "====> Io no merge test start";
 

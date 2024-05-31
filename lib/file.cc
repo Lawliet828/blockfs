@@ -723,23 +723,34 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
   return ret;
 }
 
-void OpenFile::FileReader::Transform2Block() {
-  FileOffset fos = FileOffset(offset_);
+int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
+  LOG(INFO) << open_file_->file()->file_name()
+            << " read udisk offset: " << block->dev_offset
+            << " read size: " << block->read_size_ << " buffer addr: 0x"
+            << (uint64_t)block->extern_buffer;
+  if (direct_) {
+    return FileSystem::Instance()->dev()->PreadDirect(
+        block->extern_buffer, block->read_size_, block->dev_offset);
+  } else {
+    return FileSystem::Instance()->dev()->PreadCache(
+        block->extern_buffer, block->read_size_, block->dev_offset);
+  }
+}
 
+int64_t OpenFile::FileReader::ReadData() {
   // 按照block来切分递增计数直到和需要读取的size相等
   uint64_t curr_read_count = 0;
   uint32_t block_read_index = 0;   // 读取的是全局block的索引
   uint32_t block_read_offset = 0;  // 读取的block的偏移,初始为偏移为0
   uint64_t block_read_size = 0;    // 读取当前block的大小
-  int32_t file_cut_in_file = 0;
-  int32_t block_index_in_file_block = fos.block_index_in_file_block;
-  uint64_t block_offset_in_block = fos.block_offset_in_block;
+  int32_t block_index_in_file_block = offset_ / kBlockSize;
+  uint64_t block_offset_in_block = offset_ % kBlockSize;
 
   const FilePtr &file = open_file_->file();
   FileBlockPtr file_block = file->GetFileBlock(0);
   // 删除文件发生故障, 只删除了fileblock的情形
   if (nullptr == file_block) [[unlikely]] {
-    return;
+    return -1;
   }
   do {
     block_read_index = file_block->get_block_id(block_index_in_file_block);
@@ -781,24 +792,7 @@ void OpenFile::FileReader::Transform2Block() {
     // 按照block的粒度读取, 处理完一个block即block索引增加
     ++block_index_in_file_block;
   } while (true);
-}
 
-int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
-  LOG(INFO) << open_file_->file()->file_name()
-            << " read udisk offset: " << block->dev_offset
-            << " read size: " << block->read_size_ << " buffer addr: 0x"
-            << (uint64_t)block->extern_buffer;
-  if (direct_) {
-    return FileSystem::Instance()->dev()->PreadDirect(
-        block->extern_buffer, block->read_size_, block->dev_offset);
-  } else {
-    return FileSystem::Instance()->dev()->PreadCache(
-        block->extern_buffer, block->read_size_, block->dev_offset);
-  }
-}
-
-// 优化:preadv
-int64_t OpenFile::FileReader::ReadData() {
   int64_t ret = 0;
   int64_t block_read;
   uint32_t block_num = read_blocks_.size();
@@ -842,10 +836,8 @@ int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
 }
 
 int64_t OpenFile::FileWriter::WriteData() {
-  FileOffset fos = FileOffset(offset_);
-
-  int32_t block_index_in_file_block = fos.block_index_in_file_block;
-  uint64_t block_offset_in_block = fos.block_offset_in_block;
+  int32_t block_index_in_file_block = offset_ / kBlockSize;
+  uint64_t block_offset_in_block = offset_ % kBlockSize;
 
   uint64_t curr_write_count = 0;
   uint32_t block_write_index = 0;
