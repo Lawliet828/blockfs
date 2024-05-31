@@ -642,11 +642,6 @@ int File::ftruncate(uint64_t offset) {
   }
 }
 
-int File::posix_fallocate(uint64_t offset, uint64_t size) {
-  LOG(ERROR) << file_name() << " fallocate not supported yet";
-  return -1;
-}
-
 int File::fsync() { return FileSystem::Instance()->dev()->Fsync(); }
 
 void File::UpdateTimeStamp(time_t seconds) {

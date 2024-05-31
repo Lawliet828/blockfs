@@ -126,7 +126,6 @@ class File : public Inode<FileMeta, FileBlock>,
 
   // open file functions
   int ftruncate(uint64_t offset);
-  int posix_fallocate(uint64_t offset, uint64_t size);
   int fsync();
 };
 typedef std::shared_ptr<File> FilePtr;

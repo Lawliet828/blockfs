@@ -246,17 +246,6 @@ int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
   return open_file->file()->ftruncate(size);
 }
 
-int32_t FileSystem::PosixFallocate(int32_t fd, int64_t offset, int64_t len) {
-  LOG(INFO) << "posix fallocate file fd: " << fd << " offset: " << offset
-            << " len: " << len;
-  OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
-  if (!open_file) {
-    // errno = ENOENT;
-    return -1;
-  }
-  return open_file->file()->posix_fallocate(offset, len);
-}
-
 int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
   LOG(INFO) << "read file fd: " << fd << " len: " << len;
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);

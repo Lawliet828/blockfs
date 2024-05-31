@@ -22,6 +22,10 @@ fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bs=4k -size=64M -numjobs=
    READ: bw=75.7KiB/s (77.5kB/s), 75.7KiB/s-75.7KiB/s (77.5kB/s-77.5kB/s), io=22.2MiB (23.3MB), run=300348-300348msec
   WRITE: bw=76.0KiB/s (77.9kB/s), 76.0KiB/s-76.0KiB/s (77.9kB/s-77.9kB/s), io=22.3MiB (23.4MB), run=300348-300348msec
 
+2024/05/31 21:30 rssd云盘 去掉file锁, 使用block锁
+   READ: bw=264KiB/s (270kB/s), 264KiB/s-264KiB/s (270kB/s-270kB/s), io=64.0MiB (67.1MB), run=248181-248181msec
+  WRITE: bw=199KiB/s (204kB/s), 199KiB/s-199KiB/s (204kB/s-204kB/s), io=32.1MiB (33.7MB), run=165081-165081msec
+
 4K随机读写
 ```
 fio -direct=1 -iodepth=16 -rw=randrw -ioengine=libaio -bs=4k -size=32M -numjobs=8 -group_reporting -fallocate=none -name=Test4KRandRW -verify=md5 --do_verify=1 --verify_fatal=1

@@ -967,35 +967,6 @@ static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
 }
 
 /**
- * Allocates space for an open file
- *
- * This function ensures that required space is allocated for specified
- * file.  If this function returns success then any subsequent write
- * request to specified range is guaranteed not to fail because of lack
- * of space on the file system media.
- */
-static int bfs_fallocate(const char *path, int mode, off_t offset, off_t length,
-                         struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_fallocate: " << path;
-
-  ino_t fd;
-  int res;
-
-  if (mode) return -EOPNOTSUPP;
-
-  if (fi == nullptr)
-    fd = FileSystem::Instance()->file_handle()->open(path, O_WRONLY);
-  else
-    fd = fi->fh;
-
-  res = -FileSystem::Instance()->PosixFallocate(fd, offset, length);
-
-  if (fi == nullptr) FileSystem::Instance()->file_handle()->close(fd);
-
-  return res;
-}
-
-/**
  * Copy a range of data from one file to another
  *
  * Performs an optimized copy between two file descriptors without the
@@ -1069,7 +1040,6 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
 static const struct fuse_operations kBFSOps = {
     // .lookup = mfs_lookup,
     .getattr = mfs_getattr,
-    .readlink = nullptr,
     .mknod = bfs_mknod,
     .mkdir = bfs_mkdir,
     .unlink = bfs_unlink,
@@ -1086,10 +1056,6 @@ static const struct fuse_operations kBFSOps = {
     .flush = bfs_flush,
     .release = bfs_release,
     .fsync = bfs_fsync,
-    .setxattr = nullptr,
-    .getxattr = nullptr,
-    .listxattr = nullptr,
-    .removexattr = nullptr,
     .opendir = bfs_opendir,
     .readdir = bfs_readdir,
     .releasedir = bfs_releasedir,
@@ -1106,7 +1072,6 @@ static const struct fuse_operations kBFSOps = {
     .read_buf = nullptr,
 #endif
     .flock = bfs_flock,
-    .fallocate = bfs_fallocate,
     .copy_file_range = bfs_copy_file_range,
     .lseek = bfs_lseek,
 };

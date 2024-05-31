@@ -78,7 +78,6 @@ class FileSystem {
   // Returns 0 on success.
   int32_t TruncateFile(const std::string &filename, int64_t size);
   int32_t TruncateFile(const int32_t fd, int64_t size);
-  int32_t PosixFallocate(int32_t fd, int64_t offset, int64_t len);
 
   int64_t ReadFile(int32_t fd, void *buf, size_t len);
   int64_t PreadFile(ino_t fd, void *buf, size_t len, off_t offset);
