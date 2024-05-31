@@ -699,7 +699,6 @@ off_t OpenFile::lseek(off_t offset, int whence) {
 }
 
 int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
-  std::shared_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " read size: " << size
             << " offset: " << append_pos;
@@ -740,7 +739,7 @@ int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
 int64_t OpenFile::FileReader::ReadData() {
   // 按照block来切分递增计数直到和需要读取的size相等
   uint64_t curr_read_count = 0;
-  uint32_t block_read_index = 0;   // 读取的是全局block的索引
+  uint32_t block_id = 0;   // 读取的是全局block的索引
   uint32_t block_read_offset = 0;  // 读取的block的偏移,初始为偏移为0
   uint64_t block_read_size = 0;    // 读取当前block的大小
   int32_t block_index_in_file_block = offset_ / kBlockSize;
@@ -753,7 +752,7 @@ int64_t OpenFile::FileReader::ReadData() {
     return -1;
   }
   do {
-    block_read_index = file_block->get_block_id(block_index_in_file_block);
+    block_id = file_block->get_block_id(block_index_in_file_block);
     // 第一次填充的可能是在某个block中间的偏移
     if (block_offset_in_block > 0) {
       block_read_offset = block_offset_in_block;
@@ -768,17 +767,18 @@ int64_t OpenFile::FileReader::ReadData() {
     // 计算当前block在磁盘上的偏移
     uint64_t dev_offset =
         FileSystem::Instance()->super_meta()->block_data_start_offset_ +
-        FileSystem::Instance()->super_meta()->block_size_ * block_read_index +
+        FileSystem::Instance()->super_meta()->block_size_ * block_id +
         block_read_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
     LOG(INFO) << file->file_name() << " data_start_offset: "
               << FileSystem::Instance()->super_meta()->block_data_start_offset_
               << " need read offset: " << curr_read_count
-              << " read block index: " << block_read_index
+              << " read block_id: " << block_id
               << " read block offset: " << block_read_offset
               << " block_read_size: " << block_read_size
               << " dev_offset: " << dev_offset;
     BlockData block {
+      .block_id = block_id,
       .extern_buffer = read_buffer_ + curr_read_count,
       .dev_offset = dev_offset,
       .read_size_ = block_read_size
@@ -797,6 +797,8 @@ int64_t OpenFile::FileReader::ReadData() {
   int64_t block_read;
   uint32_t block_num = read_blocks_.size();
   for (uint32_t i = 0; i < block_num; ++i) {
+    uint32_t block_id = read_blocks_[i].block_id;
+    std::shared_lock lock(FileSystem::Instance()->block_handle()->block_lock(block_id));
     block_read = ReadBlockData(&read_blocks_[i]);
     if (block_read <= 0) [[unlikely]] {
       LOG(ERROR) << open_file_->file()->file_name()
@@ -840,14 +842,14 @@ int64_t OpenFile::FileWriter::WriteData() {
   uint64_t block_offset_in_block = offset_ % kBlockSize;
 
   uint64_t curr_write_count = 0;
-  uint32_t block_write_index = 0;
+  uint32_t block_id = 0;
   uint32_t block_write_offset = 0;
   uint64_t block_write_size = 0;
 
   const FilePtr &file = open_file_->file();
   FileBlockPtr file_block = file->GetFileBlock(0);
   do {
-    block_write_index = file_block->get_block_id(block_index_in_file_block);
+    block_id = file_block->get_block_id(block_index_in_file_block);
 
     //  第一次填充的可能是在某个block中间的偏移
     if (block_offset_in_block > 0) {
@@ -862,17 +864,18 @@ int64_t OpenFile::FileWriter::WriteData() {
     }
     uint64_t dev_offset =
         FileSystem::Instance()->super_meta()->block_data_start_offset_ +
-        FileSystem::Instance()->super_meta()->block_size_ * block_write_index +
+        FileSystem::Instance()->super_meta()->block_size_ * block_id +
         block_write_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
     LOG(INFO) << file->file_name() << " data_start_offset: "
               << FileSystem::Instance()->super_meta()->block_data_start_offset_
               << " need wirte offset: " << curr_write_count
-              << " block_write_index: " << block_write_index
+              << " block_id: " << block_id
               << " block_write_offset: " << block_write_offset
               << " block_write_size: " << block_write_size
               << " dev_offset: " << dev_offset;
     BlockData block {
+      .block_id = block_id,
       .extern_buffer = write_buffer_ + curr_write_count,
       .dev_offset = dev_offset,
       .write_size_ = block_write_size
@@ -890,6 +893,8 @@ int64_t OpenFile::FileWriter::WriteData() {
   int64_t block_write;
   uint32_t block_num = write_blocks_.size();
   for (uint32_t i = 0; i < block_num; ++i) {
+    uint32_t block_id = write_blocks_[i].block_id;
+    std::unique_lock lock(FileSystem::Instance()->block_handle()->block_lock(block_id));
     block_write = WriteBlockData(&write_blocks_[i]);
     if (block_write <= 0) [[unlikely]] {
       LOG(ERROR) << open_file_->file()->file_name()
@@ -911,7 +916,6 @@ int64_t OpenFile::FileWriter::WriteData() {
  * retcount will be less than count only if an error occurs
  * or end of file is reached */
 int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
-  std::shared_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pread size: " << size
             << " offset: " << offset;
@@ -939,7 +943,6 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
  * allocates new bytes and updates file size as necessary,
  * fills any gaps with zeros */
 int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
-  std::unique_lock lock(rw_lock_);
   LOG(INFO) << "file name: " << file_->file_name()
             << " file size: " << file_->file_size() << " pwrite size: " << size
             << " offset: " << offset;

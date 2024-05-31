@@ -102,7 +102,7 @@ bool SuperBlock::FormatAllMeta() {
   meta->device_size = FileSystem::Instance()->dev()->dev_size();
   uint64_t free_udisk_size =
       meta->device_size - meta->block_data_start_offset_;
-  meta->curr_block_num_ = free_udisk_size / kBlockSize;
+  meta->curr_block_num = free_udisk_size / kBlockSize;
 
   // 最大支持12T的block个数
   meta->max_support_block_num_ =
@@ -258,7 +258,7 @@ void SuperBlock::Dump() noexcept {
             << "\n"
             << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
             << "device_size: " << meta()->device_size << "\n"
-            << "curr_block_num_: " << meta()->curr_block_num_ << "\n"
+            << "curr_block_num: " << meta()->curr_block_num << "\n"
             << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
 }
 

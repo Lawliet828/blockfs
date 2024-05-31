@@ -110,7 +110,7 @@ union SuperBlockMeta {
 
     // variable according to the udisk device size
     uint64_t device_size;  // current udisk size (device size)
-    uint64_t curr_block_num_;   // current udisk supported block number
+    uint64_t curr_block_num;   // current udisk supported block number
 
     // The mount point opened by each instance of UXDB,
     // the directory is generally /mnt/mysql/data

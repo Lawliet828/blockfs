@@ -6,26 +6,13 @@
 namespace udisk::blockfs {
 
 bool BlockHandle::InitializeMeta() {
-  set_max_block_num(FileSystem::Instance()->super_meta()->curr_block_num_);
-  return true;
-}
-
-// 新增加的block id加到资源池, 总的udisk size做了限制,
-// 所以传入的new_max_block_num个数肯定是受到限制的
-void BlockHandle::set_max_block_num(uint32_t new_max_block_num) noexcept {
-  LOG(DEBUG) << "set max block num: " << new_max_block_num;
-  META_HANDLE_LOCK();
-  // 如果是扩容的话, 只需要吧offset湖面的空间串联起来
-  // 如果是缩容的话, 要确定缩容的offset后面的block未被使用
-  if (new_max_block_num < max_block_num_) {
-    LOG(ERROR) << "less than curr block num, shrink udisk not supported yet";
-    return;
-  }
-
+  uint32_t new_max_block_num = FileSystem::Instance()->super_meta()->curr_block_num;
+  std::lock_guard<std::mutex> lock(mutex_);
   for (uint32_t i = max_block_num_; i < new_max_block_num; ++i) {
     block_id_pool_.emplace(i);
   }
   max_block_num_ = new_max_block_num;
+  return true;
 }
 
 bool BlockHandle::GetSpecificBlockId(uint32_t block_id) {

@@ -136,10 +136,10 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   FilePtr file_;            /* current open file pointer */
   int32_t open_fd_ = -1;    /* current open file descriptor */
   uint64_t append_pos_ = 0; /* current open file offset */
-  std::shared_mutex rw_lock_;
  private:
   // Transform info of block read or write
   struct BlockData {
+    uint32_t block_id;
     uint8_t *extern_buffer;  // 读或者写buffer的地址,如果超过block会转换
     uint64_t dev_offset;  // 写入block的在udisk逻辑盘上的偏移地址
     union {

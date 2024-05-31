@@ -1,5 +1,8 @@
 #pragma once
 
+#include <shared_mutex>
+#include <vector>
+
 #include "device.h"
 #include "meta_handle.h"
 
@@ -12,18 +15,13 @@ class BlockHandle : public MetaHandle {
   // 总的udisk的容量减去元数据的空间后剩余的4M的个数
   uint32_t max_block_num_ = 0;
   std::unordered_set<uint32_t> block_id_pool_;
+  std::vector<std::shared_mutex> block_locks_ = std::vector<std::shared_mutex>(100000); // TODO: 精确的大小
 
  public:
   BlockHandle() = default;
-  BlockHandle(const uint32_t max_block_num) {
-    set_max_block_num(max_block_num);
-  }
   ~BlockHandle() = default;
 
   const uint32_t max_block_num() const noexcept { return max_block_num_; }
-
-  // 主要是在线扩容需要更新blockid的资源池
-  void set_max_block_num(uint32_t max_block_id_num) noexcept;
 
   const uint64_t GetFreeBlockNum() {
     META_HANDLE_LOCK();
@@ -40,5 +38,10 @@ class BlockHandle : public MetaHandle {
   bool PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids);
 
   virtual bool InitializeMeta() override;
+
+  std::vector<std::shared_mutex> &block_locks() { return block_locks_; }
+  std::shared_mutex &block_lock(uint32_t block_id) {
+    return block_locks_[block_id];
+  }
 };
 }

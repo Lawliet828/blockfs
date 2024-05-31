@@ -161,7 +161,7 @@ int32_t FileSystem::StatVFS(struct statvfs* buf) {
   // f_frsize: 单位字节, df命令中的块大小
   buf->f_frsize = buf->f_bsize;
   // f_blocks: 文件系统数据块总数
-  buf->f_blocks = super_meta()->curr_block_num_;
+  buf->f_blocks = super_meta()->curr_block_num;
   // f_bfree: 可用块数
   buf->f_bfree = block_handle()->GetFreeBlockNum();
   buf->f_bavail = buf->f_bfree;
