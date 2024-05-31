@@ -73,8 +73,6 @@ class File : public Inode<FileMeta, FileBlock>,
   bool locked() const noexcept { return locked_; }
   void set_deleted(bool deleted) noexcept { deleted_ = deleted; }
   const bool deleted() const noexcept { return deleted_; }
-  void set_crc(uint32_t crc) noexcept { meta_->crc_ = crc; }
-  uint32_t crc() const noexcept { return meta_->crc_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
   const bool used() const noexcept { return meta_->used_; }
   void set_fh(int32_t fh) noexcept { meta_->fh_ = fh; }
@@ -148,16 +146,10 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
     // Find the read and write offset information
     // according to the file read and write position
     FileOffset(const int64_t offset) {
-      // 1. Count how many blocks are in front of the file
-      int32_t num_blocks_front = offset / kBlockSize;
+      // Count in which block index
+      block_index_in_file_block = offset / kBlockSize;
 
-      // 2. Count in which file cut
-      file_block_index = num_blocks_front / kFileBlockCapacity;
-
-      // 3. Count in which block index
-      block_index_in_file_block = num_blocks_front % kFileBlockCapacity;
-
-      // 4. Count block offset in final block
+      // Count block offset in final block
       block_offset_in_block = offset % kBlockSize;
 
       LOG(INFO) << "current offset: " << offset
@@ -168,8 +160,8 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
   };
   // Transform info of block read or write
   struct BlockData {
-    uint8_t *extern_buffer_;  // 读或者写buffer的地址,如果超过block会转换
-    uint64_t udisk_offset_;  // 写入block的在udisk逻辑盘上的偏移地址
+    uint8_t *extern_buffer;  // 读或者写buffer的地址,如果超过block会转换
+    uint64_t dev_offset;  // 写入block的在udisk逻辑盘上的偏移地址
     union {
       uint64_t read_size_;
       uint64_t write_size_;
@@ -212,14 +204,12 @@ class OpenFile : public std::enable_shared_from_this<OpenFile> {
 
    private:
     std::vector<BlockData> write_blocks_;
-    // Transform to read discrete block data
-    void Transform2Block();
     int64_t WriteBlockData(BlockData *block);
 
    public:
     FileWriter(OpenFilePtr file, void *buffer, uint64_t size, uint64_t offset,
                bool direct = true);
-    ~FileWriter();
+    ~FileWriter() = default;
     int64_t WriteData();
   };
 

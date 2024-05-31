@@ -232,7 +232,7 @@ void File::DumpMeta() {
   LOG(INFO) << "dump file meta: "
             << " file_name: " << file_name() << " file_size: " << file_size()
             << " fh: " << fh() << " dh: " << dh()
-            << " crc: " << crc() << " parent fh: " << parent_fh()
+            << " crc: " << meta_->crc_ << " parent fh: " << parent_fh()
             << " parent size: " << parent_size() << " child fh: " << child_fh();
   for (const auto &it : item_maps_) {
     const FileBlockPtr &fb = it.second;
@@ -731,12 +731,12 @@ void OpenFile::FileReader::Transform2Block() {
   uint32_t block_read_index = 0;   // 读取的是全局block的索引
   uint32_t block_read_offset = 0;  // 读取的block的偏移,初始为偏移为0
   uint64_t block_read_size = 0;    // 读取当前block的大小
-  int32_t file_cut_in_file = fos.file_block_index;
+  int32_t file_cut_in_file = 0;
   int32_t block_index_in_file_block = fos.block_index_in_file_block;
   uint64_t block_offset_in_block = fos.block_offset_in_block;
 
   const FilePtr &file = open_file_->file();
-  FileBlockPtr file_block = file->GetFileBlock(file_cut_in_file);
+  FileBlockPtr file_block = file->GetFileBlock(0);
   // 删除文件发生故障, 只删除了fileblock的情形
   if (nullptr == file_block) [[unlikely]] {
     return;
@@ -754,8 +754,8 @@ void OpenFile::FileReader::Transform2Block() {
       block_read_size =
           std::min(size_ - curr_read_count, (uint64_t)kBlockSize);
     }
-    // 计算当前block在udisk分区上的偏移
-    uint64_t udisk_offset =
+    // 计算当前block在磁盘上的偏移
+    uint64_t dev_offset =
         FileSystem::Instance()->super_meta()->block_data_start_offset_ +
         FileSystem::Instance()->super_meta()->block_size_ * block_read_index +
         block_read_offset;
@@ -766,11 +766,12 @@ void OpenFile::FileReader::Transform2Block() {
               << " read block index: " << block_read_index
               << " read block offset: " << block_read_offset
               << " block_read_size: " << block_read_size
-              << " udisk_offset: " << udisk_offset;
-    BlockData block;
-    block.extern_buffer_ = read_buffer_ + curr_read_count;
-    block.udisk_offset_ = udisk_offset;
-    block.read_size_ = block_read_size;
+              << " dev_offset: " << dev_offset;
+    BlockData block {
+      .extern_buffer = read_buffer_ + curr_read_count,
+      .dev_offset = dev_offset,
+      .read_size_ = block_read_size
+    };
     read_blocks_.emplace_back(block);
     curr_read_count += block_read_size;
     if (curr_read_count >= size_) {
@@ -778,25 +779,21 @@ void OpenFile::FileReader::Transform2Block() {
       break;
     }
     // 按照block的粒度读取, 处理完一个block即block索引增加
-    // 跨越到下一个fileblock需要重新获取
-    if (++block_index_in_file_block == kFileBlockCapacity) {
-      file_block = file->GetFileBlock(++file_cut_in_file);
-      block_index_in_file_block = 0;
-    }
+    ++block_index_in_file_block;
   } while (true);
 }
 
 int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
   LOG(INFO) << open_file_->file()->file_name()
-            << " read udisk offset: " << block->udisk_offset_
+            << " read udisk offset: " << block->dev_offset
             << " read size: " << block->read_size_ << " buffer addr: 0x"
-            << (uint64_t)block->extern_buffer_;
+            << (uint64_t)block->extern_buffer;
   if (direct_) {
     return FileSystem::Instance()->dev()->PreadDirect(
-        block->extern_buffer_, block->read_size_, block->udisk_offset_);
+        block->extern_buffer, block->read_size_, block->dev_offset);
   } else {
     return FileSystem::Instance()->dev()->PreadCache(
-        block->extern_buffer_, block->read_size_, block->udisk_offset_);
+        block->extern_buffer, block->read_size_, block->dev_offset);
   }
 }
 
@@ -828,15 +825,25 @@ OpenFile::FileWriter::FileWriter(OpenFilePtr file, void *buffer, uint64_t size,
       size_(size),
       offset_(offset),
       direct_(direct) {
-  Transform2Block();
 }
 
-OpenFile::FileWriter::~FileWriter() {}
+int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
+  LOG(INFO) << open_file_->file()->file_name()
+            << " write disk offset: " << block->dev_offset
+            << " write size: " << block->write_size_ << " buffer addr: 0x"
+            << (uint64_t)block->extern_buffer;
+  if (direct_) {
+    return FileSystem::Instance()->dev()->PwriteDirect(
+        block->extern_buffer, block->write_size_, block->dev_offset);
+  } else {
+    return FileSystem::Instance()->dev()->PwriteCache(
+        block->extern_buffer, block->write_size_, block->dev_offset);
+  }
+}
 
-void OpenFile::FileWriter::Transform2Block() {
+int64_t OpenFile::FileWriter::WriteData() {
   FileOffset fos = FileOffset(offset_);
 
-  int32_t file_cut_in_file = fos.file_block_index;
   int32_t block_index_in_file_block = fos.block_index_in_file_block;
   uint64_t block_offset_in_block = fos.block_offset_in_block;
 
@@ -846,9 +853,8 @@ void OpenFile::FileWriter::Transform2Block() {
   uint64_t block_write_size = 0;
 
   const FilePtr &file = open_file_->file();
-  FileBlockPtr file_block = nullptr;
+  FileBlockPtr file_block = file->GetFileBlock(0);
   do {
-    file_block = file->GetFileBlock(file_cut_in_file);
     block_write_index = file_block->get_block_id(block_index_in_file_block);
 
     //  第一次填充的可能是在某个block中间的偏移
@@ -862,7 +868,7 @@ void OpenFile::FileWriter::Transform2Block() {
       block_write_size =
           std::min(size_ - curr_write_count, (uint64_t)kBlockSize);
     }
-    uint64_t udisk_offset =
+    uint64_t dev_offset =
         FileSystem::Instance()->super_meta()->block_data_start_offset_ +
         FileSystem::Instance()->super_meta()->block_size_ * block_write_index +
         block_write_offset;
@@ -873,40 +879,21 @@ void OpenFile::FileWriter::Transform2Block() {
               << " block_write_index: " << block_write_index
               << " block_write_offset: " << block_write_offset
               << " block_write_size: " << block_write_size
-              << " udisk_offset: " << udisk_offset;
-    BlockData block;
-    block.extern_buffer_ = write_buffer_ + curr_write_count;
-    block.udisk_offset_ = udisk_offset;
-    block.write_size_ = block_write_size;
-    write_blocks_.push_back(std::move(block));
+              << " dev_offset: " << dev_offset;
+    BlockData block {
+      .extern_buffer = write_buffer_ + curr_write_count,
+      .dev_offset = dev_offset,
+      .write_size_ = block_write_size
+    };
+    write_blocks_.emplace_back(block);
     curr_write_count += block_write_size;
     if (curr_write_count >= size_) {
       LOG(DEBUG) << file->file_name() << " finshed fill write block";
       break;
     }
-    // 跨越到下一个fileblock需要重新获取
-    if (++block_index_in_file_block == kFileBlockCapacity) {
-      file_block = file->GetFileBlock(++file_cut_in_file);
-      block_index_in_file_block = 0;
-    }
+    ++block_index_in_file_block;
   } while (true);
-}
 
-int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
-  LOG(INFO) << open_file_->file()->file_name()
-            << " write disk offset: " << block->udisk_offset_
-            << " write size: " << block->write_size_ << " buffer addr: 0x"
-            << (uint64_t)block->extern_buffer_;
-  if (direct_) {
-    return FileSystem::Instance()->dev()->PwriteDirect(
-        block->extern_buffer_, block->write_size_, block->udisk_offset_);
-  } else {
-    return FileSystem::Instance()->dev()->PwriteCache(
-        block->extern_buffer_, block->write_size_, block->udisk_offset_);
-  }
-}
-
-int64_t OpenFile::FileWriter::WriteData() {
   int64_t ret = 0;
   int64_t block_write;
   uint32_t block_num = write_blocks_.size();

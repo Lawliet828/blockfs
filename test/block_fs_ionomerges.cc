@@ -17,7 +17,7 @@ using namespace udisk::blockfs;
 struct IoRequest {
   char *write_buffer_;
   uint64_t write_size_;
-  uint64_t udisk_offset_;
+  uint64_t dev_offset;
 };
 
 class IoThread {
@@ -42,8 +42,8 @@ class IoThread {
         IoRequest io = io_tasks_.front();
         io_tasks_.pop_front();
         ret = dev_->PwriteDirect(io.write_buffer_, io.write_size_,
-                                 io.udisk_offset_);
-        LOG(INFO) << "Wirte buffer offset: " << io.udisk_offset_
+                                 io.dev_offset);
+        LOG(INFO) << "Wirte buffer offset: " << io.dev_offset
                   << " size: " << io.write_size_ << " ret: " << ret
                   << " errno: " << errno;
         assert(ret > 0);
