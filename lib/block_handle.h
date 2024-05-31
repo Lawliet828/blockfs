@@ -1,5 +1,6 @@
 #pragma once
 
+#include <new>
 #include <shared_mutex>
 #include <vector>
 
@@ -8,6 +9,15 @@
 
 namespace udisk::blockfs {
 
+#ifdef __cpp_lib_hardware_interference_size
+  using std::hardware_constructive_interference_size;
+  using std::hardware_destructive_interference_size;
+#else
+  // 64 bytes on x86-64 │ L1_CACHE_BYTES │ L1_CACHE_SHIFT │ __cacheline_aligned │ ...
+  constexpr std::size_t hardware_constructive_interference_size = 64;
+  constexpr std::size_t hardware_destructive_interference_size = 64;
+#endif
+
 // 主要管理空闲的BlockId资源
 class BlockHandle : public MetaHandle {
  private:
@@ -15,7 +25,10 @@ class BlockHandle : public MetaHandle {
   // 总的udisk的容量减去元数据的空间后剩余的4M的个数
   uint32_t max_block_num_ = 0;
   std::unordered_set<uint32_t> block_id_pool_;
-  std::vector<std::shared_mutex> block_locks_ = std::vector<std::shared_mutex>(100000); // TODO: 精确的大小
+  struct alignas(hardware_destructive_interference_size) Mutex {
+    std::shared_mutex m;
+  };
+  std::array<Mutex, 100000> block_locks_; // TODO: 精确的大小
 
  public:
   BlockHandle() = default;
@@ -39,9 +52,8 @@ class BlockHandle : public MetaHandle {
 
   virtual bool InitializeMeta() override;
 
-  std::vector<std::shared_mutex> &block_locks() { return block_locks_; }
   std::shared_mutex &block_lock(uint32_t block_id) {
-    return block_locks_[block_id];
+    return block_locks_[block_id].m;
   }
 };
 }
