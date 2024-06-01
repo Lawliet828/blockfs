@@ -50,7 +50,6 @@ class File : public Inode<FileMeta, FileBlock>,
   bool deleted_ = false;
 
  private:
-  uint32_t GetNextFileCut() noexcept;
   int ExtendFile(uint64_t offset);
   bool CopyData(uint32_t src_block_id, uint32_t dst_block_id, uint64_t offset,
                 uint64_t len);
@@ -107,7 +106,6 @@ class File : public Inode<FileMeta, FileBlock>,
 
   bool AddFileBlockLock(const FileBlockPtr &fb) noexcept;
   bool AddFileBlockNoLock(const FileBlockPtr &fb) noexcept;
-  bool RemoveFileBlock(const FileBlockPtr &fb);
   bool RemoveAllFileBlock();
   FileBlockPtr GetFileBlock(int32_t file_cut);
 

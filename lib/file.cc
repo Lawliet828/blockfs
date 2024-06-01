@@ -119,19 +119,6 @@ File::~File() {
   // 如果有打开的文件需要处理
 }
 
-uint32_t File::GetNextFileCut() noexcept {
-  if (item_maps_.size() == 0) {
-    return 0;
-  }
-  uint32_t max_file_cut = item_maps_.size() - 1;
-  FileBlockPtr file_block = GetFileBlock(max_file_cut);
-  if (file_block->used_block_num() == kFileBlockCapacity) {
-    return max_file_cut + 1;
-  } else {
-    return max_file_cut;
-  }
-}
-
 int File::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->file_handle()->RunInMetaGuard([this, to] {
@@ -255,23 +242,15 @@ bool File::AddFileBlockNoLock(const FileBlockPtr &fb) noexcept {
   item_maps_[fb->file_cut()] = fb;
   LOG(TRACE) << "file block idx: " << fb->index()
              << " add to file: " << file_name()
-             << " file cut: " << fb->file_cut()
              << " file block size: " << item_maps_.size()
              << " block id num: " << fb->used_block_num();
   return true;
 }
 
-bool File::RemoveFileBlock(const FileBlockPtr &fb) {
-  LOG(INFO) << file_name() << " remove file block cut: " << fb->file_cut();
-  if (!fb->ReleaseAll()) {
-    return false;
-  }
-  return true;
-}
-
 bool File::RemoveAllFileBlock() {
   for (auto iter = item_maps_.begin(); iter != item_maps_.end(); ++iter) {
-    if (!RemoveFileBlock(iter->second)) {
+    FileBlockPtr fb = iter->second;
+    if (!fb->ReleaseAll()) {
       return false;
     }
   }
@@ -360,7 +339,7 @@ int File::ExtendFile(uint64_t offset) {
   }
   if (need_new_file_block) {
     file_block->set_used(true);
-    file_block->set_file_cut(GetNextFileCut());
+    file_block->set_file_cut(0);
     file_block->set_fh(meta_->fh_);
     file_block->set_is_temp(this->is_temp());
   }

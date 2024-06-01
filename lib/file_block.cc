@@ -73,7 +73,7 @@ bool FileBlock::ReleaseAll() {
 }
 
 bool FileBlock::ReleaseMyself() {
-  LOG(INFO) << "relase fh: " << fh() << " file cut: " << file_cut()
+  LOG(INFO) << "relase fh: " << fh()
             << " file block index: " << index_;
   FileBlock::ClearMeta(meta_);
   if (!WriteMeta()) {
