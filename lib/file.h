@@ -1,7 +1,7 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_FILE_H_
 #define LIB_FILE_H_
 
+#include <atomic>
 #include <shared_mutex>
 
 #include "device.h"
@@ -15,12 +15,6 @@ typedef std::shared_ptr<FileBlock> FileBlockPtr;
 
 typedef std::unordered_map<int32_t, FileBlockPtr> FileBlockMap;
 
-class ParentFile;
-typedef std::shared_ptr<ParentFile> ParentFilePtr;
-
-class File;
-typedef std::shared_ptr<File> FilePtr;
-
 class OpenFile;
 typedef std::shared_ptr<OpenFile> OpenFilePtr;
 
@@ -32,7 +26,7 @@ class ParentFile {
   bool tmp_file_ = false;
 
  public:
-  static ParentFilePtr NewParentFile(FileMeta *meta, uint64_t offset,
+  static std::shared_ptr<ParentFile> NewParentFile(FileMeta *meta, uint64_t offset,
                                      FileBlockMap &fbs, bool tmp_file = false);
   ParentFile(FileMeta *meta, uint64_t offset, FileBlockMap &fbs, bool tmp_file);
   ~ParentFile();
@@ -40,6 +34,7 @@ class ParentFile {
   bool tmp_file() const noexcept { return tmp_file_; }
   bool Recycle();
 };
+typedef std::shared_ptr<ParentFile> ParentFilePtr;
 
 class File : public Inode<FileMeta, FileBlock>,
              public std::enable_shared_from_this<File> {
@@ -57,9 +52,9 @@ class File : public Inode<FileMeta, FileBlock>,
   int ShrinkFile(uint64_t offset);
 
  public:
-  File();
-  File(FileMeta *meta);
-  virtual ~File();
+  File(): nlink_(0) {}
+  File(FileMeta *meta): Inode(meta), nlink_(0) {}
+  virtual ~File() = default;
   bool Release();
   bool ReleaseNolock();
 

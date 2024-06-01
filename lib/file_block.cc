@@ -1,8 +1,9 @@
+#include "file_block.h"
+
 #include "file_system.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 void FileBlock::ClearMeta(FileBlockMeta *meta) {
   LOG(INFO) << "clear file block index: " << meta->index_
@@ -82,5 +83,4 @@ bool FileBlock::ReleaseMyself() {
   FileSystem::Instance()->file_block_handle()->PutFileBlockLock(index_);
   return true;
 }
-}  // namespace blockfs
-}  // namespace udisk
+}

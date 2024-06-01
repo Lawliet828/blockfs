@@ -111,14 +111,6 @@ bool ParentFile::Recycle() {
   return true;
 }
 
-File::File() : nlink_(0) {}
-
-File::File(FileMeta *meta) : Inode(meta), nlink_(0) {}
-
-File::~File() {
-  // 如果有打开的文件需要处理
-}
-
 int File::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->file_handle()->RunInMetaGuard([this, to] {

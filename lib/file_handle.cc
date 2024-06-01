@@ -48,7 +48,7 @@ bool FileHandle::InitializeMeta() {
         LOG(ERROR) << "file meta " << fh << " used but name empty";
         return false;
       }
-      if (unlikely(meta->fh_ != static_cast<int32_t>(fh))) {
+      if (meta->fh_ != static_cast<int32_t>(fh)) [[unlikely]] {
         LOG(ERROR) << "file meta " << fh << " used but fh invalid";
         return false;
       }

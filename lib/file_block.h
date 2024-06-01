@@ -1,6 +1,4 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_BLOCK_H
-#define LIB_BLOCK_H
+#pragma once
 
 #include <assert.h>
 
@@ -75,4 +73,3 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
 typedef std::shared_ptr<FileBlock> FileBlockPtr;
 
 }
-#endif

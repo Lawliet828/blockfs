@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <atomic>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -24,9 +23,9 @@ class Inode {
   bool deleted_;
 
  public:
-  Inode() {}
+  Inode() = default;
   Inode(MetaName *meta) : meta_(meta) {}
-  virtual ~Inode() {}
+  virtual ~Inode() = default;
 
   void set_meta(MetaName *meta) noexcept { meta_ = meta; }
   MetaName *meta() noexcept { return meta_; }
@@ -45,7 +44,7 @@ class Inode {
   virtual void set_ctime(time_t time) noexcept {};
   virtual time_t ctime() noexcept { return 0; };
 
-  virtual void stat(struct stat *buf) { return; }
+  virtual void stat(struct stat *buf) = 0;
   virtual int rename(const std::string &to) { return 0; }
 
   virtual bool UpdateMeta() { return false; }
