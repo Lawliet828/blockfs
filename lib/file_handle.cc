@@ -40,7 +40,6 @@ bool FileHandle::InitializeMeta() {
       }
       LOG(DEBUG) << "file handle: " << fh << " name: " << meta->file_name_
                  << " size: " << meta->size_ << " dh: " << meta->dh_
-                 << " seq_no: " << meta->seq_no_
                  << " child_fh: " << meta->child_fh_
                  << " parent_fh: " << meta->parent_fh_;
       if (unlikely(::strnlen(meta->file_name_, sizeof(meta->file_name_)) ==

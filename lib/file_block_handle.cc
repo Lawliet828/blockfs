@@ -26,7 +26,6 @@ bool FileBlockHandle::InitializeMeta() {
                  << " read crc: " << meta->crc_ << "\n"
                  << " cal crc: " << crc << "\n"
                  << " used: " << meta->used_ << "\n"
-                 << " seq_no: " << meta->seq_no_ << "\n"
                  << " fh: " << meta->fh_ << "\n"
                  << " padding: " << meta->padding_ << "\n"
                  << " used_block_num:" << meta->used_block_num_;

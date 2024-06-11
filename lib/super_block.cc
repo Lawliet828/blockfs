@@ -233,7 +233,6 @@ void SuperBlock::Dump() noexcept {
             << "crc: " << meta()->crc_ << "\n"
             << "uuid: " << meta()->uuid_ << "\n"
             << "magic: " << meta()->magic_ << "\n"
-            << "seq_no: " << meta()->seq_no_ << "\n"
             << "max_file_num: " << meta()->max_file_num << "\n"
             << "max_udisk_size: " << meta()->max_support_udisk_size_ << "\n"
             << "block_size: " << meta()->block_size_ << "\n"

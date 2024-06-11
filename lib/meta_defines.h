@@ -69,8 +69,6 @@ typedef int32_t dh_t;
 typedef uint64_t seq_t;
 
 static const seq_t kReservedUnusedSeq = 0;  // 0 is reserved sequence
-static const seq_t kMinUnCommittedSeq = 1;  // 1 is always committed
-static const seq_t kMaxUnCommittedSeq = UINT64_MAX;
 
 /* 文件系统的超级块
  * 大小: 4K
@@ -82,7 +80,6 @@ union SuperBlockMeta {
     uint32_t crc_;
     char uuid_[kUUIDSize];  // mfs uuid -> /dev/vdc
     uint32_t magic_;                  // bfs magic
-    seq_t seq_no_;                    // bfs sequenece
     // mfs consts
     uint64_t max_file_num;             // max supported dirs or files 10w
     uint64_t max_support_udisk_size_;  // max supported udisk size 128T
