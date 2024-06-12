@@ -39,8 +39,6 @@ fuse配置项：
 
 fuse_debug 必须配置，是否开启fuse debug信息打印
 
-fuse_auto_unmount 选配，mount进程挂掉自动umount fuse，默认true
-
 fuse_attribute_timeout 选配，默认是5.0s
 
 fuse_entry_timeout 选配，默认是5.0s
@@ -57,7 +55,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58499 20210202 14:51:29.774464Z][INFO][lib/config_load.cc:54] fuse_debug: false
 [58499 20210202 14:51:29.774471Z][INFO][lib/config_load.cc:63] fuse mount point: /home/luotang/bfs/
 [58499 20210202 14:51:29.774484Z][INFO][lib/config_load.cc:90] fuse new_fuse_thread: false
-[58499 20210202 14:51:29.774488Z][INFO][lib/config_load.cc:96] fuse_auto_unmount: false
 [58499 20210202 14:51:29.774525Z][INFO][lib/block_device.cc:413] device: /dev/. not allowed, skip it
 [58499 20210202 14:51:29.774532Z][INFO][lib/block_device.cc:413] device: /dev/.. not allowed, skip it
 [58499 20210202 14:51:29.774539Z][WARN][lib/block_device.cc:379] master node need to set nomerges flag

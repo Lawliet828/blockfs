@@ -1,12 +1,9 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-
 #include "config_load.h"
 
 #include "config_parser.h"
 #include "logging.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   if (config_path_.empty()) {
@@ -47,19 +44,7 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   }
   LOG(DEBUG) << "fuse_debug: " << config->fuse_debug_;
 
-  if (ini.GetBoolValue("fuse", "fuse_foreground", &config->fuse_foreground_) !=
-      0) {
-    config->fuse_foreground_ = false;
-  }
-  LOG(DEBUG) << "fuse_foreground: " << config->fuse_foreground_;
-
-  if (ini.GetBoolValue("fuse", "fuse_auto_unmount",
-                       &config->fuse_auto_unmount_) != 0) {
-    config->fuse_auto_unmount_ = true;
-  }
-
   return true;
 }
 
-}  // namespace blockfs
-}  // namespace udisk
+}
