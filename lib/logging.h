@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_LOGGER_H_
 #define LIB_LOGGER_H_
 
@@ -75,7 +74,6 @@ class Logger {
   std::string savePath_;  //日志保存目录
   LogLevel logLevel_;     //日志类型
   char buffer_[4096];
-  TimeStamp time_;
 
   static LogLevel min_log_level_;
 };

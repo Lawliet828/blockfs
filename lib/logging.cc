@@ -82,7 +82,7 @@ LogLevel Logger::get_min_level() { return min_log_level_; }
 LogLevel Logger::min_log_level_ = INFO;
 
 Logger::Logger(LogLevel logLevel, const char* FILE, int LINE)
-    : logLevel_(logLevel), time_(TimeStamp::now()) {
+    : logLevel_(logLevel) {
   if (logLevel_ >= min_log_level_) {
     ::memset(buffer_, 0, 4096);
     logName_ += GetCurrentTime(0);
