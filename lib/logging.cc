@@ -7,7 +7,10 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 #include "comm_utils.h"
 #include "current_thread.h"
@@ -116,30 +119,26 @@ void Logger::SetLogName(const std::string& logName) { logName_ = logName; }
 void Logger::SetSavePath(const std::string& savePath) { savePath_ = savePath; }
 
 std::string Logger::GetCurrentTime(int flag) const {
-  int64_t microSecondsSinceEpoch = time_.microSecondsSinceEpoch();
-  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch /
-                                       TimeStamp::kMicroSecondsPerSecond);
-  int microseconds = static_cast<int>(microSecondsSinceEpoch %
-                                      TimeStamp::kMicroSecondsPerSecond);
-  int milliseconds = microseconds / 1000;
-  if (seconds != t_lastSecond) {
-    t_lastSecond = seconds;
-    struct tm tm_time;
-    ::memset(&tm_time, 0, sizeof(struct tm));
+  using namespace std::chrono;
 
-    ::localtime_r(&seconds, &tm_time);
+  // Get current time
+  system_clock::time_point now = system_clock::now();
 
-    int len =
-        snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d",
-                 tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
-                 tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
-    assert(len == 17);
-    (void)len;
-  }
+  // Convert to time_t for use with localtime
+  time_t tt = system_clock::to_time_t(now);
 
-  char time_str[64] = {0};
-  ::snprintf(time_str, sizeof(time_str) - 1, "%s.%03d", t_time, milliseconds);
-  return time_str;
+  // Convert to tm for formatting
+  std::tm tm = *std::localtime(&tt);
+
+  // Get the number of milliseconds from the current time
+  auto duration = now.time_since_epoch();
+  auto millis = duration_cast<milliseconds>(duration).count() % 1000;
+
+  // Format the time and append the milliseconds
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%Y%m%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << millis;
+
+  return oss.str();
 }
 
 void Logger::Append(const char* buf, unsigned int len) {

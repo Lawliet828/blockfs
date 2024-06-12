@@ -39,9 +39,6 @@ class TimeStamp {
 
   // default copy/assignment/dtor are Okay
 
-  std::string toString() const;
-  std::string toFormattedString(bool showMicroseconds = true) const;
-
   bool valid() const { return microSecondsSinceEpoch_ > 0; }
 
   // for internal usage.
@@ -55,14 +52,6 @@ class TimeStamp {
   /// Get time of now.
   ///
   static TimeStamp now();
-  static TimeStamp invalid() { return TimeStamp(); }
-
-  static TimeStamp fromUnixTime(time_t t) { return fromUnixTime(t, 0); }
-
-  static TimeStamp fromUnixTime(time_t t, int microseconds) {
-    return TimeStamp(static_cast<int64_t>(t) * kMicroSecondsPerSecond +
-                     microseconds);
-  }
 
   static const int kMicroSecondsPerSecond = 1000 * 1000;
 
@@ -83,30 +72,6 @@ inline bool operator<(TimeStamp lhs, TimeStamp rhs) {
 inline bool operator==(TimeStamp lhs, TimeStamp rhs) {
   return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
 }
-
-///
-/// Gets time difference of two TimeStamps, result in seconds.
-///
-/// @param high, low
-/// @return (high-low) in seconds
-/// @c double has 52-bit precision, enough for one-microsecond
-/// resolution for next 100 years.
-inline double timeDifference(TimeStamp high, TimeStamp low) {
-  int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
-  return static_cast<double>(diff) / TimeStamp::kMicroSecondsPerSecond;
-}
-
-///
-/// Add @c seconds to given TimeStamp.
-///
-/// @return TimeStamp+seconds as TimeStamp
-///
-// static inline TimeStamp addTime(TimeStamp TimeStamp, double seconds)
-// {
-//   int64_t delta = static_cast<int64_t>(seconds *
-//   TimeStamp::kMicroSecondsPerSecond); return
-//   TimeStamp(TimeStamp.microSecondsSinceEpoch() + delta);
-// }
 
 }  // namespace blockfs
 }  // namespace udisk

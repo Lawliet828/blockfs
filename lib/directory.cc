@@ -1,5 +1,7 @@
 #include "directory.h"
 
+#include <chrono>
+
 #include "file_system.h"
 #include "logging.h"
 
@@ -27,10 +29,10 @@ void Directory::stat(struct stat *buf) {
 }
 
 void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
-  TimeStamp ts = TimeStamp::now();
-  int64_t microSecondsSinceEpoch = ts.microSecondsSinceEpoch();
-  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch /
-                                       TimeStamp::kMicroSecondsPerSecond);
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
   if (a) set_atime(seconds);
   if (m) set_mtime(seconds);
   if (c) set_ctime(seconds);
