@@ -1,21 +1,11 @@
 #include "comm_utils.h"
 
 #include <dirent.h>
-#include <limits.h>
-#include <mntent.h>
 #include <signal.h>
 #include <string.h>
-#include <sys/mount.h>
-#include <sys/prctl.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include <filesystem>
-#include <vector>
-
-#include "logging.h"
 
 namespace udisk::blockfs {
 

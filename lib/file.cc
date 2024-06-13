@@ -927,10 +927,9 @@ int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
   }
 
   // 减少时间戳更新的次数
-  auto now = std::chrono::system_clock::now();
-  auto duration = now.time_since_epoch();
-  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+  using namespace std::chrono;
+  system_clock::time_point now = system_clock::now();
+  time_t seconds = system_clock::to_time_t(now);
   if (seconds % 2 == 0) {
     file_->UpdateTimeStamp(seconds);
   }

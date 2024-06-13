@@ -16,9 +16,9 @@ FileSystem::FileSystem() {}
 
 FileSystem::~FileSystem() { Destroy(); }
 
-FileSystem *FileSystem::g_instance = new FileSystem();
+FileSystem* FileSystem::g_instance = new FileSystem();
 
-FileSystem *FileSystem::Instance() { return g_instance; }
+FileSystem* FileSystem::Instance() { return g_instance; }
 
 /**
  * mount the blockfs filesystem
@@ -176,10 +176,8 @@ int32_t FileSystem::StatVFS(struct statvfs* buf) {
   // f_namemax: 最大文件长度
   buf->f_namemax = super_meta()->max_file_name_len_;
   LOG(DEBUG) << "statvfs f_bsize: " << buf->f_bsize
-             << " f_blocks: " << buf->f_blocks
-             << " f_bfree: " << buf->f_bfree
-             << " f_files: " << buf->f_files
-             << " f_ffree: " << buf->f_ffree;
+             << " f_blocks: " << buf->f_blocks << " f_bfree: " << buf->f_bfree
+             << " f_files: " << buf->f_files << " f_ffree: " << buf->f_ffree;
   return 0;
 }
 
@@ -197,7 +195,7 @@ int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
  * \return success or failed
  */
 int32_t FileSystem::RenamePath(const std::string& oldpath,
-                              const std::string& newpath) {
+                               const std::string& newpath) {
   LOG(INFO) << "old path: " << oldpath << " newpath: " << newpath;
   if (unlikely(oldpath.empty() || newpath.empty())) {
     LOG(ERROR) << "rename path error, oldpath: " << oldpath
@@ -257,8 +255,8 @@ int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
 }
 
 int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
-  LOG(INFO) << "pread file fd: " << fd << " len: " << len << " offset: "
-            << offset;
+  LOG(INFO) << "pread file fd: " << fd << " len: " << len
+            << " offset: " << offset;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     errno = ENOENT;
@@ -268,9 +266,9 @@ int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
 }
 
 int64_t FileSystem::PwriteFile(ino_t fd, const void* buf, size_t len,
-                              off_t offset) {
-  LOG(INFO) << "pwrite file fd: " << fd << " len: " << len << " offset: "
-            << offset;
+                               off_t offset) {
+  LOG(INFO) << "pwrite file fd: " << fd << " len: " << len
+            << " offset: " << offset;
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     errno = ENOENT;
@@ -290,7 +288,8 @@ off_t FileSystem::SeekFile(ino_t fd, off_t offset, int whence) {
 }
 
 int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
-  OpenFilePtr open_file = FileSystem::Instance()->file_handle()->GetOpenFile(fd);
+  OpenFilePtr open_file =
+      FileSystem::Instance()->file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
     return -1;
@@ -443,7 +442,8 @@ bool FileSystem::Format(const std::string& dev_name) {
  *
  * \return success or failed
  */
-bool FileSystem::Check(const std::string& dev_name, const std::string &log_level) {
+bool FileSystem::Check(const std::string& dev_name,
+                       const std::string& log_level) {
   Logger::set_min_level(Logger::LogLevelConvert(log_level));
   if (!Initialize()) {
     return false;
@@ -482,7 +482,8 @@ int EasyReaddir(const std::string& dir, std::set<std::string>* out) {
 bool FileSystem::OpenTarget(const std::string& uuid) {
   const std::string kBlockDevivePath = "/sys/block";
   try {
-    for (const auto& entry : std::filesystem::directory_iterator(kBlockDevivePath)) {
+    for (const auto& entry :
+         std::filesystem::directory_iterator(kBlockDevivePath)) {
       if (!device_->Open("/dev/" + entry.path().filename().string())) {
         continue;
       }
@@ -553,4 +554,4 @@ void FileSystem::DumpFileMeta(const std::string& path) {
   }
 }
 
-}
+}  // namespace udisk::blockfs
