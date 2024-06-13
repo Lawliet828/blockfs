@@ -16,6 +16,7 @@
 #include "comm_utils.h"
 #include "file_system.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -109,7 +110,7 @@ class UDiskBFS {
 };
 
 void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  LOG(INFO) << "call mfs_lookup parent: " << parent << " name: " << name;
+  SPDLOG_INFO("call mfs_lookup parent: {} name: {}", parent, name);
 
   struct fuse_entry_param e;
   ::memset(&e, 0, sizeof(e));
@@ -135,7 +136,7 @@ void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
 static int mfs_getattr(const char *path, struct stat *stbuf,
                        struct fuse_file_info *fi)
 {
-  LOG(INFO) << "call mfs_getattr file: " << path;
+  SPDLOG_INFO("call mfs_getattr file: {}", path);
 
   int res;
 
@@ -286,7 +287,7 @@ static int mfs_truncate(const char *path, off_t size,
   if (nullptr == path || size < 0) [[unlikely]] {
     return -EINVAL;
   }
-  LOG(INFO) << "call mfs_truncate file: " << path;
+  SPDLOG_INFO("call mfs_truncate file: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -354,7 +355,7 @@ static int mfs_open(const char *path, struct fuse_file_info *fi) {
   if (nullptr == path) [[unlikely]] {
     return -EINVAL;
   }
-  LOG(INFO) << "call mfs_open file: " << path;
+  SPDLOG_INFO("call mfs_open file: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -381,7 +382,7 @@ static int mfs_open(const char *path, struct fuse_file_info *fi) {
  */
 static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
                     struct fuse_file_info *fi) {
-  LOG(INFO) << "call mfs_read file: " << path;
+  SPDLOG_INFO("call mfs_read file: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -413,7 +414,7 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
  */
 static int mfs_write(const char *path, const char *buf, size_t size,
                      off_t offset, struct fuse_file_info *fi) {
-  LOG(INFO) << "call mfs_write file: " << path;
+  SPDLOG_INFO("call mfs_write file: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;

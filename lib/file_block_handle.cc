@@ -27,7 +27,6 @@ bool FileBlockHandle::InitializeMeta() {
                  << " cal crc: " << crc << "\n"
                  << " used: " << meta->used_ << "\n"
                  << " fh: " << meta->fh_ << "\n"
-                 << " padding: " << meta->padding_ << "\n"
                  << " used_block_num:" << meta->used_block_num_;
       for (uint32_t i = 0; i < meta->used_block_num_; ++i) {
         LOG(ERROR) << "block index: " << i

@@ -143,7 +143,6 @@ static_assert(sizeof(DirMeta) == kBlockFsDirMetaSize,
 
 union FileMeta {
   struct {
-    // bool deleted_;
     uint32_t crc_;
     int32_t fh_;
     seq_t seq_no_;
@@ -176,7 +175,6 @@ union FileBlockMeta {
     seq_t seq_no_;
     uint32_t fh_;
     uint32_t file_cut_;
-    uint32_t padding_;
     uint32_t used_block_num_;
     bool used_;
     bool is_temp_;

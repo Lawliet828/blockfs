@@ -49,7 +49,6 @@ class FileSystem {
 
   bool OpenTarget(const std::string &uuid);
   bool InitializeMeta();
-  int MakeMountPoint(const char *mount_point);
   int MakeMountPoint(const std::string &mount_point);
 
  public:

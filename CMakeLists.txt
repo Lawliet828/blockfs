@@ -1,12 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.11)
 project(BlockFS)
 
 set(BLOCK_FS_VERSION_MAJOR 0)
 set(BLOCK_FS_VERSION_MINOR 1)
 
-MESSAGE( STATUS "Build CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+MESSAGE(STATUS "Build CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
 include (${CMAKE_SOURCE_DIR}/deps/cmake/utils.cmake)
+
+if(NOT TARGET spdlog)
+    # Stand-alone build
+    find_package(spdlog REQUIRED)
+endif()
 
 # pkg-config --cflags-only-I fuse3
 # find_package(PkgConfig REQUIRED)

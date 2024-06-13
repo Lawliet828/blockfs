@@ -122,7 +122,7 @@ void daemonize(bool chdir = false, bool close = false) {
   }
 }
 
-void ToolLogPreInit(const std::string &name, const std::string &dirname) {
+void LogPreInit(const std::string &name, const std::string &dirname) {
   static int log_fd = -1;
 
   std::string filename = dirname;
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
   bfs_config_info *conf = FileSystem::Instance()->mount_config();
   conf->fuse_mount_point = mountpoint;
 
-  ToolLogPreInit("block_fs_mount", conf->log_path_);
+  LogPreInit("mfs", conf->log_path_);
 
   // daemonize(true, false);
 

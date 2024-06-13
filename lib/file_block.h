@@ -20,8 +20,10 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   bool ReleaseAll();
   bool ReleaseMyself();
 
-  const int32_t index() const noexcept { return index_; }
+  int32_t index() const noexcept { return index_; }
   FileBlockMeta *meta() const noexcept { return meta_; }
+
+  uint32_t crc() const noexcept { return meta_->crc_; }
 
   void set_file_cut(uint32_t file_cut) noexcept { meta_->file_cut_ = file_cut; }
   uint32_t file_cut() const noexcept { return meta_->file_cut_; }
@@ -40,7 +42,7 @@ class FileBlock : public std::enable_shared_from_this<FileBlock> {
   }
   uint32_t used_block_num() const noexcept { return meta_->used_block_num_; }
 
-  const uint32_t get_block_id(const uint32_t block_index) const noexcept {
+  uint32_t get_block_id(const uint32_t block_index) const noexcept {
     assert(block_index < kFileBlockCapacity);
     return meta_->block_id_[block_index];
   }

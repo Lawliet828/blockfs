@@ -3,6 +3,7 @@
 #include "crc.h"
 #include "file_system.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -130,8 +131,7 @@ bool FileHandle::TransformPath(const std::string &filename,
   }
   new_dirname = GetDirName(file_name);
   new_filename = GetFileName(file_name);
-  LOG(INFO) << "transformPath dirname: " << new_dirname;
-  LOG(INFO) << "transformPath filename: " << new_filename;
+  SPDLOG_INFO("transformPath dirname: {}, filename: {}", new_dirname, new_filename);
   if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {
     LOG(ERROR) << "file name exceed size: " << new_filename;
     errno = ENAMETOOLONG;

@@ -9,6 +9,7 @@
 #include <mutex>
 
 #include "file_system.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -26,8 +27,8 @@ bool File::WriteMeta(int32_t fh) {
   meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                      FileSystem::Instance()->super_meta()->file_meta_size_ -
                          sizeof(meta->crc_));
-  LOG(INFO) << "write file meta, name: " << meta->file_name_ << " fh: " << fh
-            << " align_index: " << align_index << " crc: " << meta->crc_;
+  uint32_t crc = meta->crc_;
+  SPDLOG_INFO("write file meta, name: {} fh: {} align_index: {} crc: {}", meta->file_name_, fh, align_index, crc);
   // TODO: 需要全局统一枷锁
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
@@ -41,7 +42,8 @@ bool File::WriteMeta(int32_t fh) {
 }
 
 void File::ClearMeta(FileMeta *meta) {
-  LOG(INFO) << "clear file name: " << meta->file_name_ << " fh: " << meta->fh_;
+  int32_t fh = meta->fh_;
+  SPDLOG_INFO("clear file meta, name: {} fh: {}", meta->file_name_, fh);
   meta->used_ = false;
   meta->is_temp_ = false;
   meta->size_ = 0;
@@ -114,7 +116,7 @@ bool ParentFile::Recycle() {
 int File::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->file_handle()->RunInMetaGuard([this, to] {
-        LOG(INFO) << "rename old name: " << file_name() << " to: " << to;
+        SPDLOG_INFO("rename file name: {} to: {}", file_name(), to);
         // 先把之前的文件映射去掉
         const DirectoryPtr &old_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());
@@ -227,8 +229,7 @@ bool File::AddFileBlockLock(const FileBlockPtr &fb) noexcept {
 bool File::AddFileBlockNoLock(const FileBlockPtr &fb) noexcept {
   auto it = item_maps_.find(fb->file_cut());
   if (it != item_maps_.end()) [[unlikely]] {
-    LOG(INFO) << file_name()
-              << " failed to add fb because already exist: " << fb->index();
+    SPDLOG_INFO("{} failed to add fb because already exist: {}", file_name(), fb->index());
     return false;
   }
   item_maps_[fb->file_cut()] = fb;
@@ -253,8 +254,7 @@ bool File::RemoveAllFileBlock() {
 }
 
 FileBlockPtr File::GetFileBlock(int32_t file_cut) {
-  LOG(INFO) << file_name() << " get file block cut: " << file_cut
-            << " file block size: " << item_maps_.size();
+  SPDLOG_INFO("{} get file block cut: {} file block size: {}", file_name(), file_cut, item_maps_.size());
   auto iter = item_maps_.find(file_cut);
   if (iter == item_maps_.end()) [[unlikely]] {
     LOG(ERROR) << "cannot find file cut: " << file_cut;
@@ -273,8 +273,7 @@ int File::ExtendFile(uint64_t offset) {
   }
   // 计算需要扩大偏移的位置
   uint64_t expand_size = offset - meta_->size_;
-  LOG(INFO) << file_name() << " need expand size: " << expand_size
-            << " offset: " << offset << " current size: " << meta_->size_;
+  SPDLOG_INFO("{} need expand size: {} offset: {} current size: {}", file_name(), expand_size, offset, file_size());
 
   // 1. Count last block space left
   uint64_t last_block_left;
@@ -342,13 +341,9 @@ int File::ExtendFile(uint64_t offset) {
   while (block_ids_cursor < block_ids.size()) {
     if (file_block && !file_block->is_block_full()) {
       // 如果fileblock没有填满,并且blockid还没填充使用完
-      LOG(INFO) << file_name() << " fill file block, used_block_num: "
-                << file_block->used_block_num()
-                << " block id: " << block_ids[block_ids_cursor];
+      SPDLOG_INFO("{} fill file block, used_block_num: {} block id: {}", file_name(), file_block->used_block_num(), block_ids[block_ids_cursor]);
       file_block->add_block_id(block_ids[block_ids_cursor++]);
-      LOG(INFO) << file_name() << " fill file block, used_block_num: "
-                << file_block->used_block_num() << " left block ids num: "
-                << (block_ids.size() - block_ids_cursor);
+      SPDLOG_INFO("{} fill file block, used_block_num: {} left block ids num: {}", file_name(), file_block->used_block_num(), (block_ids.size() - block_ids_cursor));
     } else {
       LOG(ERROR) << file_name() << " file block is full";
       return -1;
@@ -421,7 +416,7 @@ bool File::CopyData(uint32_t src_block_id, uint32_t dst_block_id,
     offset += data_len;
   }
   ret = FileSystem::Instance()->dev()->Fsync();
-  LOG(INFO) << file_name() << " copy data success";
+  SPDLOG_INFO("{} copy data success", file_name());
   return (ret == 0);
 }
 
@@ -537,7 +532,7 @@ int File::ShrinkFile(uint64_t offset) {
                     0, block_offset)) {
         return -1;
       }
-      LOG(INFO) << file_name() << " file_block_num: " << file_block_num;
+      SPDLOG_INFO("{} file_block_num: {}", file_name(), file_block_num);
       // 填充到申请最后一个fileblock
       new_fb = file_block;
       new_fb->add_block_id(new_block_id);
@@ -600,8 +595,7 @@ int File::ShrinkFile(uint64_t offset) {
 
 int File::ftruncate(uint64_t offset) {
   std::lock_guard<std::mutex> lock(mutex_);
-  LOG(INFO) << "file name: " << file_name() << " size: " << meta_->size_
-            << " ftruncate offset: " << offset;
+  SPDLOG_INFO("file name: {} file size: {} ftruncate offset: {}", file_name(), file_size(), offset);
   if (offset > file_size()) {
     return ExtendFile(offset);
   } else if (offset < file_size()) {
@@ -638,8 +632,7 @@ off_t OpenFile::lseek(off_t offset, int whence) {
   /* get current file position */
   off_t current_pos = append_pos();
 
-  LOG(DEBUG) << file_->file_name() << " lseek fh: " << file_->fh()
-               << " offset: " << current_pos;
+  SPDLOG_DEBUG("{} lseek fh: {} offset: {}", file_->file_name(), file_->fh(), current_pos);
 
   switch (whence) {
     case SEEK_SET:
@@ -689,10 +682,7 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
 }
 
 int64_t OpenFile::FileReader::ReadBlockData(BlockData *block) {
-  LOG(INFO) << open_file_->file()->file_name()
-            << " read udisk offset: " << block->dev_offset
-            << " read size: " << block->read_size_ << " buffer addr: 0x"
-            << (uint64_t)block->extern_buffer;
+  SPDLOG_INFO("{} read udisk offset: {} read size: {} buffer addr: 0x{}", open_file_->file()->file_name(), block->dev_offset, block->read_size_, (uint64_t)block->extern_buffer);
   if (direct_) {
     return FileSystem::Instance()->dev()->PreadDirect(
         block->extern_buffer, block->read_size_, block->dev_offset);
@@ -736,13 +726,8 @@ int64_t OpenFile::FileReader::ReadData() {
         FileSystem::Instance()->super_meta()->block_size_ * block_id +
         block_read_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
-    LOG(INFO) << file->file_name() << " data_start_offset: "
-              << FileSystem::Instance()->super_meta()->block_data_start_offset_
-              << " need read offset: " << curr_read_count
-              << " read block_id: " << block_id
-              << " read block offset: " << block_read_offset
-              << " block_read_size: " << block_read_size
-              << " dev_offset: " << dev_offset;
+    uint64_t block_data_start_offset = FileSystem::Instance()->super_meta()->block_data_start_offset_;
+    SPDLOG_INFO("{} data_start_offset: {} need read offset: {} block_id: {} block_read_offset: {} block_read_size: {} dev_offset: {}", file->file_name(), block_data_start_offset, curr_read_count, block_id, block_read_offset, block_read_size, dev_offset);
     BlockData block {
       .block_id = block_id,
       .extern_buffer = read_buffer_ + curr_read_count,
@@ -752,7 +737,7 @@ int64_t OpenFile::FileReader::ReadData() {
     read_blocks_.emplace_back(block);
     curr_read_count += block_read_size;
     if (curr_read_count >= size_) {
-      LOG(DEBUG) << "finshed fill read block";
+      SPDLOG_DEBUG("finshed fill read block");
       break;
     }
     // 按照block的粒度读取, 处理完一个block即block索引增加
@@ -790,10 +775,7 @@ OpenFile::FileWriter::FileWriter(OpenFilePtr file, void *buffer, uint64_t size,
 }
 
 int64_t OpenFile::FileWriter::WriteBlockData(BlockData *block) {
-  LOG(INFO) << open_file_->file()->file_name()
-            << " write disk offset: " << block->dev_offset
-            << " write size: " << block->write_size_ << " buffer addr: 0x"
-            << (uint64_t)block->extern_buffer;
+  SPDLOG_INFO("{} write disk offset: {} write size: {} buffer addr: 0x{}", open_file_->file()->file_name(), block->dev_offset, block->write_size_, (uint64_t)block->extern_buffer);
   if (direct_) {
     return FileSystem::Instance()->dev()->PwriteDirect(
         block->extern_buffer, block->write_size_, block->dev_offset);
@@ -833,13 +815,8 @@ int64_t OpenFile::FileWriter::WriteData() {
         FileSystem::Instance()->super_meta()->block_size_ * block_id +
         block_write_offset;
     // TODO: 如果连续的block的话,读写可以考虑聚合优化
-    LOG(INFO) << file->file_name() << " data_start_offset: "
-              << FileSystem::Instance()->super_meta()->block_data_start_offset_
-              << " need wirte offset: " << curr_write_count
-              << " block_id: " << block_id
-              << " block_write_offset: " << block_write_offset
-              << " block_write_size: " << block_write_size
-              << " dev_offset: " << dev_offset;
+    uint64_t block_data_start_offset = FileSystem::Instance()->super_meta()->block_data_start_offset_;
+    SPDLOG_INFO("{} data_start_offset: {} need wirte offset: {} block_id: {} block_write_offset: {} block_write_size: {} dev_offset: {}", file->file_name(), block_data_start_offset, curr_write_count, block_id, block_write_offset, block_write_size, dev_offset);
     BlockData block {
       .block_id = block_id,
       .extern_buffer = write_buffer_ + curr_write_count,
@@ -849,7 +826,7 @@ int64_t OpenFile::FileWriter::WriteData() {
     write_blocks_.emplace_back(block);
     curr_write_count += block_write_size;
     if (curr_write_count >= size_) {
-      LOG(DEBUG) << file->file_name() << " finshed fill write block";
+      SPDLOG_DEBUG("{} finshed fill write block", file->file_name());
       break;
     }
     ++block_index_in_file_block;
@@ -882,9 +859,7 @@ int64_t OpenFile::FileWriter::WriteData() {
  * retcount will be less than count only if an error occurs
  * or end of file is reached */
 int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
-  LOG(INFO) << "file name: " << file_->file_name()
-            << " file size: " << file_->file_size() << " pread size: " << size
-            << " offset: " << offset;
+  SPDLOG_INFO("file name: {} file size: {} pread size: {} offset: {}", file_->file_name(), file_->file_size(), size, offset);
   if (size == 0 || offset >= file_->file_size()) [[unlikely]] {
     LOG(WARNING) << file_->file_name() << " read nothing,"
                  << " read size: " << size << " read offset: " << offset
@@ -909,9 +884,7 @@ int64_t OpenFile::pread(void *buf, uint64_t size, uint64_t offset) {
  * allocates new bytes and updates file size as necessary,
  * fills any gaps with zeros */
 int64_t OpenFile::pwrite(const void *buf, uint64_t size, uint64_t offset) {
-  LOG(INFO) << "file name: " << file_->file_name()
-            << " file size: " << file_->file_size() << " pwrite size: " << size
-            << " offset: " << offset;
+  SPDLOG_INFO("file name: {} file size: {} pwrite size: {} offset: {}", file_->file_name(), file_->file_size(), size, offset);
   void *buffer = const_cast<void *>(buf);
   if (size == 0) [[unlikely]] {
     return 0;

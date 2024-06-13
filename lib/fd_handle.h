@@ -3,8 +3,8 @@
 #include <list>
 #include <mutex>
 
-#include "logging.h"
 #include "meta_handle.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -20,7 +20,7 @@ class FdHandle : public MetaHandle {
 
   void set_max_fd_num(int32_t max_fd_num) noexcept {
     META_HANDLE_LOCK();
-    LOG(DEBUG) << "max fd num: " << max_fd_num;
+    SPDLOG_DEBUG("max fd num: {}", max_fd_num);
     for (int32_t index = max_fd_num_; index < max_fd_num; ++index) {
       free_fd_pool_.push_back(index);
     }
@@ -30,21 +30,21 @@ class FdHandle : public MetaHandle {
   int32_t get_fd() noexcept {
     META_HANDLE_LOCK();
     if (free_fd_pool_.empty()) [[unlikely]] {
-      LOG(ERROR) << "fd pool is exhausted";
+      SPDLOG_ERROR("fd pool is exhausted");
       errno = ENFILE;
       return -1;
     }
-    LOG(INFO) << "current fd pool size: " << free_fd_pool_.size();
+    SPDLOG_INFO("current fd pool size: {}", free_fd_pool_.size());
     int32_t fd = free_fd_pool_.front();
     free_fd_pool_.pop_front();
-    LOG(INFO) << "current fd: " << fd << " pool size: " << free_fd_pool_.size();
+    SPDLOG_INFO("current fd: {} pool size: {}", fd, free_fd_pool_.size());
     return fd;
   }
 
   void put_fd(int32_t fd) noexcept {
     META_HANDLE_LOCK();
     if (fd > max_fd_num_) [[unlikely]] {
-      LOG(ERROR) << "fd large than max_fd_num: " << max_fd_num_;
+      SPDLOG_ERROR("fd large than max_fd_num: {}", max_fd_num_);
       return;
     }
     free_fd_pool_.push_back(fd);

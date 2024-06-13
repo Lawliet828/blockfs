@@ -2,6 +2,15 @@
 
 #include "config_parser.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/cfg/env.h"   // support for loading levels from the environment variable
+#include "spdlog/fmt/ostr.h"  // support for user defined types
+#include "spdlog/sinks/rotating_file_sink.h"
+
+#ifdef SPDLOG_ACTIVE_LEVEL
+#undef SPDLOG_ACTIVE_LEVEL
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+#endif
 
 namespace udisk::blockfs {
 
@@ -25,9 +34,18 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   }
   LOG(DEBUG) << "log level: " << config->log_level_;
   if (ini.GetStringValue("common", "log_path", &config->log_path_) != 0) {
-    config->log_path_ = "/var/log/bfs/";
+    config->log_path_ = "/var/log/mfs/";
   }
   LOG(DEBUG) << "log path: " << config->log_path_;
+  // Create a file rotating logger with 100 MB size max and 3 rotated files
+  auto max_size = 1024 * 1024 * 100;
+  auto max_files = 3;
+  auto logger = spdlog::rotating_logger_mt("mfs_spdlog", "/var/log/mfs/mfs_spdlog.log", max_size, max_files);
+  spdlog::set_default_logger(logger);
+  spdlog::set_level(spdlog::level::debug);
+  // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
+  spdlog::set_pattern("%Y%m%d %H:%M:%S.%e %t %l %@ %! - %v");
+  SPDLOG_INFO("Welcome to spdlog version {}.{}.{}!", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 
   Logger::set_min_level(Logger::LogLevelConvert(config->log_level_));
 
@@ -42,7 +60,7 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {
     config->fuse_debug_ = false;
   }
-  LOG(DEBUG) << "fuse_debug: " << config->fuse_debug_;
+  SPDLOG_DEBUG("fuse_debug: {}", config->fuse_debug_);
 
   return true;
 }

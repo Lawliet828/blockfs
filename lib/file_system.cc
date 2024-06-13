@@ -9,6 +9,7 @@
 
 #include "config_load.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -104,13 +105,12 @@ block_fs_dirent* FileSystem::ReadDirectory(BLOCKFS_DIR* dir) {
  * \return success or failed
  */
 int32_t FileSystem::StatPath(const std::string& path, struct stat* buf) {
-  LOG(INFO) << "stat path: " << path;
   if (unlikely(path.empty())) {
     LOG(ERROR) << "stat path empty";
     errno = EINVAL;
     return -1;
   }
-  LOG(INFO) << "stat path: " << path;
+  SPDLOG_INFO("stat path: {}", path);
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断
@@ -196,7 +196,7 @@ int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
  */
 int32_t FileSystem::RenamePath(const std::string& oldpath,
                                const std::string& newpath) {
-  LOG(INFO) << "old path: " << oldpath << " newpath: " << newpath;
+  SPDLOG_INFO("rename path: {} to {}", oldpath, newpath);
   if (unlikely(oldpath.empty() || newpath.empty())) {
     LOG(ERROR) << "rename path error, oldpath: " << oldpath
                << " newpath: " << newpath;
@@ -224,7 +224,7 @@ int32_t FileSystem::RenamePath(const std::string& oldpath,
 }
 
 int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
-  LOG(INFO) << "truncate file: " << filename << " len: " << size;
+  SPDLOG_INFO("truncate file: {} len: {}", filename, size);
   FilePtr file = file_handle()->GetCreatedFile(filename);
   if (!file) {
     errno = ENOENT;
@@ -234,7 +234,7 @@ int32_t FileSystem::TruncateFile(const std::string& filename, int64_t size) {
 }
 
 int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
-  LOG(INFO) << "truncate file fd: " << fd << " len: " << size;
+  SPDLOG_INFO("truncate file fd: {} len: {}", fd, size);
   // 两个操作在一个锁范围
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) [[unlikely]] {
@@ -245,7 +245,7 @@ int32_t FileSystem::TruncateFile(const int32_t fd, int64_t size) {
 }
 
 int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
-  LOG(INFO) << "read file fd: " << fd << " len: " << len;
+  SPDLOG_INFO("read file fd: {} len: {}", fd, len);
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -255,8 +255,7 @@ int64_t FileSystem::ReadFile(int32_t fd, void* buf, size_t len) {
 }
 
 int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
-  LOG(INFO) << "pread file fd: " << fd << " len: " << len
-            << " offset: " << offset;
+  SPDLOG_INFO("pread file fd: {} len: {} offset: {}", fd, len, offset);
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     errno = ENOENT;
@@ -267,8 +266,7 @@ int64_t FileSystem::PreadFile(ino_t fd, void* buf, size_t len, off_t offset) {
 
 int64_t FileSystem::PwriteFile(ino_t fd, const void* buf, size_t len,
                                off_t offset) {
-  LOG(INFO) << "pwrite file fd: " << fd << " len: " << len
-            << " offset: " << offset;
+  SPDLOG_INFO("pwrite file fd: {} len: {} offset: {}", fd, len, offset);
   OpenFilePtr open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     errno = ENOENT;
@@ -278,7 +276,7 @@ int64_t FileSystem::PwriteFile(ino_t fd, const void* buf, size_t len,
 }
 
 off_t FileSystem::SeekFile(ino_t fd, off_t offset, int whence) {
-  LOG(INFO) << "lseek file fd: " << fd << " offset: " << offset;
+  SPDLOG_INFO("lseek file fd: {} offset: {}", fd, offset);
   const OpenFilePtr& open_file = file_handle()->GetOpenFile(fd);
   if (!open_file) {
     // errno = ENOENT;
@@ -407,7 +405,7 @@ bool FileSystem::FormatFSData() {
       break;
     }
   }
-  LOG(INFO) << "format data zero success";
+  SPDLOG_INFO("format data zero success");
   return true;
 }
 
@@ -521,16 +519,8 @@ bool FileSystem::InitializeMeta() {
  *
  * \return true or false
  */
-int FileSystem::MakeMountPoint(const char* mount_point) {
-  LOG(INFO) << "create fs mount point: " << mount_point;
-  if (!dir_handle()->GetCreatedDirectory(mount_point)) {
-    return dir_handle()->CreateDirectory(mount_point);
-  }
-  return 0;
-}
-
 int FileSystem::MakeMountPoint(const std::string& mount_point) {
-  LOG(INFO) << "create fs mount point: " << mount_point;
+  SPDLOG_INFO("create fs mount point: {}", mount_point);
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
     return dir_handle()->CreateDirectory(mount_point);
   }
@@ -538,7 +528,7 @@ int FileSystem::MakeMountPoint(const std::string& mount_point) {
 }
 
 void FileSystem::DumpFileMeta(const std::string& path) {
-  LOG(INFO) << "dump file meta: " << path;
+  SPDLOG_INFO("dump file meta: {}", path);
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断
