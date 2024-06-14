@@ -36,8 +36,4 @@ std::string GetParentDirName(const std::string &path) {
   return GetDirName(parent);
 }
 
-bool RunAsAdmin() {
-  return (::geteuid() == 0);                    // true, is root
-}
-
 }

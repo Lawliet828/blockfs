@@ -16,7 +16,5 @@ std::string GetFileName(const std::string &path);
 std::string GetDirName(const std::string &path);
 std::string GetParentDirName(const std::string &path);
 
-bool RunAsAdmin();
-
 }
 #endif

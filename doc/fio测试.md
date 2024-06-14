@@ -1,7 +1,7 @@
 配置：
 
 4核8G
-40G RSSD数据盘
+40G RSSD数据盘 QOS iops:100000 bw:800MB/s
 
 write-iops
 fio --name=4k_rw --ioengine=libaio --blocksize=4k --readwrite=randwrite --filesize=64M --numjobs=4 --iodepth=32 --direct=1 --group_reporting -time_based=1 -runtime=90
@@ -30,15 +30,10 @@ fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bs=4k -size=512M -numjobs
    READ: bw=226MiB/s (237MB/s), 226MiB/s-226MiB/s (237MB/s-237MB/s), io=64.0MiB (67.1MB), run=283-283msec
   WRITE: bw=188MiB/s (197MB/s), 188MiB/s-188MiB/s (197MB/s-197MB/s), io=32.1MiB (33.7MB), run=171-171msec
 
-4K随机读写
 ```
-fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bsrange=1k-16k -size=1G -numjobs=8 -group_reporting -fallocate=none -name=Test4KRandRW -verify=md5 --do_verify=1 --verify_fatal=1
+fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bsrange=1k-16k -size=1G -numjobs=8 -group_reporting -fallocate=none -name=4KRandRW -verify=md5 --do_verify=1 --verify_fatal=1
 ```
 
-2024/05/29 18:00 rssd云盘
-   READ: bw=230KiB/s (235kB/s), 230KiB/s-230KiB/s (235kB/s-235kB/s), io=256MiB (268MB), run=1141351-1141351msec
-  WRITE: bw=174KiB/s (178kB/s), 174KiB/s-174KiB/s (178kB/s-178kB/s), io=129MiB (135MB), run=758849-758849msec
-
-2024/06/14 00:55 rssd云盘 读写流程使用spdlog
-   READ: bw=173MiB/s (181MB/s), 173MiB/s-173MiB/s (181MB/s-181MB/s), io=256MiB (268MB), run=1481-1481msec
-  WRITE: bw=118MiB/s (124MB/s), 118MiB/s-118MiB/s (124MB/s-124MB/s), io=129MiB (135MB), run=1088-1088msec
+2024/06/14 16:15 rssd云盘 使用spdlog
+   READ: bw=187MiB/s (196MB/s), 187MiB/s-187MiB/s (196MB/s-196MB/s), io=8192MiB (8590MB), run=43733-43733msec
+  WRITE: bw=139MiB/s (146MB/s), 139MiB/s-139MiB/s (146MB/s-146MB/s), io=4096MiB (4295MB), run=29508-29508msec

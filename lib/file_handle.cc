@@ -24,7 +24,7 @@ bool FileHandle::InitializeMeta() {
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                          FileSystem::Instance()->super_meta()->file_meta_size_ -
                              sizeof(meta->crc_));
-    if (unlikely(meta->crc_ != crc)) {
+    if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "file meta " << fh << " crc error, read:" << meta->crc_
                  << " cal: " << crc << " file name: " << meta->file_name_;
       return false;
@@ -68,7 +68,7 @@ bool FileHandle::InitializeMeta() {
       const DirectoryPtr &dir =
           FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(
               meta->dh_);
-      if (unlikely(!dir)) {
+      if (!dir) [[unlikely]] {
         LOG(ERROR) << "file meta " << fh << " cannot find parent directory";
         return false;
       }
@@ -150,9 +150,9 @@ bool FileHandle::TransformPath(const std::string &filename,
  */
 FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
   META_HANDLE_LOCK();
-  if (unlikely(free_metas_.empty())) {
+  if (free_metas_.empty()) [[unlikely]] {
     LOG(WARNING) << "file meta not enough";
-    block_fs_set_errno(ENFILE);
+    errno = ENFILE;
     return nullptr;
   }
   int32_t fh = free_metas_.front();
@@ -164,7 +164,7 @@ FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
     LOG(ERROR) << "new file meta invalid, used: " << meta->used_
                << " size: " << meta->size_ << " fh: " << meta->fh_
                << " wanted fh: " << fh;
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return nullptr;
   }
   meta->used_ = true;
@@ -505,7 +505,6 @@ int FileHandle::UnlinkFileNolock(const ino_t fh) {
     return -1;
   }
 
-  // 同步从节点
   LOG(INFO) << "remove file success: " << file->file_name();
   block_fs_set_errno(0);
   return 0;

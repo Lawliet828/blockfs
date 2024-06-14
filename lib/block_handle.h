@@ -3,9 +3,11 @@
 #include <new>
 #include <shared_mutex>
 #include <vector>
+#include <unordered_set>
 
 #include "device.h"
 #include "meta_handle.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -37,17 +39,29 @@ class BlockHandle : public MetaHandle {
   const uint32_t max_block_num() const noexcept { return max_block_num_; }
 
   const uint64_t GetFreeBlockNum() {
-    META_HANDLE_LOCK();
+    std::lock_guard<std::mutex> lock(mutex_);
     return block_id_pool_.size();
   }
 
   // 主要用于元数据加载,不需要加锁
-  bool GetSpecificBlockId(uint32_t block_id);
+  bool GetSpecificBlockId(uint32_t block_id) {
+    if (block_id_pool_.contains(block_id)) {
+      block_id_pool_.erase(block_id);
+      return true;
+    } else {
+      SPDLOG_CRITICAL("block id: {} cannot be in used", block_id);
+      return false;
+    }
+  }
 
   bool GetFreeBlockIdLock(uint32_t block_id_num,
                           std::vector<uint32_t> *block_ids);
 
-  bool PutFreeBlockIdLock(uint32_t block_id);
+  bool PutFreeBlockIdLock(uint32_t block_id) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    block_id_pool_.emplace(block_id);
+    return true;
+  }
   bool PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids);
 
   virtual bool InitializeMeta() override;

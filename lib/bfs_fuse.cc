@@ -1177,7 +1177,7 @@ void UDiskBFS::FuseLoop(bfs_config_info *info) {
 }
 
 void block_fs_fuse_mount(bfs_config_info *info) {
-  if (!RunAsAdmin()) {
+  if (::geteuid() != 0) {
     LOG(ERROR) << "fuse mount requires root privileges";
     return;
   }

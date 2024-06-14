@@ -1,7 +1,6 @@
 #include "block_handle.h"
 
 #include "file_system.h"
-#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -15,20 +14,9 @@ bool BlockHandle::InitializeMeta() {
   return true;
 }
 
-bool BlockHandle::GetSpecificBlockId(uint32_t block_id) {
-  auto iter = block_id_pool_.find(block_id);
-  if (iter != block_id_pool_.end()) {
-    block_id_pool_.erase(block_id);
-    return true;
-  } else {
-    SPDLOG_CRITICAL("block id: {} cannot be in used", block_id);
-    return false;
-  }
-}
-
 bool BlockHandle::GetFreeBlockIdLock(uint32_t block_id_num,
                                      std::vector<uint32_t> *block_ids) {
-  META_HANDLE_LOCK();
+  std::lock_guard<std::mutex> lock(mutex_);
   if (block_id_pool_.size() < block_id_num) [[unlikely]] {
     SPDLOG_ERROR("block id not enough, left: {} wanted: {}",
                  block_id_pool_.size(), block_id_num);
@@ -47,23 +35,17 @@ bool BlockHandle::GetFreeBlockIdLock(uint32_t block_id_num,
   return true;
 }
 
-bool BlockHandle::PutFreeBlockIdLock(uint32_t block_id) {
-  META_HANDLE_LOCK();
-  block_id_pool_.emplace(block_id);
-  return true;
-}
-
 bool BlockHandle::PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids) {
-  META_HANDLE_LOCK();
+  std::lock_guard<std::mutex> lock(mutex_);
   if (block_ids.size() == 0) [[unlikely]] {
     SPDLOG_ERROR("block id list empty");
     return false;
   }
   SPDLOG_INFO("current block pool size: {} put block_id_num: {}",
               block_id_pool_.size(), block_ids.size());
-  for (auto iter = block_ids.begin(); iter != block_ids.end(); ++iter) {
-    block_id_pool_.emplace(*iter);
-    SPDLOG_DEBUG("put block id: {} to free pool done", *iter);
+  for (auto id : block_ids) {
+    block_id_pool_.emplace(id);
+    SPDLOG_DEBUG("put block id: {} to free pool done", id);
   }
   return true;
 }
