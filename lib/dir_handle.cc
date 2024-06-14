@@ -18,7 +18,7 @@ bool DirHandle::RunInMetaGuard(const DirectoryCallback &cb) {
 
 bool DirHandle::InitializeMeta() {
   DirMeta *meta;
-  for (uint64_t dh = 0;
+  for (dh_t dh = 0;
        dh < FileSystem::Instance()->super_meta()->max_file_num; ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         base_addr() + FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
@@ -47,7 +47,7 @@ bool DirHandle::InitializeMeta() {
         return false;
       }
     } else {
-      AddDirectory2FreeNolock(dh);
+      free_dhs_.push_back(dh);
     }
   }
 
@@ -55,7 +55,7 @@ bool DirHandle::InitializeMeta() {
   // 后面扫面文件的时候, 再把子文件加到父文件中.
   for (const auto &d : created_dirs_) {
     // 挂载点没有父目录
-    if (unlikely(IsMountPoint(d.second->dir_name()))) {
+    if (IsMountPoint(d.second->dir_name())) [[unlikely]] {
       continue;
     }
     std::string dir_name = d.second->dir_name();
@@ -198,7 +198,7 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
     return nullptr;
   }
   dh_t dh = free_dhs_.front();
-  LOG(INFO) << "create new directory handle: " << dh;
+  SPDLOG_INFO("create new directory handle: {}", dh);
 
   DirMeta *meta =
       reinterpret_cast<DirMeta *>(base_addr() + sizeof(DirMeta) * dh);
@@ -211,8 +211,8 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
 
   DirectoryPtr dir = std::make_shared<Directory>();
   if (!dir) {
-    LOG(ERROR) << "failed to new directory pointer";
-    block_fs_set_errno(ENOMEM);
+    SPDLOG_ERROR("failed to new directory pointer");
+    errno = ENOMEM;
     return nullptr;
   }
   dir->set_meta(meta);
@@ -257,31 +257,27 @@ bool DirHandle::NewDirectory(const std::string &dirname,
     dirs->first = itor->second;
   }
 
-  // 父目录是文件,不能在上面创建文件夹
   DirectoryPtr dir = NewFreeDirectoryNolock(dirname);
   if (!dir) {
+    SPDLOG_ERROR("failed to new directory, dirname: {}", dirname);
     return false;
   }
   dirs->second = dir;
   return true;
 }
 
-void DirHandle::AddDirectory2FreeNolock(dh_t index) {
-  free_dhs_.push_back(index);
-}
-
 void DirHandle::AddDirectory2Free(dh_t index) {
   META_HANDLE_LOCK();
-  AddDirectory2FreeNolock(index);
+  free_dhs_.push_back(index);
 }
 
 bool DirHandle::AddDirectory2CreateNolock(const DirectoryPtr &child) {
   // 当前文件夹加入内存映射表
-  if (created_dirs_.find(child->dir_name()) != created_dirs_.end()) {
+  if (created_dirs_.contains(child->dir_name())) {
     LOG(FATAL) << "directory name has exist, name: " << child->dir_name();
     return false;
   }
-  if (created_dhs_.find(child->dh()) != created_dhs_.end()) {
+  if (created_dhs_.contains(child->dh())) {
     LOG(FATAL) << "directory dh has exist, name: " << child->dir_name();
     return false;
   }
@@ -467,6 +463,7 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
  */
 int32_t DirHandle::CreateDirectory(const std::string &path) {
   if (!CheckFileExist(path)) {
+    SPDLOG_ERROR("dir exist: {}", path);
     return -1;
   }
   // 校验路径的合法性并且添加分隔符
@@ -608,12 +605,12 @@ int32_t DirHandle::RenameDirectory(const std::string &from,
     return -1;
   }
 
-  block_fs_set_errno(0);
+  errno = 0;
   return 0;
 }
 
 BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
-  LOG(INFO) << "open directory " << path;
+  SPDLOG_INFO("open directory: {}", path);
   // 校验路径的合法性并且添加分隔符
   std::string dir_name;
   if (!TransformPath(path, dir_name)) {
@@ -621,14 +618,14 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
   }
   DirectoryPtr dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
-  if (unlikely(!dir)) {
+  if (!dir) [[unlikely]] {
     block_fs_set_errno(ENOTDIR);
     block_fs_set_errno(ENOENT);
     return nullptr;
   }
   int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
-    block_fs_set_errno(ENFILE);
+    errno = ENFILE;
     return nullptr;
   }
   BLOCKFS_DIR *d = new BLOCKFS_DIR();

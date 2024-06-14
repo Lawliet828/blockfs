@@ -174,14 +174,7 @@ bool SuperBlock::set_uxdb_mount_point(const std::string &path) {
  */
 bool SuperBlock::is_mount_point(const std::string &path) noexcept {
   std::string mount_point = uxdb_mount_point();
-  if (path == mount_point) {
-    return true;
-  }
-  std::string tmp_path = path;
-  if (tmp_path[tmp_path.size() - 1] != '/') {
-    tmp_path += '/';
-  }
-  if (tmp_path == mount_point) {
+  if (path == mount_point || path + '/' == mount_point) {
     return true;
   }
   return false;

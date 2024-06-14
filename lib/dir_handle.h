@@ -11,9 +11,6 @@
 namespace udisk {
 namespace blockfs {
 
-typedef std::unordered_map<std::string, DirectoryPtr> DirectoryNameMap;
-typedef std::unordered_map<dh_t, DirectoryPtr> DirectoryHandleMap;
-
 // guard directory in directory handle mutex
 typedef std::function<bool()> DirectoryCallback;
 
@@ -21,10 +18,11 @@ class DirHandle : public MetaHandle {
  private:
   std::list<dh_t> free_dhs_;  // 目录Meta的空闲链表
 
+  typedef std::unordered_map<std::string, DirectoryPtr> DirectoryNameMap;
   DirectoryNameMap created_dirs_;   // 已创建的目录
   DirectoryNameMap deleted_dirs_;   // 待删除的目录
-  DirectoryHandleMap created_dhs_;  // 文件句柄名字映射
-  DirectoryHandleMap open_dirs_;    // 已打开的目录
+  std::unordered_map<dh_t, DirectoryPtr> created_dhs_;  // 文件句柄名字映射
+  std::unordered_map<dh_t, DirectoryPtr> open_dirs_;    // 已打开的目录
 
  private:
   bool TransformPath(const std::string &path, std::string &dir_name);
@@ -35,7 +33,6 @@ class DirHandle : public MetaHandle {
   DirectoryPtr NewFreeDirectoryNolock(const std::string &dirname);
   bool NewDirectory(const std::string &dirname,
                     std::pair<DirectoryPtr, DirectoryPtr> *dirs);
-  void AddDirectory2FreeNolock(dh_t index);
   void AddDirectory2Free(dh_t index);
   bool AddDirectory2CreateNolock(const DirectoryPtr &child);
   bool AddDirectory(const DirectoryPtr &parent, const DirectoryPtr &child);

@@ -510,16 +510,13 @@ bool FileSystem::InitializeMeta() {
 
 /**
  * create mount point
- *
- * \param mount_point
- *
- * \return true or false
  */
 int FileSystem::MakeMountPoint(const std::string& mount_point) {
   SPDLOG_INFO("create fs mount point: {}", mount_point);
   if (!dir_handle()->GetCreatedDirectory(mount_point)) {
     return dir_handle()->CreateDirectory(mount_point);
   }
+  SPDLOG_INFO("mount point exists: {}", mount_point);
   return 0;
 }
 
