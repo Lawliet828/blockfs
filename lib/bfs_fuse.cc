@@ -596,7 +596,7 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                        off_t offset, struct fuse_file_info *fi,
                        enum fuse_readdir_flags flags)
 {
-  LOG(INFO) << "call bfs_readdir: " << path;
+  SPDLOG_INFO("call bfs_readdir: {}", path);
 
   (void)offset;
   (void)fi;
@@ -604,8 +604,6 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
-
-  LOG(INFO) << "readdir: " << in_path;
 
   if (::strcmp(path, "/") == 0) {
     if (DIR_FILLER(filler, buf, ".", nullptr, 0) != 0 ||

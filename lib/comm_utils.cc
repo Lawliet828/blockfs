@@ -21,8 +21,9 @@ std::string GetFileName(const std::string &path) {
     return path.substr(pos + 1);
 }
 
+// 返回目录名, 末尾需要带'/'
 std::string GetDirName(const std::string &path) {
-  return std::filesystem::path(path).parent_path().string();
+  return std::filesystem::path(path).parent_path().string() + "/";
 }
 
 std::string GetParentDirName(const std::string &path) {

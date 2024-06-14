@@ -117,9 +117,9 @@ const uint32_t Directory::ChildCount() noexcept {
 }
 
 void Directory::ScanDir(std::vector<block_fs_dirent *> &dir_infos) {
-  LOG(INFO) << "init scan directory: " << dir_name();
+  SPDLOG_INFO("init scan directory: {}", dir_name());
   for (const auto &d : child_dir_maps_) {
-    LOG(INFO) << "scan directory: " << d.second->dir_name();
+    SPDLOG_INFO("scan directory: {}", d.second->dir_name());
     block_fs_dirent *info = new block_fs_dirent();
     info->d_ino = d.second->dh();
     info->d_type = DT_DIR;
