@@ -5,6 +5,7 @@
 #include "crc.h"
 #include "file_system.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -148,8 +149,6 @@ bool DirHandle::IsMountPoint(const std::string &dirname) const noexcept {
  * 检查是否有同名的文件名存在
  *
  * \param dirname UXDB-UDISK约定: DB创建的绝对目录
- *
- * \return strip success or failed
  */
 bool DirHandle::CheckFileExist(const std::string &dirname,
                                bool check_parent) const noexcept {
@@ -240,18 +239,17 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
  */
 bool DirHandle::NewDirectory(const std::string &dirname,
                              std::pair<DirectoryPtr, DirectoryPtr> *dirs) {
-  META_HANDLE_LOCK();
-  auto itor = created_dirs_.find(dirname);
-  if (itor != created_dirs_.end()) [[unlikely]] {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (created_dirs_.contains(dirname)) [[unlikely]] {
     LOG(ERROR) << "directory has already exist: " << dirname;
     errno = EEXIST;
     return false;
   }
   if (!IsMountPoint(dirname)) {
     std::string parent_dir_name = GetParentDirName(dirname);
-    itor = created_dirs_.find(parent_dir_name);
+    auto itor = created_dirs_.find(parent_dir_name);
     if (itor == created_dirs_.end()) [[unlikely]] {
-      LOG(ERROR) << "parent directory not exist: " << parent_dir_name;
+      SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
       errno = ENOENT;
       return false;
     }
@@ -390,8 +388,8 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(
     return kEmptyDirectoryPtr;
   }
   auto itor = created_dirs_.find(dir_name);
-  if (unlikely(itor == created_dirs_.end())) {
-    LOG(WARNING) << "directory not exist: " << dir_name;
+  if (itor == created_dirs_.end()) {
+    SPDLOG_WARN("directory not exist: {}", dir_name);
     return kEmptyDirectoryPtr;
   }
   return itor->second;

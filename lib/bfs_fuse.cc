@@ -167,9 +167,6 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
     return 0;
   }
 
-  // fuse_get_context()->gid
-  // fuse_get_context()->uid
-
   if (fi)
     res = FileSystem::Instance()->StatPath(fi->fh, stbuf);
   else
@@ -206,8 +203,8 @@ static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
  * bits set, i.e. S_ISDIR(mode) can be false.  To obtain the
  * correct directory type bits use  mode|S_IFDIR
  * */
-static int bfs_mkdir(const char *path, mode_t mode) {
-  LOG(INFO) << "call bfs_mkdir file: " << path;
+static int mfs_mkdir(const char *path, mode_t mode) {
+  SPDLOG_INFO("call mfs_mkdir file: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -1042,7 +1039,7 @@ static const struct fuse_operations kBFSOps = {
     // .lookup = mfs_lookup,
     .getattr = mfs_getattr,
     .mknod = bfs_mknod,
-    .mkdir = bfs_mkdir,
+    .mkdir = mfs_mkdir,
     .unlink = bfs_unlink,
     .rmdir = bfs_rmdir,
     .symlink = nullptr,

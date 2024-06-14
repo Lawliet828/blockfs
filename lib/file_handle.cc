@@ -129,8 +129,8 @@ bool FileHandle::TransformPath(const std::string &filename,
   if (!FileSystem::Instance()->super()->CheckMountPoint(file_name, true)) {
     return false;
   }
-  new_dirname = GetDirName(file_name);
-  new_filename = GetFileName(file_name);
+  new_dirname = GetDirName(filename);
+  new_filename = GetFileName(filename);
   SPDLOG_INFO("transformPath dirname: {}, filename: {}", new_dirname, new_filename);
   if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {
     LOG(ERROR) << "file name exceed size: " << new_filename;
@@ -594,7 +594,7 @@ const FilePtr &FileHandle::GetCreatedFileNoLock(int32_t fh) {
 }
 
 const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
-  LOG(INFO) << "get created file name: " << filename;
+  SPDLOG_INFO("get created file name: {}", filename);
   std::string new_dirname;
   std::string new_filename;
   if (!TransformPath(filename, new_dirname, new_filename)) {
@@ -603,10 +603,9 @@ const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(new_dirname);
   if (!dir) [[unlikely]] {
-    // block_fs_set_errno(ENOTDIR);
     return kEmptyFilePtr;
   }
-  META_HANDLE_LOCK();
+  std::lock_guard<std::mutex> lock(mutex_);
   FileNameKey key = std::make_pair(dir->dh(), new_filename);
   return GetCreatedFileNoLock(key);
 }
@@ -616,7 +615,7 @@ const FilePtr &FileHandle::GetCreatedFileNoLock(const FileNameKey &key) {
   if (itor == created_files_.end()) [[unlikely]] {
     SPDLOG_WARN("file not exist: {}", key.second);
     /* ERROR: trying to open a file that does not exist without O_CREATE */
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return kEmptyFilePtr;
   }
   return itor->second;

@@ -5,6 +5,7 @@
 #include "crc.h"
 #include "file_system.h"
 #include "logging.h"
+#include "spdlog/spdlog.h"
 
 SuperBlock::SuperBlock() {}
 SuperBlock::~SuperBlock() { buffer_.reset(); }
@@ -198,7 +199,7 @@ bool SuperBlock::CheckMountPoint(const std::string &path, bool isFile) {
     return false;
   }
   std::string sub = meta()->uxdb_mount_point_;
-  LOG(INFO) << "check target path: " << path << " mount point: " << sub;
+  SPDLOG_INFO("check target path: {} mount point: {}", path, sub);
   if (path.size() < sub.size()) {
     LOG(ERROR) << "path less than mount moint: " << path;
     errno = EXDEV;
