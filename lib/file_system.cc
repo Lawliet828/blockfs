@@ -8,7 +8,6 @@
 #include <functional>
 
 #include "config_load.h"
-#include "logging.h"
 #include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
@@ -30,7 +29,7 @@ FileSystem* FileSystem::Instance() { return g_instance; }
  */
 int32_t FileSystem::MountFileSystem(const std::string& config_path) {
   if (config_path.empty()) [[unlikely]] {
-    LOG(ERROR) << "config path is empty";
+    SPDLOG_ERROR("config path is empty");
     return -1;
   }
 
@@ -105,8 +104,8 @@ block_fs_dirent* FileSystem::ReadDirectory(BLOCKFS_DIR* dir) {
  * \return success or failed
  */
 int32_t FileSystem::StatPath(const std::string& path, struct stat* buf) {
-  if (unlikely(path.empty())) {
-    LOG(ERROR) << "stat path empty";
+  if (path.empty()) [[unlikely]] {
+    SPDLOG_ERROR("stat path empty");
     errno = EINVAL;
     return -1;
   }
@@ -175,9 +174,8 @@ int32_t FileSystem::StatVFS(struct statvfs* buf) {
   buf->f_fsid = 0;
   // f_namemax: 最大文件长度
   buf->f_namemax = super_meta()->max_file_name_len_;
-  LOG(DEBUG) << "statvfs f_bsize: " << buf->f_bsize
-             << " f_blocks: " << buf->f_blocks << " f_bfree: " << buf->f_bfree
-             << " f_files: " << buf->f_files << " f_ffree: " << buf->f_ffree;
+  SPDLOG_DEBUG("statvfs f_bsize: {} f_blocks: {} f_bfree: {} f_files: {} f_ffree: {}",
+               buf->f_bsize, buf->f_blocks, buf->f_bfree, buf->f_files, buf->f_ffree);
   return 0;
 }
 
@@ -198,15 +196,14 @@ int32_t FileSystem::RenamePath(const std::string& oldpath,
                                const std::string& newpath) {
   SPDLOG_INFO("rename path: {} to {}", oldpath, newpath);
   if (unlikely(oldpath.empty() || newpath.empty())) {
-    LOG(ERROR) << "rename path error, oldpath: " << oldpath
-               << " newpath: " << newpath;
+    SPDLOG_ERROR("rename path error, oldpath: {} newpath: {}", oldpath, newpath);
     errno = EINVAL;
     return -1;
   }
 
   FilePtr dest_file = file_handle()->GetCreatedFile(newpath);
   if (dest_file) {
-    LOG(ERROR) << "new file name exists, file_name: " << newpath;
+    SPDLOG_ERROR("new file name exists, file_name: {}", newpath);
     return -1;
   }
 
@@ -347,7 +344,7 @@ bool FileSystem::Initialize() {
  * \return void
  */
 void FileSystem::Destroy() {
-  LOG(DEBUG) << "close file store now";
+  SPDLOG_DEBUG("close file store now");
   for (auto& handle : handle_vector_) {
     if (handle) {
       delete handle;
@@ -397,7 +394,7 @@ bool FileSystem::FormatFSData() {
     }
     ret = dev()->PwriteDirect(buffer->data(), zero_data_len, zero_data_offset);
     if (ret != static_cast<int64_t>(zero_data_len)) {
-      LOG(ERROR) << "write zero data error size:" << ret;
+      SPDLOG_ERROR("write zero data error size: {}", ret);
       return false;
     }
     zero_data_offset += zero_data_len;
@@ -489,16 +486,15 @@ bool FileSystem::OpenTarget(const std::string& uuid) {
       bool success = ShmManager::PrefetchSuperMeta(meta);
       std::string meta_uuid = meta.uuid_;
       if (!success || meta_uuid != uuid) {
-        LOG(DEBUG) << "read meta error or uuid mismatch,"
-                   << " read uuid: " << meta_uuid << " wanted uuid: " << uuid;
+        SPDLOG_DEBUG("read meta error or uuid mismatch, read uuid: {} wanted uuid: {}",
+                     meta_uuid, uuid);
         device_->Close();
         continue;
       }
       return true;
     }
   } catch (std::filesystem::filesystem_error& e) {
-    LOG(ERROR) << "failed to open dir:" << kBlockDevivePath
-               << ", error: " << e.what();
+    SPDLOG_ERROR("failed to open dir: {} error: {}", kBlockDevivePath, e.what());
   }
   return false;
 }

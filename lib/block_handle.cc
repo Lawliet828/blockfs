@@ -1,7 +1,7 @@
 #include "block_handle.h"
 
 #include "file_system.h"
-#include "logging.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -21,7 +21,7 @@ bool BlockHandle::GetSpecificBlockId(uint32_t block_id) {
     block_id_pool_.erase(block_id);
     return true;
   } else {
-    LOG(FATAL) << "block id: " << block_id << " cannot be in used";
+    SPDLOG_CRITICAL("block id: {} cannot be in used", block_id);
     return false;
   }
 }
@@ -30,20 +30,20 @@ bool BlockHandle::GetFreeBlockIdLock(uint32_t block_id_num,
                                      std::vector<uint32_t> *block_ids) {
   META_HANDLE_LOCK();
   if (block_id_pool_.size() < block_id_num) [[unlikely]] {
-    LOG(ERROR) << "block id not enough, left: " << block_id_pool_.size()
-               << " wanted: " << block_id_num;
+    SPDLOG_ERROR("block id not enough, left: {} wanted: {}",
+                 block_id_pool_.size(), block_id_num);
     return false;
   }
-  LOG(INFO) << "current block pool size: " << block_id_pool_.size()
-            << " apply block_id_num: " << block_id_num;
+  SPDLOG_INFO("current block pool size: {} apply block_id_num: {}",
+              block_id_pool_.size(), block_id_num);
   block_ids->clear();
   auto iter = block_id_pool_.begin();
   for (uint32_t i = 0; i < block_id_num; ++i) {
-    LOG(INFO) << "apply for a new file block id: " << *iter;
+    SPDLOG_INFO("apply for a new file block id: {}", *iter);
     block_ids->emplace_back(*iter);
     iter = block_id_pool_.erase(iter);
   }
-  LOG(DEBUG) << "current block pool size: " << block_id_pool_.size();
+  SPDLOG_DEBUG("current block pool size: {}", block_id_pool_.size());
   return true;
 }
 
@@ -56,14 +56,14 @@ bool BlockHandle::PutFreeBlockIdLock(uint32_t block_id) {
 bool BlockHandle::PutFreeBlockIdLock(const std::vector<uint32_t> &block_ids) {
   META_HANDLE_LOCK();
   if (block_ids.size() == 0) [[unlikely]] {
-    LOG(ERROR) << "block id list empty";
+    SPDLOG_ERROR("block id list empty");
     return false;
   }
-  LOG(INFO) << "current block pool size: " << block_id_pool_.size()
-            << " put block_id_num: " << block_ids.size();
+  SPDLOG_INFO("current block pool size: {} put block_id_num: {}",
+              block_id_pool_.size(), block_ids.size());
   for (auto iter = block_ids.begin(); iter != block_ids.end(); ++iter) {
     block_id_pool_.emplace(*iter);
-    LOG(DEBUG) << "put block id: " << *iter << " to free pool done";
+    SPDLOG_DEBUG("put block id: {} to free pool done", *iter);
   }
   return true;
 }

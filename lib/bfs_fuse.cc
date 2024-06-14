@@ -436,7 +436,7 @@ static int mfs_write(const char *path, const char *buf, size_t size,
 }
 
 static int mfs_statfs(const char *path, struct statvfs *vfs) {
-  LOG(INFO) << "call mfs_statfs file: " << path;
+  SPDLOG_INFO("call mfs_statfs file: {}", path);
 
   int res = FileSystem::Instance()->StatVFS(vfs);
   if (res < 0) return -errno;
@@ -564,7 +564,7 @@ static int bfs_fsync(const char *path, int datasync,
  */
 
 static int bfs_opendir(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_opendir: " << path;
+  SPDLOG_INFO("call bfs_opendir: {}", path);
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;

@@ -614,8 +614,8 @@ const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
 
 const FilePtr &FileHandle::GetCreatedFileNoLock(const FileNameKey &key) {
   auto itor = created_files_.find(key);
-  if (unlikely(itor == created_files_.end())) {
-    LOG(WARNING) << "file not exist: " << key.second;
+  if (itor == created_files_.end()) [[unlikely]] {
+    SPDLOG_WARN("file not exist: {}", key.second);
     /* ERROR: trying to open a file that does not exist without O_CREATE */
     block_fs_set_errno(ENOENT);
     return kEmptyFilePtr;
