@@ -3,7 +3,7 @@
 #include <chrono>
 
 #include "file_system.h"
-#include "logging.h"
+#include "spdlog/spdlog.h"
 
 // common dir/file functions
 void Directory::stat(struct stat *buf) {
@@ -29,10 +29,9 @@ void Directory::stat(struct stat *buf) {
 }
 
 void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
-  auto now = std::chrono::system_clock::now();
-  auto duration = now.time_since_epoch();
-  int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-  time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+  using namespace std::chrono;
+  system_clock::time_point now = system_clock::now();
+  time_t seconds = system_clock::to_time_t(now);
   if (a) set_atime(seconds);
   if (m) set_mtime(seconds);
   if (c) set_ctime(seconds);
@@ -43,19 +42,6 @@ void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
                           sizeof(meta_->crc_));
 }
 
-void Directory::IncLinkCount() noexcept {
-  META_HANDLE_LOCK();
-  ++nlink_;
-}
-void Directory::DecLinkCount() noexcept {
-  META_HANDLE_LOCK();
-  --nlink_;
-}
-
-const uint32_t Directory::LinkCount() noexcept {
-  META_HANDLE_LOCK();
-  return nlink_;
-}
 
 /**
  * 清理文件夹元数据字段
@@ -111,7 +97,7 @@ bool Directory::SuicideNolock() {
  *
  * \return strip success or failed
  */
-const uint32_t Directory::ChildCount() noexcept {
+uint32_t Directory::ChildCount() noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   return (item_maps_.size() + child_dir_maps_.size());
 }
@@ -137,7 +123,7 @@ void Directory::ScanDir(std::vector<block_fs_dirent *> &dir_infos) {
   }
   for (const auto &item : item_maps_) {
     const FilePtr &file = item.second;
-    LOG(INFO) << "scan file: " << file->file_name();
+    SPDLOG_INFO("scan file: {}", file->file_name());
     block_fs_dirent *info = new block_fs_dirent();
     info->d_ino = file->fh();
     info->d_type = DT_REG;
@@ -149,14 +135,13 @@ void Directory::ScanDir(std::vector<block_fs_dirent *> &dir_infos) {
 }
 
 void Directory::DumpMeta() {
-  LOG(INFO) << "directory info: "
-            << " dh: " << dh() << " dir_name: " << dir_name();
+  SPDLOG_INFO("directory info: dh: {} dir_name: {}", dh(), dir_name());
 }
 
 bool Directory::WriteMeta() {
   uint32_t align_index =
       FileSystem::Instance()->dir_handle()->PageAlignIndex(dh());
-  LOG(INFO) << "directory handle: " << dh() << " align_index: " << align_index;
+  SPDLOG_INFO("directory handle: {} align_index: {}", dh(), align_index);
   uint64_t offset =
       FileSystem::Instance()->super_meta()->dir_meta_size_ * align_index;
   void *align_meta = FileSystem::Instance()->dir_handle()->base_addr() + offset;
@@ -167,8 +152,8 @@ bool Directory::WriteMeta() {
       align_meta, kBlockFsPageSize,
       FileSystem::Instance()->super_meta()->dir_meta_offset_ + offset);
   if (ret != kBlockFsPageSize) [[unlikely]] {
-    LOG(ERROR) << "write directory meta " << dh() << "error size:" << ret
-               << " need:" << kBlockFsPageSize;
+    SPDLOG_ERROR("write directory meta {} error size: {} need: {}", dh(), ret,
+                 kBlockFsPageSize);
     return false;
   }
   return true;
@@ -183,17 +168,18 @@ bool Directory::WriteMeta(dh_t dh) {
   uint64_t offset =
       FileSystem::Instance()->super_meta()->dir_meta_size_ * align_index;
   void *align_meta = FileSystem::Instance()->dir_handle()->base_addr() + offset;
-  meta->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
+  uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                       FileSystem::Instance()->super_meta()->dir_meta_size_ -
                           sizeof(meta->crc_));
-  LOG(INFO) << "write dir meta, name: " << meta->dir_name_ << " dh: " << dh
-            << " align_index: " << align_index << " crc: " << meta->crc_;
+  meta->crc_ = crc;
+  SPDLOG_INFO("write dir meta, name: {} dh: {} align_index: {} crc: {}",
+              meta->dir_name_, dh, align_index, crc);
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
       FileSystem::Instance()->super_meta()->dir_meta_offset_ + offset);
   if (ret != kBlockFsPageSize) [[unlikely]] {
-    LOG(ERROR) << "write directory meta " << dh << "error size:" << ret
-               << " need:" << kBlockFsPageSize;
+    SPDLOG_ERROR("write directory meta {} error size: {} need: {}", dh, ret,
+                 kBlockFsPageSize);
     return false;
   }
   return true;
@@ -206,11 +192,11 @@ bool Directory::AddChildFile(const FilePtr &file) {
 
 bool Directory::AddChildFileNoLock(const FilePtr &file) {
   if (item_maps_.find(file->fh()) != item_maps_.end()) {
-    LOG(ERROR) << "file fh has exist, name: " << file->file_name();
+    SPDLOG_ERROR("file fh has exist, name: {}", file->file_name());
     return false;
   }
-  LOG(DEBUG) << "add fh: " << file->fh() << " name: " << file->file_name()
-             << " to " << dir_name();
+  SPDLOG_DEBUG("add fh: {} name: {} to {}", file->fh(), file->file_name(),
+               dir_name());
   item_maps_[file->fh()] = file;
   return true;
 }
@@ -222,7 +208,7 @@ bool Directory::RemoveChildFile(const FilePtr &file) {
 
 bool Directory::RemoveChildFileNolock(const FilePtr &file) {
   if (item_maps_.erase(file->fh()) != 1) {
-    LOG(ERROR) << "failed to remove child file: " << file->file_name();
+    SPDLOG_ERROR("failed to remove child file: {}", file->file_name());
     return false;
   }
   return true;
@@ -230,7 +216,7 @@ bool Directory::RemoveChildFileNolock(const FilePtr &file) {
 
 bool Directory::AddChildDirectoryNolock(const DirectoryPtr &child) {
   if (child_dir_maps_.find(child->dh()) != child_dir_maps_.end()) {
-    LOG(ERROR) << "directory dh has exist, name: " << child->dir_name();
+    SPDLOG_ERROR("directory dh has exist, name: {}", child->dir_name());
     return false;
   }
   child_dir_maps_[child->dh()] = child;
@@ -245,7 +231,7 @@ bool Directory::AddChildDirectory(const DirectoryPtr &child) {
 bool Directory::RemovChildDirectory(const DirectoryPtr &child) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (child_dir_maps_.erase(child->dh()) != 1) {
-    LOG(ERROR) << "failed to remove child directory: " << child->dir_name();
+    SPDLOG_ERROR("failed to remove child directory: {}", child->dir_name());
     return false;
   }
   return true;
@@ -254,10 +240,10 @@ bool Directory::RemovChildDirectory(const DirectoryPtr &child) {
 bool Directory::ForceRemoveAllFiles() {
   std::lock_guard<std::mutex> lock(mutex_);
   std::unordered_map<int32_t, FilePtr>::iterator it;
-  LOG(INFO) << "file num: " << item_maps_.size();
+  SPDLOG_INFO("file num: {}", item_maps_.size());
   for (it = item_maps_.begin(); it != item_maps_.end();) {
-    LOG(INFO) << "file index: " << it->first
-              << " name: " << it->second->file_name();
+    SPDLOG_INFO("file index: {} name: {}", it->first,
+                it->second->file_name());
     FileSystem::Instance()->file_handle()->unlink(dir_name() +
                                                  it->second->file_name());
     item_maps_.erase(it++);
@@ -270,7 +256,7 @@ bool Directory::ForceRemoveAllFiles() {
 int Directory::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, to] {
-        LOG(INFO) << "rename old dir: " << dir_name() << " to: " << to;
+        SPDLOG_INFO("rename old dir: {} to: {}", dir_name(), to);
         set_dir_name(to);
         if (!WriteMeta()) {
           return false;

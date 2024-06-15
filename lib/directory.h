@@ -27,13 +27,22 @@ class Directory : public Inode<DirMeta, File>,
   }
   std::string dir_name() const { return std::string(meta_->dir_name_); }
   void set_dh(dh_t dh) const noexcept { meta_->dh_ = dh; }
-  const dh_t dh() const { return meta_->dh_; }
+  dh_t dh() const { return meta_->dh_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
-  const uint32_t ChildCount() noexcept;
+  uint32_t ChildCount() noexcept;
   const uint32_t DecAckCnt() { return --ack_cnt_; }
-  void IncLinkCount() noexcept;
-  void DecLinkCount() noexcept;
-  const uint32_t LinkCount() noexcept;
+  void IncLinkCount() noexcept {
+    std::lock_guard lock(mutex_);
+    ++nlink_;
+  }
+  void DecLinkCount() noexcept {
+    std::lock_guard lock(mutex_);
+    --nlink_;
+  }
+  uint32_t LinkCount() noexcept {
+    std::lock_guard lock(mutex_);
+    return nlink_;
+  }
 
   void set_atime(time_t time) noexcept override { meta_->atime_ = time; }
   time_t atime() noexcept override { return meta_->atime_; }
