@@ -30,7 +30,6 @@ class SuperBlock : public MetaHandle {
   std::string uuid() noexcept { return meta()->uuid_; }
   uint64_t meta_size() noexcept { return meta()->block_data_start_offset_; }
 
-  bool CheckMountPoint(const std::string &path, bool isFile = false);
   bool WriteMeta();
 };
 }

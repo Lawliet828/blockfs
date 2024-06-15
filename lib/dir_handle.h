@@ -8,8 +8,7 @@
 #include "file_handle.h"
 #include "meta_handle.h"
 
-namespace udisk {
-namespace blockfs {
+namespace udisk::blockfs {
 
 // guard directory in directory handle mutex
 typedef std::function<bool()> DirectoryCallback;
@@ -20,7 +19,6 @@ class DirHandle : public MetaHandle {
 
   typedef std::unordered_map<std::string, DirectoryPtr> DirectoryNameMap;
   DirectoryNameMap created_dirs_;   // 已创建的目录
-  DirectoryNameMap deleted_dirs_;   // 待删除的目录
   std::unordered_map<dh_t, DirectoryPtr> created_dhs_;  // 文件句柄名字映射
   std::unordered_map<dh_t, DirectoryPtr> open_dirs_;    // 已打开的目录
 
@@ -33,7 +31,6 @@ class DirHandle : public MetaHandle {
   DirectoryPtr NewFreeDirectoryNolock(const std::string &dirname);
   bool NewDirectory(const std::string &dirname,
                     std::pair<DirectoryPtr, DirectoryPtr> *dirs);
-  void AddDirectory2Free(dh_t index);
   bool AddDirectory2CreateNolock(const DirectoryPtr &child);
   bool AddDirectory(const DirectoryPtr &parent, const DirectoryPtr &child);
   bool FindDirectory(const std::string &dirname,
@@ -57,15 +54,15 @@ class DirHandle : public MetaHandle {
 
   uint32_t PageAlignIndex(uint32_t index) const;
 
-  bool RunInMetaGuard(const DirectoryCallback &cb);
+  bool RunInMetaGuard(const DirectoryCallback &cb) {
+    std::lock_guard lock(mutex_);
+    return cb();
+  }
 
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
   virtual void Dump(const std::string &path) noexcept override;
 
- public:
-  // External POSIX API
-  // Warning: path with uxdb_mount_point
   int32_t CreateDirectory(const std::string &path);
   int32_t DeleteDirectory(const std::string &path, bool recursive);
   int32_t RenameDirectory(const std::string &from, const std::string &to);
@@ -75,5 +72,4 @@ class DirHandle : public MetaHandle {
   int32_t CloseDirectory(BLOCKFS_DIR *dir);
 };
 
-}  // namespace blockfs
-}  // namespace udisk
+}

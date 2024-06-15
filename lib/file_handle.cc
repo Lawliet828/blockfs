@@ -126,7 +126,9 @@ bool FileHandle::TransformPath(const std::string &filename,
                                std::string &new_dirname,
                                std::string &new_filename) {
   std::string file_name = filename;
-  if (!FileSystem::Instance()->super()->CheckMountPoint(file_name, true)) {
+  if (filename[filename.size() - 1] == '/') [[unlikely]] {
+    LOG(ERROR) << "file cannot endwith dir separator: " << filename;
+    errno = ENOTDIR;
     return false;
   }
   new_dirname = GetDirName(filename);

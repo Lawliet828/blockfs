@@ -181,40 +181,6 @@ bool SuperBlock::is_mount_point(const std::string &path) noexcept {
 }
 
 /**
- * Check the legality of the file/directory mounting path
- *
- * \param path : absolute directory
- */
-bool SuperBlock::CheckMountPoint(const std::string &path, bool isFile) {
-  if (path.empty()) [[unlikely]] {
-    LOG(ERROR) << "path cannot be empty";
-    errno = EINVAL;
-    return false;
-  }
-  std::string sub = meta()->uxdb_mount_point_;
-  SPDLOG_INFO("check target path: {} mount point: {}", path, sub);
-  if (path.size() < sub.size()) {
-    LOG(ERROR) << "path less than mount moint: " << path;
-    errno = EXDEV;
-    return false;
-  }
-  if (path.compare(0, sub.size(), sub) != 0) {
-    LOG(ERROR) << "path not startwith mount prefix: " << path;
-    errno = EXDEV;
-    return false;
-  }
-  if (isFile) {
-    if (path[path.size() - 1] == '/') [[unlikely]] {
-      LOG(ERROR) << "file cannot endwith dir separator: " << path;
-      errno = ENOTDIR;
-      return false;
-    }
-  }
-  errno = 0;
-  return true;
-}
-
-/**
  * dump super metadata info
  *
  * \param void

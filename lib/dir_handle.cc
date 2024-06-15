@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <libgen.h>
-#include <stdio.h>
 
 #include "crc.h"
 #include "file_system.h"
@@ -11,35 +10,33 @@ namespace udisk::blockfs {
 
 const static DirectoryPtr kEmptyDirectoryPtr;
 
-bool DirHandle::RunInMetaGuard(const DirectoryCallback &cb) {
-  META_HANDLE_LOCK();
-  return cb();
-}
-
 bool DirHandle::InitializeMeta() {
   DirMeta *meta;
-  for (dh_t dh = 0;
-       dh < FileSystem::Instance()->super_meta()->max_file_num; ++dh) {
+  for (dh_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
+       ++dh) {
     meta = reinterpret_cast<DirMeta *>(
-        base_addr() + FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
+        base_addr() +
+        FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
     uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                          FileSystem::Instance()->super_meta()->dir_meta_size_ -
                              sizeof(meta->crc_));
+    uint32_t meta_crc = meta->crc_;
     if (meta->crc_ != crc) [[unlikely]] {
-      LOG(ERROR) << "directory meta " << dh << " " << meta->dir_name_
-                 << " crc error, read: " << meta->crc_ << " cal: " << crc;
+      SPDLOG_ERROR("directory meta {} {} crc error, read: {} cal: {}", dh,
+                   meta->dir_name_, meta_crc, crc);
       return false;
     }
 
     if (meta->used_) {
       LOG(DEBUG) << "directory handle: " << dh << " name: " << meta->dir_name_
-                   << " seq_no: " << meta->seq_no_ << " crc: " << meta->crc_;
-      if (::strnlen(meta->dir_name_, sizeof(meta->dir_name_)) == 0) [[unlikely]] {
-        LOG(ERROR) << "directory meta " << dh << " used but name empty";
+                 << " seq_no: " << meta->seq_no_ << " crc: " << meta->crc_;
+      if (::strnlen(meta->dir_name_, sizeof(meta->dir_name_)) == 0)
+          [[unlikely]] {
+        SPDLOG_ERROR("directory meta {} used but name empty", dh);
         return false;
       }
       if (meta->dh_ != static_cast<dh_t>(dh)) [[unlikely]] {
-        LOG(ERROR) << "directory meta " << dh << " used but dh invalid";
+        SPDLOG_ERROR("directory meta {} used but dh invalid", dh);
         return false;
       }
       DirectoryPtr dir = std::make_shared<Directory>(meta);
@@ -91,8 +88,8 @@ bool DirHandle::FormatAllMeta() {
       dir_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   DirMeta *meta;
-  for (uint64_t dh = 0;
-       dh < FileSystem::Instance()->super_meta()->max_file_num; ++dh) {
+  for (uint64_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
+       ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         buffer->data() +
         FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
@@ -103,14 +100,14 @@ bool DirHandle::FormatAllMeta() {
                            sizeof(meta->crc_));
   }
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
-      buffer->data(), FileSystem::Instance()->super_meta()->dir_meta_total_size_,
+      buffer->data(), dir_meta_total_size,
       FileSystem::Instance()->super_meta()->dir_meta_offset_);
-  if (ret != static_cast<int64_t>(
-                 FileSystem::Instance()->super_meta()->dir_meta_total_size_)) {
-    LOG(ERROR) << "write directory meta error size:" << ret;
+  if (ret != static_cast<int64_t>(dir_meta_total_size)) {
+    SPDLOG_ERROR("write directory meta error size: {} need: {}", ret,
+                 dir_meta_total_size);
     return false;
   }
-  LOG(INFO) << "write all directory meta success";
+  SPDLOG_INFO("write all directory meta success");
   return true;
 }
 
@@ -121,15 +118,10 @@ bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
     dir_name += '/';
   }
   if (dir_name.size() >= kBlockFsMaxDirNameLen) {
-    LOG(ERROR) << "directory path: " << dir_name
-               << " too long, size: " << dir_name.size()
-               << " max limit: " << kBlockFsMaxDirNameLen;
+    SPDLOG_ERROR("directory path: {} too long, size: {} max limit: {}",
+                 dir_name, dir_name.size(), kBlockFsMaxDirNameLen);
     errno = ENAMETOOLONG;
     return false;
-  }
-  // 创建挂载目录不需要检查
-  if (!IsMountPoint(dir_name)) {
-    return FileSystem::Instance()->super()->CheckMountPoint(dir_name);
   }
   return true;
 }
@@ -138,8 +130,6 @@ bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
  * 判断需要操作的目录(带/分隔符)是否是根目录(挂载点)
  *
  * \param dirname UXDB-UDISK约定: DB创建的绝对目录
- *
- * \return strip success or failed
  */
 bool DirHandle::IsMountPoint(const std::string &dirname) const noexcept {
   return FileSystem::Instance()->super()->is_mount_point(dirname);
@@ -159,7 +149,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
     }
     // 检查同名的文件是否存在
     if (FileSystem::Instance()->file_handle()->GetCreatedFile(path)) {
-      LOG(ERROR) << "the same file path exist: " << dirname;
+      SPDLOG_ERROR("the same file path exist: {}", dirname);
       if (check_parent) {
         errno = EEXIST;
       } else {
@@ -174,7 +164,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
       }
       // 检查上一层是否目录是否存在并且为文件
       if (FileSystem::Instance()->file_handle()->GetCreatedFile(parent_path)) {
-        LOG(ERROR) << "the same parent path file exist: " << dirname;
+        SPDLOG_ERROR("the same parent path file exist: {}", dirname);
         errno = ENOTDIR;
         return false;
       }
@@ -193,7 +183,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
  */
 DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
   if (free_dhs_.empty()) [[unlikely]] {
-    LOG(ERROR) << "directory meta not enough";
+    SPDLOG_ERROR("directory meta not enough");
     errno = ENFILE;
     return nullptr;
   }
@@ -239,9 +229,9 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
  */
 bool DirHandle::NewDirectory(const std::string &dirname,
                              std::pair<DirectoryPtr, DirectoryPtr> *dirs) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard lock(mutex_);
   if (created_dirs_.contains(dirname)) [[unlikely]] {
-    LOG(ERROR) << "directory has already exist: " << dirname;
+    SPDLOG_ERROR("directory has already exist: {}", dirname);
     errno = EEXIST;
     return false;
   }
@@ -264,11 +254,6 @@ bool DirHandle::NewDirectory(const std::string &dirname,
   }
   dirs->second = dir;
   return true;
-}
-
-void DirHandle::AddDirectory2Free(dh_t index) {
-  META_HANDLE_LOCK();
-  free_dhs_.push_back(index);
 }
 
 bool DirHandle::AddDirectory2CreateNolock(const DirectoryPtr &child) {
@@ -294,7 +279,7 @@ bool DirHandle::AddDirectory(const DirectoryPtr &parent,
       return false;
     }
   }
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   if (!AddDirectory2CreateNolock(child)) {
     assert(!parent->RemovChildDirectory(child));
     return false;
@@ -304,20 +289,20 @@ bool DirHandle::AddDirectory(const DirectoryPtr &parent,
 
 bool DirHandle::FindDirectory(const std::string &dirname,
                               std::pair<DirectoryPtr, DirectoryPtr> *dirs) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   std::string parent_dir_name = GetParentDirName(dirname);
   auto itor = created_dirs_.find(parent_dir_name);
-  if (unlikely(itor == created_dirs_.end())) {
-    LOG(ERROR) << "parent directory not exist: " << parent_dir_name;
-    block_fs_set_errno(ENOENT);
+  if (itor == created_dirs_.end()) [[unlikely]] {
+    SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
+    errno = ENOENT;
     return false;
   }
   dirs->first = itor->second;
 
   itor = created_dirs_.find(dirname);
-  if (unlikely(itor == created_dirs_.end())) {
-    LOG(ERROR) << "directory not exist: " << dirname;
-    block_fs_set_errno(ENOENT);
+  if (itor == created_dirs_.end()) [[unlikely]] {
+    SPDLOG_ERROR("directory not exist: {}", dirname);
+    errno = ENOENT;
     return false;
   }
   dirs->second = itor->second;
@@ -334,7 +319,6 @@ bool DirHandle::RemoveDirectoryFromCreateNolock(const DirectoryPtr &child) {
     LOG(ERROR) << "failed to remove directory dh map: " << child->dir_name();
     return false;
   }
-  // deleted_dirs_[child->dir_name()] = child;
   return true;
 }
 
@@ -343,12 +327,12 @@ bool DirHandle::RemoveDirectory(const DirectoryPtr &parent,
   if (!parent->RemovChildDirectory(child)) {
     return false;
   }
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   return RemoveDirectoryFromCreateNolock(child);
 }
 
 const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   auto itor = open_dirs_.find(fd);
   if (itor == open_dirs_.end()) [[unlikely]] {
     LOG(ERROR) << "directory not been opened: " << fd;
@@ -358,7 +342,7 @@ const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
 }
 
 const DirectoryPtr &DirHandle::GetCreatedDirectory(dh_t dh) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   return GetCreatedDirectoryNolock(dh);
 }
 
@@ -372,7 +356,7 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(dh_t dh) {
 }
 
 const DirectoryPtr &DirHandle::GetCreatedDirectory(const std::string &dirname) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   return GetCreatedDirectoryNolock(dirname);
 }
 
@@ -399,14 +383,15 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(
  * @return 0 success or -1 failed
  */
 int32_t DirHandle::DeleteDirectory(dh_t dh) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   return DeleteDirectoryNolock(dh);
 }
 int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
-  LOG(INFO) << "delete dir handle: " << dh;
-  const DirectoryPtr dir = FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(dh);
+  SPDLOG_INFO("delete dir handle: {}", dh);
+  const DirectoryPtr dir =
+      FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(dh);
   if (!dir) {
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return -1;
   }
 
@@ -417,13 +402,13 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   // 文件夹下面还有文件或者文件夹不能被删除
   if (dir->ChildCount() > 0) {
     LOG(ERROR) << "directory not empty: " << dir->dir_name();
-    block_fs_set_errno(ENOTEMPTY | EEXIST);
+    errno = ENOTEMPTY | EEXIST;
     return -1;
   }
 
   if (dir->LinkCount() > 0) {
     LOG(ERROR) << "directory has been opened: " << dir->dir_name();
-    block_fs_set_errno(EBUSY);
+    errno = EBUSY;
     return -1;
   }
 
@@ -481,7 +466,7 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
   const DirectoryPtr &curr_dir = dirs.second;
 
   {
-    META_HANDLE_LOCK();
+    std::lock_guard lock(mutex_);
     // 持久化文件夹元数据
     int retry_count = 0;
     while (!curr_dir->WriteMeta()) {
@@ -500,7 +485,6 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
   }
 
   LOG(INFO) << "make directory success: " << path;
-
   errno = 0;
   return 0;
 }
@@ -526,7 +510,7 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
   // 挂载目录不能被删除
   if (IsMountPoint(path)) {
     LOG(ERROR) << "mount point cannot be removed: " << path;
-    block_fs_set_errno(EPERM | EBUSY);
+    errno = EPERM | EBUSY;
     return -1;
   }
 
@@ -541,13 +525,13 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
   // 文件夹下面还有文件或者文件夹不能被删除
   if (curr_dir->ChildCount() > 0) {
     LOG(ERROR) << "directory not empty: " << path;
-    block_fs_set_errno(ENOTEMPTY | EEXIST);
+    errno = ENOTEMPTY | EEXIST;
     return -1;
   }
 
   if (curr_dir->LinkCount() > 0) {
     LOG(ERROR) << "directory has been opened: " << path;
-    block_fs_set_errno(EBUSY);
+    errno = EBUSY;
     return -1;
   }
 
@@ -562,8 +546,7 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
     return -1;
   }
 
-  // 同步从节点
-  LOG(INFO) << "remove directory success: " << path;
+  SPDLOG_INFO("remove directory success: {}", path);
   errno = 0;
   return 0;
 }
@@ -641,7 +624,7 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
 // https://download.csdn.net/download/fronteer/4995825
 // https://blog.csdn.net/chenleng8306/article/details/100790301
 block_fs_dirent *DirHandle::ReadDirectory(BLOCKFS_DIR *d) {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   if (!d->inited_) {
     d->dir_->ScanDir(d->dir_items_);
     d->dir_->UpdateTimeStamp(false, true, true);
@@ -654,8 +637,7 @@ block_fs_dirent *DirHandle::ReadDirectory(BLOCKFS_DIR *d) {
 }
 
 int32_t DirHandle::CloseDirectory(BLOCKFS_DIR *d) {
-  LOG(INFO) << "close directory name: " << d->dir_->dir_name()
-            << " fd: " << d->fd();
+  SPDLOG_INFO("close directory name: {} fd: {}", d->dir_->dir_name(), d->fd());
   FileSystem::Instance()->fd_handle()->put_fd(d->fd_);
   for (uint32_t i = 0; i < d->dir_items_.size(); ++i) {
     delete d->dir_items_[i];
@@ -672,4 +654,4 @@ void DirHandle::Dump(const std::string &path) noexcept {
   dir->DumpMeta();
 }
 
-}
+}  // namespace udisk::blockfs
