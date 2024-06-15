@@ -1,6 +1,4 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_SUPER_BLOCK_H_
-#define LIB_SUPER_BLOCK_H_
+#pragma once
 
 #include "aligned_buffer.h"
 #include "meta_defines.h"
@@ -16,10 +14,9 @@ class SuperBlock : public MetaHandle {
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
   virtual void Dump() noexcept override;
-  virtual void Dump(const std::string &file_name) noexcept override;
 
-  SuperBlock();
-  ~SuperBlock();
+  SuperBlock() = default;
+  ~SuperBlock() { buffer_.reset(); }
   SuperBlockMeta *meta() {
     return reinterpret_cast<SuperBlockMeta *>(base_addr());
   }
@@ -33,4 +30,3 @@ class SuperBlock : public MetaHandle {
   bool WriteMeta();
 };
 }
-#endif

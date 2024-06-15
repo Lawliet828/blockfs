@@ -1,14 +1,9 @@
 #include "super_block.h"
 
-#include <uuid/uuid.h>
-
 #include "crc.h"
 #include "file_system.h"
 #include "logging.h"
 #include "spdlog/spdlog.h"
-
-SuperBlock::SuperBlock() {}
-SuperBlock::~SuperBlock() { buffer_.reset(); }
 
 /**
  * get the total super metadata on the shared udisk
@@ -22,12 +17,12 @@ bool SuperBlock::InitializeMeta() {
   SuperBlockMeta *meta = reinterpret_cast<SuperBlockMeta *>(base_addr());
   uint32_t crc = Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
                        kSuperBlockSize - sizeof(meta->crc_));
-  if (unlikely(meta->crc_ != crc)) {
+  if (meta->crc_ != crc) [[unlikely]] {
     LOG(ERROR) << "super block crc error, read:" << meta->crc_
                << " cal: " << crc;
     return false;
   }
-  if (unlikely(meta->magic_ != kBlockFsMagic)) {
+  if (meta->magic_ != kBlockFsMagic) [[unlikely]] {
     LOG(ERROR) << "super block magic error, read:" << meta->magic_
                << " wanted: " << kBlockFsMagic;
     return false;
@@ -46,9 +41,7 @@ bool SuperBlock::FormatAllMeta() {
   SuperBlockMeta *meta = reinterpret_cast<SuperBlockMeta *>(buffer_->data());
 
   /* BlockFS的常量定义 */
-  uuid_t uuid;
-  ::uuid_generate(uuid);
-  ::uuid_unparse(uuid, meta->uuid_);
+  std::strcpy(meta->uuid_, "12345678901234567890123456789012345678901234567890123456789");
   meta->magic_ = kBlockFsMagic;
   meta->max_file_num = kBlockFsMaxFileNum;
   meta->max_support_udisk_size_ = kBlockFsMaxUDiskSize;
@@ -220,15 +213,6 @@ void SuperBlock::Dump() noexcept {
             << "curr_block_num: " << meta()->curr_block_num << "\n"
             << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
 }
-
-/**
- * dump super metadata info to outer file
- *
- * \param void
- *
- * \return void
- */
-void SuperBlock::Dump(const std::string &file_name) noexcept {}
 
 bool SuperBlock::WriteMeta() {
   meta()->crc_ =

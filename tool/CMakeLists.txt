@@ -1,5 +1,4 @@
-
-set(COMMLIBS block_fs uuid)
+set(COMMLIBS block_fs)
 set(EXECUTABLE_NAME "block_fs_tool")
 
 # 基础工具
