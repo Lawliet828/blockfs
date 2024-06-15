@@ -3,7 +3,6 @@
 
 #include "crc.h"
 #include "file_system.h"
-#include "logging.h"
 #include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
@@ -28,8 +27,8 @@ bool DirHandle::InitializeMeta() {
     }
 
     if (meta->used_) {
-      LOG(DEBUG) << "directory handle: " << dh << " name: " << meta->dir_name_
-                 << " seq_no: " << meta->seq_no_ << " crc: " << meta->crc_;
+      SPDLOG_DEBUG("directory handle: {} name: {} crc: {}", dh,
+                   meta->dir_name_, crc);
       if (::strnlen(meta->dir_name_, sizeof(meta->dir_name_)) == 0)
           [[unlikely]] {
         SPDLOG_ERROR("directory meta {} used but name empty", dh);
@@ -57,14 +56,15 @@ bool DirHandle::InitializeMeta() {
     }
     std::string dir_name = d.second->dir_name();
     std::string parent_dir_name = GetParentDirName(dir_name);
-    LOG(DEBUG) << "add child directory: " << dir_name;
+    SPDLOG_DEBUG("add child directory: {} to parent: {}", dir_name,
+                 parent_dir_name);
     const DirectoryPtr &parent_dir = GetCreatedDirectoryNolock(parent_dir_name);
     if (!parent_dir || !parent_dir->AddChildDirectoryNolock(d.second)) {
       return false;
     }
   }
 
-  LOG(DEBUG) << "read directory meta success, free num:" << GetFreeMetaSize();
+  SPDLOG_DEBUG("read directory meta success, free num: {}", GetFreeMetaSize());
   return true;
 }
 
@@ -193,8 +193,10 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
   DirMeta *meta =
       reinterpret_cast<DirMeta *>(base_addr() + sizeof(DirMeta) * dh);
   if (meta->used_ || meta->dh_ != dh) [[unlikely]] {
-    LOG(FATAL) << "new directory meta invalid, used: " << meta->used_
-               << " dh: " << meta->dh_ << " wanted dh: " << dh;
+    bool meta_used = meta->used_;
+    dh_t meta_dh = meta->dh_;
+    SPDLOG_CRITICAL("new directory meta invalid, used: {} dh: {} wanted dh: {}",
+                    meta_used, meta_dh, dh);
     errno = EINVAL;
     return nullptr;
   }
@@ -259,11 +261,11 @@ bool DirHandle::NewDirectory(const std::string &dirname,
 bool DirHandle::AddDirectory2CreateNolock(const DirectoryPtr &child) {
   // 当前文件夹加入内存映射表
   if (created_dirs_.contains(child->dir_name())) {
-    LOG(FATAL) << "directory name has exist, name: " << child->dir_name();
+    SPDLOG_CRITICAL("directory name has exist, name: {}", child->dir_name());
     return false;
   }
   if (created_dhs_.contains(child->dh())) {
-    LOG(FATAL) << "directory dh has exist, name: " << child->dir_name();
+    SPDLOG_CRITICAL("directory dh has exist, name: {}", child->dir_name());
     return false;
   }
   created_dirs_[child->dir_name()] = child;
@@ -312,11 +314,11 @@ bool DirHandle::FindDirectory(const std::string &dirname,
 bool DirHandle::RemoveDirectoryFromCreateNolock(const DirectoryPtr &child) {
   // 从创建文件的映射中删除
   if (created_dirs_.erase(child->dir_name()) != 1) {
-    LOG(ERROR) << "failed to remove directory name map: " << child->dir_name();
+    SPDLOG_ERROR("failed to remove directory name map: {}", child->dir_name());
     return false;
   }
   if (created_dhs_.erase(child->dh()) != 1) {
-    LOG(ERROR) << "failed to remove directory dh map: " << child->dir_name();
+    SPDLOG_ERROR("failed to remove directory dh map: {}", child->dir_name());
     return false;
   }
   return true;
@@ -335,7 +337,7 @@ const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
   std::lock_guard lock(mutex_);
   auto itor = open_dirs_.find(fd);
   if (itor == open_dirs_.end()) [[unlikely]] {
-    LOG(ERROR) << "directory not been opened: " << fd;
+    SPDLOG_ERROR("directory not been opened: {}", fd);
     return kEmptyDirectoryPtr;
   }
   return itor->second;
@@ -349,7 +351,7 @@ const DirectoryPtr &DirHandle::GetCreatedDirectory(dh_t dh) {
 const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(dh_t dh) {
   auto itor = created_dhs_.find(dh);
   if (itor == created_dhs_.end()) [[unlikely]] {
-    LOG(WARNING) << "directory handle not exist: " << dh;
+    SPDLOG_WARN("directory handle not exist: {}", dh);
     return kEmptyDirectoryPtr;
   }
   return itor->second;
@@ -364,7 +366,7 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(
     const std::string &dirname) {
   std::string dir_name;
   if (!TransformPath(dirname, dir_name)) {
-    LOG(ERROR) << "directory path transform failed: " << dirname;
+    SPDLOG_ERROR("directory path transform failed: {}", dirname);
     return kEmptyDirectoryPtr;
   }
   auto itor = created_dirs_.find(dir_name);
@@ -401,13 +403,13 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
 
   // 文件夹下面还有文件或者文件夹不能被删除
   if (dir->ChildCount() > 0) {
-    LOG(ERROR) << "directory not empty: " << dir->dir_name();
+    SPDLOG_ERROR("directory not empty: {}", dir->dir_name());
     errno = ENOTEMPTY | EEXIST;
     return -1;
   }
 
   if (dir->LinkCount() > 0) {
-    LOG(ERROR) << "directory has been opened: " << dir->dir_name();
+    SPDLOG_ERROR("directory has been opened: {}", dir->dir_name());
     errno = EBUSY;
     return -1;
   }
@@ -422,8 +424,8 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   std::string parent_dir_name = GetParentDirName(dir->dir_name());
   auto itor = created_dirs_.find(parent_dir_name);
   if (unlikely(itor == created_dirs_.end())) {
-    LOG(ERROR) << "parent directory not exist: " << parent_dir_name;
-    block_fs_set_errno(ENOENT);
+    SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
+    errno = ENOENT;
     return -1;
   }
   const DirectoryPtr &parent_dir = itor->second;
@@ -434,7 +436,7 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
     return -1;
   }
 
-  LOG(INFO) << "remove directory success, dh: " << dh;
+  SPDLOG_INFO("remove directory success, dh: {}", dh);
   block_fs_set_errno(0);
   return 0;
 }
@@ -484,7 +486,7 @@ int32_t DirHandle::CreateDirectory(const std::string &path) {
     return -1;
   }
 
-  LOG(INFO) << "make directory success: " << path;
+  SPDLOG_INFO("make directory success: {}", path);
   errno = 0;
   return 0;
 }
@@ -509,7 +511,7 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
 
   // 挂载目录不能被删除
   if (IsMountPoint(path)) {
-    LOG(ERROR) << "mount point cannot be removed: " << path;
+    SPDLOG_ERROR("mount point cannot be removed: {}", path);
     errno = EPERM | EBUSY;
     return -1;
   }
@@ -524,13 +526,13 @@ int32_t DirHandle::DeleteDirectory(const std::string &path, bool recursive) {
 
   // 文件夹下面还有文件或者文件夹不能被删除
   if (curr_dir->ChildCount() > 0) {
-    LOG(ERROR) << "directory not empty: " << path;
+    SPDLOG_ERROR("directory not empty: {}", path);
     errno = ENOTEMPTY | EEXIST;
     return -1;
   }
 
   if (curr_dir->LinkCount() > 0) {
-    LOG(ERROR) << "directory has been opened: " << path;
+    SPDLOG_ERROR("directory has been opened: {}", path);
     errno = EBUSY;
     return -1;
   }
@@ -559,9 +561,8 @@ int32_t DirHandle::RenameDirectory(const std::string &from,
 
   // 挂载目录不能被重命名
   if (IsMountPoint(from) || IsMountPoint(to)) {
-    LOG(ERROR) << "mount point cannot be rename, from: " << from
-               << " to: " << to;
-    block_fs_set_errno(EPERM | EBUSY);
+    SPDLOG_ERROR("mount point cannot be rename, from: {} to: {}", from, to);
+    errno = EPERM | EBUSY;
     return -1;
   }
 
