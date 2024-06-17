@@ -189,13 +189,11 @@ int32_t FileSystem::CreateFile(const std::string& path, mode_t mode) {
  *
  * \param oldpath: abosolute oldpath
  * \param newpath: abosolute newpath
- *
- * \return success or failed
  */
 int32_t FileSystem::RenamePath(const std::string& oldpath,
                                const std::string& newpath) {
-  SPDLOG_INFO("rename path: {} to {}", oldpath, newpath);
-  if (unlikely(oldpath.empty() || newpath.empty())) {
+  SPDLOG_INFO("rename path: {} -> {}", oldpath, newpath);
+  if (oldpath.empty() || newpath.empty()) [[unlikely]] {
     SPDLOG_ERROR("rename path error, oldpath: {} newpath: {}", oldpath, newpath);
     errno = EINVAL;
     return -1;

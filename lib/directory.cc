@@ -256,7 +256,7 @@ bool Directory::ForceRemoveAllFiles() {
 int Directory::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, to] {
-        SPDLOG_INFO("rename old dir: {} to: {}", dir_name(), to);
+        SPDLOG_INFO("rename dir {} -> {}", dir_name(), to);
         set_dir_name(to);
         if (!WriteMeta()) {
           return false;

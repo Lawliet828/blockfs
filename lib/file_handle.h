@@ -78,8 +78,6 @@ class FileHandle : public MetaHandle {
   uint32_t PageAlignIndex(uint32_t index);
 
   FileMeta *NewFreeFileMeta(int32_t dh, const std::string &filename);
-  void AddFileName(const FilePtr &file) noexcept;
-  void AddFileHandle(const FilePtr &file) noexcept;
 
   void AddFileNoLock(const FilePtr &file) noexcept;
   bool RemoveFileNoLock(const FilePtr &file) noexcept;

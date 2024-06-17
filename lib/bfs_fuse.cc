@@ -252,8 +252,8 @@ static int bfs_rmdir(const char *path) {
  * must atomically exchange the two files, i.e. both must
  * exist and neither may be deleted.
  */
-static int bfs_rename(const char *from, const char *to, unsigned int flags) {
-  LOG(INFO) << "call bfs_rename from: " << from << " to: " << to;
+static int mfs_rename(const char *from, const char *to, unsigned int flags) {
+  SPDLOG_INFO("call mfs_rename from: {} to: {}", from, to);
 
   std::string from_path = UDiskBFS::Instance()->uxdb_mount_point();
   std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
@@ -264,7 +264,7 @@ static int bfs_rename(const char *from, const char *to, unsigned int flags) {
   /* When we have renameat2() in libc, then we can implement flags */
   if (flags) return -EINVAL;
 
-  res = FileSystem::Instance()->RenamePath(from_path.c_str(), to_path.c_str());
+  res = FileSystem::Instance()->RenamePath(from_path, to_path);
   if (res < 0) return -errno;
 
   return 0;
@@ -1041,7 +1041,7 @@ static const struct fuse_operations kBFSOps = {
     .unlink = bfs_unlink,
     .rmdir = bfs_rmdir,
     .symlink = nullptr,
-    .rename = bfs_rename,
+    .rename = mfs_rename,
     .link = nullptr,
     .chown = nullptr,
     .truncate = mfs_truncate,

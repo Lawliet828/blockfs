@@ -57,7 +57,7 @@ bool FileHandle::InitializeMeta() {
       if (!file) return false;
       if (file->child_fh() > 0) {
         LOG(DEBUG) << "this is parent file, only add to fh map";
-        AddFileHandle(file);
+        created_fhs_[file->fh()] = file;
         // ParentFilePtr parent = ParentFile::NewParentFile();
       } else {
         // LOG(WARNING) << "This is child file, add to fh and name map";
@@ -296,19 +296,10 @@ bool FileHandle::NewFile(const std::string &dirname,
   return true;
 }
 
-void FileHandle::AddFileHandle(const FilePtr &file) noexcept {
+void FileHandle::AddFileNoLock(const FilePtr &file) noexcept {
   created_fhs_[file->fh()] = file;
-}
-
-// 文件名不能保证唯一, 文件dh+文件名可以
-void FileHandle::AddFileName(const FilePtr &file) noexcept {
   FileNameKey key = std::make_pair(file->dh(), file->file_name());
   created_files_[key] = file;
-}
-
-void FileHandle::AddFileNoLock(const FilePtr &file) noexcept {
-  AddFileHandle(file);
-  AddFileName(file);
 }
 
 void FileHandle::AddFileToDirectory(const DirectoryPtr &parent,
@@ -331,6 +322,7 @@ bool FileHandle::RemoveFileNoLock(const FilePtr &file) noexcept {
   }
   return true;
 }
+
 bool FileHandle::RemoveFileFromoDirectory(const DirectoryPtr &parent,
                                           const FilePtr &file) {
   if (!parent->RemoveChildFile(file)) {

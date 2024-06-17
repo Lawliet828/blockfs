@@ -33,7 +33,7 @@ bool File::WriteMeta(int32_t fh) {
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       align_meta, kBlockFsPageSize,
       FileSystem::Instance()->super_meta()->file_meta_offset_ + offset);
-  if (unlikely(ret != kBlockFsPageSize)) {
+  if (ret != kBlockFsPageSize) [[unlikely]] {
     LOG(ERROR) << "write file meta, name: " << meta->file_name_ << " fh: " << fh
                << " error size:" << ret << " need:" << kBlockFsPageSize;
     return false;
@@ -116,7 +116,7 @@ bool ParentFile::Recycle() {
 int File::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->file_handle()->RunInMetaGuard([this, to] {
-        SPDLOG_INFO("rename file name: {} to: {}", file_name(), to);
+        SPDLOG_INFO("rename file {} -> {}", file_name(), to);
         // 先把之前的文件映射去掉
         const DirectoryPtr &old_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dh());
