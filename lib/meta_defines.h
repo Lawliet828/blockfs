@@ -50,8 +50,7 @@ constexpr uint64_t kSuperBlockSize = kBlockFsPageSize;
 constexpr uint64_t kSuperBlockOffset = 0;
 constexpr uint64_t kDirMetaOffset = (kSuperBlockOffset + kSuperBlockSize);
 
-constexpr uint64_t kBlockFsMaxFileNum = 100000;
-constexpr uint64_t kBlockFsMaxDirNum = kBlockFsMaxFileNum;
+constexpr uint64_t kMaxFileNum = 100000;
 constexpr uint64_t kBlockFsMaxUDiskSize = (128 * T);
 constexpr uint64_t kBlockSize = 4 * M;
 constexpr uint64_t kBlockFsMaxDirNameLen = 768;

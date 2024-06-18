@@ -43,7 +43,7 @@ bool SuperBlock::FormatAllMeta() {
   /* BlockFS的常量定义 */
   std::strcpy(meta->uuid_, "12345678901234567890123456789012345678901234567890123456789");
   meta->magic_ = kBlockFsMagic;
-  meta->max_file_num = kBlockFsMaxFileNum;
+  meta->max_file_num = kMaxFileNum;
   meta->max_support_udisk_size_ = kBlockFsMaxUDiskSize;
   meta->block_size_ = kBlockSize;
   meta->max_dir_name_len_ = kBlockFsMaxDirNameLen;

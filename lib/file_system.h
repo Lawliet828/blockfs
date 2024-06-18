@@ -21,7 +21,6 @@ namespace udisk::blockfs {
 
 enum MetaHandleType {
   kSuperBlockHandle,
-  kFDHandle,
   kBlockHandle,
   kDirectoryHandle,
   kFileHandle,
@@ -35,6 +34,7 @@ class FileSystem {
 
   Device *device_;
   ShmManager *shm_manager_;
+  FdHandle *fd_handle_;
 
   MetaHandle *handle_vector_[kMetaHandleSize];
 
@@ -96,7 +96,7 @@ class FileSystem {
   SuperBlockMeta *super_meta() { return super()->meta(); }
 
   FdHandle *fd_handle() {
-    return dynamic_cast<FdHandle *>(GetMetaHandle(kFDHandle));
+    return fd_handle_;
   }
   BlockHandle *block_handle() {
     return dynamic_cast<BlockHandle *>(GetMetaHandle(kBlockHandle));

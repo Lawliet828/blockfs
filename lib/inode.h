@@ -37,12 +37,12 @@ class Inode {
     return nullptr;
   }
 
-  virtual void set_atime(time_t time) noexcept {};
-  virtual time_t atime() noexcept { return 0; };
-  virtual void set_mtime(time_t time) noexcept {};
-  virtual time_t mtime() noexcept { return 0; };
-  virtual void set_ctime(time_t time) noexcept {};
-  virtual time_t ctime() noexcept { return 0; };
+  virtual void set_atime(time_t time) noexcept = 0;
+  virtual time_t atime() noexcept = 0;
+  virtual void set_mtime(time_t time) noexcept = 0;
+  virtual time_t mtime() noexcept = 0;
+  virtual void set_ctime(time_t time) noexcept = 0;
+  virtual time_t ctime() noexcept = 0;
 
   virtual void stat(struct stat *buf) = 0;
   virtual int rename(const std::string &to) { return 0; }
