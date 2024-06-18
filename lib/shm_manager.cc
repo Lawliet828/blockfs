@@ -23,7 +23,7 @@ bool ShmManager::PrefetchSuperMeta(SuperBlockMeta &meta) {
   ::memset(&meta, 0, sizeof(SuperBlockMeta));
   int64_t ret = FileSystem::Instance()->dev()->PreadCache(&meta, kSuperBlockSize,
                                                          kSuperBlockOffset);
-  if (unlikely(ret != kSuperBlockSize)) {
+  if (ret != kSuperBlockSize) [[unlikely]] {
     LOG(ERROR) << "read super block error size:" << ret;
     return false;
   }
@@ -162,7 +162,7 @@ bool ShmManager::ReadAllMeta() {
   ::memset(shm_addr_, 0, shm_size_);
   int64_t ret =
       FileSystem::Instance()->dev()->PreadDirect(shm_addr_, shm_size_, 0);
-  if (unlikely(ret != shm_size_)) {
+  if (ret != shm_size_) [[unlikely]] {
     LOG(ERROR) << "read all meta error size: " << ret;
     return false;
   }

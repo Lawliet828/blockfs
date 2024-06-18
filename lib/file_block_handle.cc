@@ -2,6 +2,7 @@
 
 #include "crc.h"
 #include "file_system.h"
+#include "spdlog/spdlog.h"
 
 namespace udisk::blockfs {
 
@@ -70,7 +71,7 @@ bool FileBlockHandle::InitializeMeta() {
       }
       file->AddFileBlockNoLock(fb);
     } else {
-      PutFileBlockNoLock(index);
+      free_fbhs_.push_back(index);
     }
   }
   return true;
@@ -107,7 +108,7 @@ bool FileBlockHandle::FormatAllMeta() {
     LOG(ERROR) << "write file block meta error size:" << ret;
     return false;
   }
-  LOG(INFO) << "write all file block meta success";
+  SPDLOG_INFO("write all file block meta success");
   return true;
 }
 
@@ -126,15 +127,6 @@ FileBlockPtr FileBlockHandle::GetFileBlockLock() {
   assert(meta->used_ == false);
   assert(meta->used_block_num_ == 0);
   return std::make_shared<FileBlock>(index, meta);
-}
-
-void FileBlockHandle::PutFileBlockLock(uint32_t index) {
-  META_HANDLE_LOCK();
-  PutFileBlockNoLock(index);
-}
-
-void FileBlockHandle::PutFileBlockNoLock(uint32_t index) {
-  free_fbhs_.push_back(index);
 }
 
 }

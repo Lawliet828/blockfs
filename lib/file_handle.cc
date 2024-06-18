@@ -43,8 +43,8 @@ bool FileHandle::InitializeMeta() {
                  << " size: " << meta->size_ << " dh: " << meta->dh_
                  << " child_fh: " << meta->child_fh_
                  << " parent_fh: " << meta->parent_fh_;
-      if (unlikely(::strnlen(meta->file_name_, sizeof(meta->file_name_)) ==
-                   0)) {
+      if (::strnlen(meta->file_name_, sizeof(meta->file_name_)) ==
+                   0) [[unlikely]] {
         LOG(ERROR) << "file meta " << fh << " used but name empty";
         return false;
       }
@@ -111,7 +111,7 @@ bool FileHandle::FormatAllMeta() {
     LOG(ERROR) << "write file meta error size:" << ret;
     return false;
   }
-  LOG(INFO) << "write all file meta success";
+  SPDLOG_INFO("write all file meta success");
   return true;
 }
 
@@ -157,11 +157,11 @@ FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
     return nullptr;
   }
   int32_t fh = free_metas_.front();
-  LOG(INFO) << "create new file handle: " << fh;
+  SPDLOG_INFO("create new file handle: {}", fh);
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
       base_addr() + sizeof(FileMeta) * fh);
-  if (unlikely(meta->used_ || meta->fh_ != fh || meta->size_ != 0)) {
+  if (meta->used_ || meta->fh_ != fh || meta->size_ != 0) [[unlikely]] {
     LOG(ERROR) << "new file meta invalid, used: " << meta->used_
                << " size: " << meta->size_ << " fh: " << meta->fh_
                << " wanted fh: " << fh;
@@ -186,11 +186,11 @@ FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
     return kEmptyFilePtr;
   }
   int32_t fh = free_metas_.front();
-  LOG(INFO) << "create new file handle: " << fh << " name: " << filename;
+  SPDLOG_INFO("create new file handle: {} name: {}", fh, filename);
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
       base_addr() + sizeof(FileMeta) * fh);
-  if (unlikely(meta->used_ || meta->fh_ != fh || meta->size_ != 0)) {
+  if (meta->used_ || meta->fh_ != fh || meta->size_ != 0) [[unlikely]] {
     LOG(ERROR) << "new file meta invalid, used: " << meta->used_
                << " size: " << meta->size_ << " fh: " << meta->fh_
                << " wanted fh: " << fh;
@@ -217,7 +217,7 @@ FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
 }
 
 FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
-  if (unlikely(free_metas_.empty())) {
+  if (free_metas_.empty()) [[unlikely]] {
     LOG(WARNING) << "file meta not enough";
     block_fs_set_errno(ENFILE);
     return nullptr;
@@ -343,7 +343,7 @@ bool FileHandle::RemoveFileFromoDirectoryNolock(const DirectoryPtr &parent,
 bool FileHandle::AddParentFile(const ParentFilePtr &parent) {
   META_HANDLE_LOCK();
   auto it = parent_files_.find(parent->fh());
-  if (unlikely(it != parent_files_.end())) {
+  if (it != parent_files_.end()) [[unlikely]] {
     return false;
   }
   parent_files_[parent->fh()] = parent;
@@ -353,7 +353,7 @@ bool FileHandle::AddParentFile(const ParentFilePtr &parent) {
 bool FileHandle::RemoveParentFile(int32_t fh) {
   META_HANDLE_LOCK();
   auto it = parent_files_.find(fh);
-  if (unlikely(it == parent_files_.end())) {
+  if (it == parent_files_.end()) [[unlikely]] {
     return false;
   }
   ParentFilePtr parent = (ParentFilePtr)it->second;
@@ -386,7 +386,7 @@ bool FileHandle::FindFile(const std::string &dirname,
                           std::pair<DirectoryPtr, FilePtr> *dirs) {
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dirname);
-  if (unlikely(!dir)) {
+  if (!dir) [[unlikely]] {
     LOG(ERROR) << "parent directory not exist: " << dirname;
     block_fs_set_errno(ENOENT);
     return false;
@@ -397,7 +397,7 @@ bool FileHandle::FindFile(const std::string &dirname,
   META_HANDLE_LOCK();
   FileNameKey key = std::make_pair(dir->dh(), filename);
   auto itor = created_files_.find(key);
-  if (unlikely(itor == created_files_.end())) {
+  if (itor == created_files_.end()) [[unlikely]] {
     LOG(WARNING) << "file not exist: " << dirname << filename;
     block_fs_set_errno(ENOENT);
     return false;
@@ -421,14 +421,14 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
   std::string new_dirname;
   std::string new_filename;
   if (!tmpfile) {
-    LOG(INFO) << "create file: " << filename;
+    SPDLOG_INFO("create file: {}", filename);
     if (!TransformPath(filename, new_dirname, new_filename)) {
       return kEmptyFilePtr;
     }
   } else {
     // 创建临时文件传入的参数是文件目录
     new_dirname = filename;
-    LOG(INFO) << "create tmp file in directory: " << new_dirname;
+    SPDLOG_INFO("create tmp file in directory: {}", new_dirname);
   }
   std::pair<DirectoryPtr, FilePtr> dirs;
   if (!NewFile(new_dirname, new_filename, tmpfile, &dirs)) [[unlikely]] {
@@ -460,7 +460,7 @@ int FileHandle::UnlinkFile(const int32_t fh) {
 }
 
 int FileHandle::UnlinkFileNolock(const ino_t fh) {
-  LOG(INFO) << "unlink file handle: " << fh;
+  SPDLOG_INFO("unlink file handle: {}", fh);
   FilePtr file = GetCreatedFileNoLock(fh);
   if (!file) {
     block_fs_set_errno(ENOENT);
@@ -498,18 +498,18 @@ int FileHandle::UnlinkFileNolock(const ino_t fh) {
     return -1;
   }
 
-  LOG(INFO) << "remove file success: " << file->file_name();
-  block_fs_set_errno(0);
+  SPDLOG_INFO("remove file success: {}", file->file_name());
+  errno = 0;
   return 0;
 }
 
 int FileHandle::unlink(const std::string &filename) {
-  LOG(INFO) << "unlink file: " << filename;
+  SPDLOG_INFO("unlink file: {}", filename);
 
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(filename);
   if (dir) {
-    block_fs_set_errno(EISDIR);
+    errno = EISDIR;
     return -1;
   }
 
@@ -520,7 +520,7 @@ int FileHandle::unlink(const std::string &filename) {
   }
 
   std::pair<DirectoryPtr, FilePtr> dirs;
-  if (unlikely(!FindFile(new_dirname, new_filename, &dirs))) {
+  if (!FindFile(new_dirname, new_filename, &dirs)) [[unlikely]] {
     return -1;
   }
   DirectoryPtr parent_dir = dirs.first;
@@ -547,9 +547,8 @@ int FileHandle::unlink(const std::string &filename) {
     return -1;
   }
 
-  // 同步从节点
   LOG(INFO) << "remove file success: " << filename;
-  block_fs_set_errno(0);
+  errno = 0;
   return 0;
 }
 
@@ -618,7 +617,7 @@ const FilePtr &FileHandle::GetCreatedFileNolock(int32_t dh,
                                                 const std::string &filename) {
   FileNameKey key = std::make_pair(dh, filename);
   auto itor = created_files_.find(key);
-  if (unlikely(itor == created_files_.end())) {
+  if (itor == created_files_.end()) [[unlikely]] {
     LOG(WARNING) << "file not exist: " << filename;
     return kEmptyFilePtr;
   }

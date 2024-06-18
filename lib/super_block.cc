@@ -111,7 +111,7 @@ bool SuperBlock::FormatAllMeta() {
     LOG(ERROR) << "write super block error size:" << ret;
     return false;
   }
-  LOG(INFO) << "write all super block success";
+  SPDLOG_INFO("write all super block success");
   return true;
 }
 
@@ -165,6 +165,6 @@ bool SuperBlock::WriteMeta() {
     LOG(ERROR) << "write super block error size:" << ret;
     return false;
   }
-  LOG(INFO) << "write super block success";
+  SPDLOG_INFO("write super block success");
   return true;
 }

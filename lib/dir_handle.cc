@@ -419,7 +419,7 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   // 删除内存文件夹
   std::string parent_dir_name = GetDirName(dir->dir_name());
   auto itor = created_dirs_.find(parent_dir_name);
-  if (unlikely(itor == created_dirs_.end())) {
+  if (itor == created_dirs_.end()) [[unlikely]] {
     SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
     errno = ENOENT;
     return -1;

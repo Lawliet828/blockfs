@@ -505,7 +505,7 @@ int File::ShrinkFile(uint64_t offset) {
         new_fb->add_block_id(old_fb->meta()->block_id_[j]);
         ++copy_block_num;
         if (copy_block_num == block_num) {
-          LOG(INFO) << file_name() << " copy block id compelted";
+          SPDLOG_INFO("{} copy block id compelted", file_name());
           copy_compelted = true;
           break;
         }

@@ -171,7 +171,7 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
  * regular files that will be called instead.
  */
 static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
-  LOG(INFO) << "call bfs_mknod file: " << path;
+  SPDLOG_INFO("call bfs_mknod file: {}", path);
 
   int res;
 
@@ -198,12 +198,10 @@ static int mfs_mkdir(const char *path, mode_t mode) {
 }
 
 /** Remove a file */
-static int bfs_unlink(const char *path) {
-  LOG(INFO) << "call bfs_unlink file: " << path;
+static int unlink(const char *path) {
+  SPDLOG_INFO("call unlink file: {}", path);
 
-  int res;
-
-  res = FileSystem::Instance()->file_handle()->unlink(path);
+  int res = FileSystem::Instance()->file_handle()->unlink(path);
   if (res < 0) return -errno;
 
   return 0;
@@ -211,7 +209,7 @@ static int bfs_unlink(const char *path) {
 
 /** Remove a directory */
 static int bfs_rmdir(const char *path) {
-  LOG(INFO) << "call bfs_rmdir file: " << path;
+  SPDLOG_INFO("call bfs_rmdir file: {}", path);
 
   int res = FileSystem::Instance()->dir_handle()->DeleteDirectory(path, false);
   if (res < 0) return -errno;
@@ -371,9 +369,9 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
  * Unless FUSE_CAP_HANDLE_KILLPRIV is disabled, this method is
  * expected to reset the setuid and setgid bits.
  */
-static int mfs_write(const char *path, const char *buf, size_t size,
+static int write(const char *path, const char *buf, size_t size,
                      off_t offset, struct fuse_file_info *fi) {
-  SPDLOG_INFO("call mfs_write file: {}", path);
+  SPDLOG_INFO("call write file: {}", path);
 
   ino_t fd;
   int res;
@@ -429,7 +427,7 @@ static int mfs_statfs(const char *path, struct statvfs *vfs) {
  * [close]: http://pubs.opengroup.org/onlinepubs/9699919799/functions/close.html
  */
 static int flush(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call flush file: " << path;
+  SPDLOG_INFO("call flush file: {}", path);
 
   ino_t fd;
   int res;
@@ -484,7 +482,7 @@ static int bfs_release(const char *path, struct fuse_file_info *fi) {
  */
 static int mfs_fsync(const char *path, int datasync,
                      struct fuse_file_info *fi) {
-  LOG(INFO) << "call mfs_fsync file: " << path;
+  SPDLOG_INFO("call mfs_fsync file: {}", path);
 
   ino_t fd;
   int res;
@@ -606,7 +604,7 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 /** Release directory
  */
 static int bfs_releasedir(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_releasedir: " << path;
+  SPDLOG_INFO("call bfs_releasedir: {}", path);
 
   if (fi) {
     BLOCKFS_DIR *dp = UDiskBFS::Instance()->PopOpenDirectory(fi->fh);
@@ -629,7 +627,7 @@ static int bfs_releasedir(const char *path, struct fuse_file_info *fi) {
  * value provided to fuse_main() / fuse_new().
  */
 static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
-  LOG(INFO) << "call bfs_init";
+  SPDLOG_INFO("call bfs_init");
 
   LOG(INFO) << "Protocol version: " << conn->proto_major << "."
             << conn->proto_minor;
@@ -680,7 +678,7 @@ static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
  * Called on filesystem exit.
  */
 static void bfs_destroy(void *userdata) {
-  LOG(INFO) << "call bfs_destroy";
+  SPDLOG_INFO("call bfs_destroy");
   UDiskBFS::Destroy();
 }
 
@@ -699,7 +697,7 @@ static int mfs_create(const char *path, mode_t mode,
   if (path == nullptr) [[unlikely]] {
     return -EINVAL;
   }
-  LOG(INFO) << "call mfs_create: " << path;
+  SPDLOG_INFO("call mfs_create: {}", path);
 
   ino_t fd = FileSystem::Instance()->file_handle()->open(path, fi->flags, mode);
 
@@ -948,7 +946,7 @@ ssize_t bfs_copy_file_range(const char *path_in, struct fuse_file_info *fi_in,
  */
 off_t bfs_lseek(const char *path, off_t off, int whence,
                 struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_lseek: " << path;
+  SPDLOG_INFO("call bfs_lseek: {}", path);
 
   ino_t fd;
   off_t res;
@@ -971,7 +969,7 @@ static const struct fuse_operations kBFSOps = {
     .getattr = mfs_getattr,
     .mknod = bfs_mknod,
     .mkdir = mfs_mkdir,
-    .unlink = bfs_unlink,
+    .unlink = unlink,
     .rmdir = bfs_rmdir,
     .symlink = nullptr,
     .rename = mfs_rename,
@@ -980,7 +978,7 @@ static const struct fuse_operations kBFSOps = {
     .truncate = mfs_truncate,
     .open = mfs_open,
     .read = mfs_read,
-    .write = mfs_write,
+    .write = write,
     .statfs = mfs_statfs,
     .flush = flush,
     .release = bfs_release,
@@ -1082,7 +1080,7 @@ void UDiskBFS::FuseLoop(bfs_config_info *info) {
   std::vector<char *> argv;
   argv.push_back(fsname_str);
   if (info->fuse_debug_) {
-    LOG(INFO) << "fuse enable debug";
+    SPDLOG_INFO("fuse enable debug");
     argv.push_back((char *)"-d");
   }
   argv.push_back((char *)"-f");

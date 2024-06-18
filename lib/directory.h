@@ -10,7 +10,6 @@ class Directory : public Inode<DirMeta, File>,
                   public std::enable_shared_from_this<Directory> {
  private:
   int32_t nlink_ = 0;
-  uint32_t ack_cnt_ = 0;
   std::unordered_map<dh_t, DirectoryPtr> child_dir_maps_;
 
  private:
@@ -30,7 +29,6 @@ class Directory : public Inode<DirMeta, File>,
   dh_t dh() const { return meta_->dh_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
   uint32_t ChildCount() noexcept;
-  const uint32_t DecAckCnt() { return --ack_cnt_; }
   void IncLinkCount() noexcept {
     std::lock_guard lock(mutex_);
     ++nlink_;

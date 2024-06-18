@@ -248,7 +248,7 @@ bool Directory::ForceRemoveAllFiles() {
                                                  it->second->file_name());
     item_maps_.erase(it++);
   }
-  // TOFO: remote  all dirs
+  // TODO: remote  all dirs
   // child_dir_maps_.clear();
   return true;
 }

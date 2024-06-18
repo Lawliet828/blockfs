@@ -1,4 +1,3 @@
-// Copyright (c) 2020 UCloud All rights reserved.
 #ifndef LIB_BLOCK_HANDLE_H
 #define LIB_BLOCK_HANDLE_H
 
@@ -24,8 +23,10 @@ class FileBlockHandle : public MetaHandle {
 
   FileBlockPtr GetFileBlockLock();
 
-  void PutFileBlockLock(uint32_t index);
-  void PutFileBlockNoLock(uint32_t index);
+  void PutFileBlockLock(uint32_t index) {
+    META_HANDLE_LOCK();
+    free_fbhs_.push_back(index);
+  }
   bool PutFileBlockLock(const FileBlockPtr &file_block) {
     META_HANDLE_LOCK();
     free_fbhs_.push_back(file_block->index());

@@ -1,7 +1,6 @@
 #ifndef LIB_ALIGNED_BUFFER_H_
 #define LIB_ALIGNED_BUFFER_H_
 
-#include "comm_utils.h"
 #include "meta_defines.h"
 
 namespace udisk::blockfs {

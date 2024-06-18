@@ -355,8 +355,8 @@ bool FileSystem::FormatFSData() {
   uint64_t zero_data_offset = super_meta()->block_data_start_offset_;
   uint64_t zero_data_len = zero_buffer_len;
   while (true) {
-    if (unlikely(super_meta()->device_size <
-                 (zero_data_offset + zero_buffer_len))) {
+    if (super_meta()->device_size <
+                 (zero_data_offset + zero_buffer_len)) [[unlikely]] {
       zero_data_len = super_meta()->device_size - zero_data_offset;
     }
     ret = dev()->PwriteDirect(buffer->data(), zero_data_len, zero_data_offset);
@@ -365,7 +365,7 @@ bool FileSystem::FormatFSData() {
       return false;
     }
     zero_data_offset += zero_data_len;
-    if (unlikely(zero_data_offset == super_meta()->device_size)) {
+    if (zero_data_offset == super_meta()->device_size) [[unlikely]] {
       break;
     }
   }
