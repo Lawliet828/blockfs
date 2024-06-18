@@ -788,10 +788,10 @@ int FileHandle::dup(int oldfd) {
   return newfd;
 }
 
-int FileHandle::fsync(int32_t fd) {
+int FileHandle::fsync(ino_t fd) {
   const OpenFilePtr &open_file = GetOpenFile(fd);
   if (!open_file) {
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return -1;
   }
   return open_file->file()->fsync();

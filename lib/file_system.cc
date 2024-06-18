@@ -59,32 +59,6 @@ int32_t FileSystem::MountFileSystem(const std::string& config_path) {
 }
 
 /**
- * remount the blockfs filesystem
- *
- * \param void
- *
- * \return success is zero, otherwise -1
- */
-int32_t FileSystem::RemountFileSystem() {
-  remount_ = true;
-  Destroy();
-
-  if (!Initialize()) {
-    return -1;
-  }
-
-  remount_ = false;
-
-  if (!shm_manager_->Initialize(false)) {
-    return -1;
-  }
-  if (!InitializeMeta()) {
-    return -1;
-  }
-  return MakeMountPoint(super()->uxdb_mount_point());
-}
-
-/**
  * read a directory
  *
  * \param dir: dir info struct
@@ -320,10 +294,9 @@ int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
  * \return success or failed
  */
 bool FileSystem::Initialize() {
-  if (!remount_) {
-    device_ = new Device();
-    shm_manager_ = new ShmManager();
-  }
+  device_ = new Device();
+  shm_manager_ = new ShmManager();
+
   handle_vector_[kSuperBlockHandle] = new SuperBlock();
   handle_vector_[kFDHandle] = new FdHandle();
   handle_vector_[kBlockHandle] = new BlockHandle();
@@ -349,15 +322,13 @@ void FileSystem::Destroy() {
     }
   }
 
-  if (!remount_) {
-    if (shm_manager_) {
-      delete shm_manager_;
-      shm_manager_ = nullptr;
-    }
-    if (device_) {
-      delete device_;
-      device_ = nullptr;
-    }
+  if (shm_manager_) {
+    delete shm_manager_;
+    shm_manager_ = nullptr;
+  }
+  if (device_) {
+    delete device_;
+    device_ = nullptr;
   }
 }
 

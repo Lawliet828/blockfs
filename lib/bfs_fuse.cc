@@ -469,8 +469,8 @@ static int mfs_statfs(const char *path, struct statvfs *vfs) {
  *
  * [close]: http://pubs.opengroup.org/onlinepubs/9699919799/functions/close.html
  */
-static int bfs_flush(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_flush file: " << path;
+static int flush(const char *path, struct fuse_file_info *fi) {
+  LOG(INFO) << "call flush file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -509,7 +509,7 @@ static int bfs_flush(const char *path, struct fuse_file_info *fi) {
  * file.  The return value of release is ignored.
  */
 static int bfs_release(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_flush file: " << path;
+  LOG(INFO) << "call bfs_release file: " << path;
 
   (void)path;
   int res = 0;
@@ -526,9 +526,9 @@ static int bfs_release(const char *path, struct fuse_file_info *fi) {
  * If the datasync parameter is non-zero, then only the user data
  * should be flushed, not the meta data.
  */
-static int bfs_fsync(const char *path, int datasync,
+static int mfs_fsync(const char *path, int datasync,
                      struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_fsync file: " << path;
+  LOG(INFO) << "call mfs_fsync file: " << path;
 
   std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
   in_path += path;
@@ -1049,9 +1049,9 @@ static const struct fuse_operations kBFSOps = {
     .read = mfs_read,
     .write = mfs_write,
     .statfs = mfs_statfs,
-    .flush = bfs_flush,
+    .flush = flush,
     .release = bfs_release,
-    .fsync = bfs_fsync,
+    .fsync = mfs_fsync,
     .opendir = bfs_opendir,
     .readdir = bfs_readdir,
     .releasedir = bfs_releasedir,

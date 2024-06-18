@@ -115,7 +115,7 @@ class FileHandle : public MetaHandle {
   int open(const std::string &filename, int32_t flags, mode_t mode = 0);
   int close(int32_t fh) noexcept;
   int dup(int oldfd);
-  int fsync(int32_t fh);
+  int fsync(ino_t fh);
 };
 }
 #endif

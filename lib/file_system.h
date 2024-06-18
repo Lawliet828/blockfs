@@ -32,7 +32,6 @@ enum MetaHandleType {
 class FileSystem {
  private:
   bfs_config_info mount_config_;
-  bool remount_ = false;
 
   Device *device_;
   ShmManager *shm_manager_;
@@ -61,7 +60,6 @@ class FileSystem {
 
   // Mount FileSystem
   int32_t MountFileSystem(const std::string &config_path);
-  int32_t RemountFileSystem();
 
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
 
