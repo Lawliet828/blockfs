@@ -253,7 +253,7 @@ static int bfs_rmdir(const char *path) {
  * exist and neither may be deleted.
  */
 static int mfs_rename(const char *from, const char *to, unsigned int flags) {
-  SPDLOG_INFO("call mfs_rename from: {} to: {}", from, to);
+  SPDLOG_INFO("call mfs_rename: {} -> {}", from, to);
 
   std::string from_path = UDiskBFS::Instance()->uxdb_mount_point();
   std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();

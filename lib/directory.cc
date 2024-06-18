@@ -191,7 +191,7 @@ bool Directory::AddChildFile(const FilePtr &file) {
 }
 
 bool Directory::AddChildFileNoLock(const FilePtr &file) {
-  if (item_maps_.find(file->fh()) != item_maps_.end()) {
+  if (item_maps_.contains(file->fh())) {
     SPDLOG_ERROR("file fh has exist, name: {}", file->file_name());
     return false;
   }
@@ -253,17 +253,45 @@ bool Directory::ForceRemoveAllFiles() {
   return true;
 }
 
+/*
+实际测试mv命令会报错mv: 无法获取'dir11' 的文件状态(stat): No such file or directory
+看日志是在rename成功后, 又getattr原路径
+但是我在upfs中操作, 没有这个问题
+*/
 int Directory::rename(const std::string &to) {
   bool success =
       FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, to] {
         SPDLOG_INFO("rename dir {} -> {}", dir_name(), to);
+
+        std::string new_parent_dir_name = GetParentDirName(to);
+        const DirectoryPtr &new_parent_dir =
+            FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(new_parent_dir_name);
+        if (!new_parent_dir) {
+          SPDLOG_ERROR("new parent dir {} not exist", new_parent_dir_name);
+          return false;
+        }
+
+        std::string old_parent_dir_name = GetParentDirName(dir_name());
+        const DirectoryPtr &old_parent_dir =
+            FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(old_parent_dir_name);
+        if (!old_parent_dir) {
+          SPDLOG_ERROR("old parent dir {} not exist", old_parent_dir_name);
+          return false;
+        }
+        old_parent_dir->RemovChildDirectory(shared_from_this());
+        if (!FileSystem::Instance()->dir_handle()->RemoveDirectoryFromCreateNolock(shared_from_this())) {
+          return false;
+        }
+
         set_dir_name(to);
+
+        FileSystem::Instance()->dir_handle()->AddDirectory2CreateNolock(shared_from_this());
+        new_parent_dir->AddChildDirectory(shared_from_this());
+
         if (!WriteMeta()) {
           return false;
         }
         return true;
       });
-  // TOOD: 文件夹的dh没有改变
-  // TODO: 修改打开文件name的map关系
   return success ? 0 : -1;
 }
