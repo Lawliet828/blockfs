@@ -54,11 +54,11 @@ class FileHandle : public MetaHandle {
                 std::pair<DirectoryPtr, FilePtr> *dirs);
 
   void AddOpenFile(ino_t fd, const OpenFilePtr &file) noexcept {
-    META_HANDLE_LOCK();
+    std::lock_guard lock(mutex_);
     open_files_[fd] = file;
   }
   void RemoveOpenFile(ino_t fd, const OpenFilePtr &file) noexcept {
-    META_HANDLE_LOCK();
+    std::lock_guard lock(mutex_);
     open_files_.erase(fd);
   }
 
@@ -113,7 +113,7 @@ class FileHandle : public MetaHandle {
   int unlink(const std::string &filename);
 
   int open(const std::string &filename, int32_t flags, mode_t mode = 0);
-  int close(int32_t fh) noexcept;
+  int close(ino_t fh) noexcept;
   int dup(int oldfd);
   int fsync(ino_t fh);
 };

@@ -15,7 +15,6 @@ class FdHandle : public MetaHandle {
 
  public:
   FdHandle() = default;
-  explicit FdHandle(int32_t max_fd_num) { set_max_fd_num(max_fd_num); }
   ~FdHandle() { free_fd_pool_.clear(); }
 
   void set_max_fd_num(int32_t max_fd_num) noexcept {

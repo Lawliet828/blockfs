@@ -37,3 +37,7 @@ fio -direct=1 -iodepth=32 -rw=randrw -ioengine=libaio -bsrange=1k-16k -size=1G -
 2024/06/14 16:15 rssd云盘 使用spdlog
    READ: bw=187MiB/s (196MB/s), 187MiB/s-187MiB/s (196MB/s-196MB/s), io=8192MiB (8590MB), run=43733-43733msec
   WRITE: bw=139MiB/s (146MB/s), 139MiB/s-139MiB/s (146MB/s-146MB/s), io=4096MiB (4295MB), run=29508-29508msec
+
+## mdtest
+
+mdtest -d /data/mysql/bfs -z 1 -i 1 -I 1

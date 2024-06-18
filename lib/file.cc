@@ -124,7 +124,7 @@ int File::rename(const std::string &to) {
           return false;
         }
 
-        std::string dir_name = GetParentDirName(to);
+        std::string dir_name = GetDirName(to);
         const DirectoryPtr &new_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
         if (!new_dir) {
@@ -668,9 +668,7 @@ int64_t OpenFile::read(void *buf, uint64_t size, uint64_t append_pos) {
   uint64_t need_read_size = size;
   if (append_pos + size > file_->file_size()) {
     need_read_size = file_->file_size() - append_pos;
-    LOG(WARNING) << file_->file_name()
-                 << " read file from offset to end, file size:"
-                 << file_->file_size() << " offset: " << append_pos;
+    SPDLOG_WARN("{} read file from offset to end, file size: {} offset: {}", file_->file_name(), file_->file_size(), append_pos);
   }
 
   FileReader reader =

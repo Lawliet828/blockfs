@@ -1,7 +1,6 @@
 #include "comm_utils.h"
 
 #include <dirent.h>
-#include <signal.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -11,7 +10,6 @@ namespace fs = std::filesystem;
 
 namespace udisk::blockfs {
 
-// https://blog.csdn.net/butterfly5211314/article/details/84575883
 // new_dirname = ::dirname(full_path.c_str());
 // new_filename = ::basename(full_path.c_str());
 std::string GetFileName(const std::string &path) {
@@ -24,13 +22,13 @@ std::string GetFileName(const std::string &path) {
 }
 
 // 返回目录名, 末尾需要带'/'，如果是根目录则返回'/'
-std::string GetParentDirName(const std::string &path) {
+std::string GetDirName(const std::string &path) {
   std::string tmp = path;
   if (tmp == "/") {
     return tmp;
   }
-  if (tmp[tmp.size() - 1] == '/') {
-    tmp.erase(tmp.size() - 1);
+  if (tmp.back() == '/') {
+    tmp.pop_back();
   }
   std::string parent_path = fs::path(tmp).parent_path().string();
   if (parent_path == "/") {

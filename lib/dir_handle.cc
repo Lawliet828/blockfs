@@ -55,7 +55,7 @@ bool DirHandle::InitializeMeta() {
       continue;
     }
     std::string dir_name = d.second->dir_name();
-    std::string parent_dir_name = GetParentDirName(dir_name);
+    std::string parent_dir_name = GetDirName(dir_name);
     SPDLOG_DEBUG("add child directory: {} to parent: {}", dir_name,
                  parent_dir_name);
     const DirectoryPtr &parent_dir = GetCreatedDirectoryNolock(parent_dir_name);
@@ -153,7 +153,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
       errno = check_parent ? EEXIST : ENOTDIR;
       return false;
     }
-    std::string parent_path = GetParentDirName(dirname);
+    std::string parent_path = GetDirName(dirname);
     if (!IsMountPoint(parent_path) && check_parent) {
       if (parent_path[parent_path.size() - 1] == '/') {
         parent_path.erase(parent_path.size() - 1);
@@ -234,7 +234,7 @@ bool DirHandle::NewDirectory(const std::string &dirname,
     return false;
   }
   if (!IsMountPoint(dirname)) {
-    std::string parent_dir_name = GetParentDirName(dirname);
+    std::string parent_dir_name = GetDirName(dirname);
     auto itor = created_dirs_.find(parent_dir_name);
     if (itor == created_dirs_.end()) [[unlikely]] {
       SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
@@ -288,7 +288,7 @@ bool DirHandle::AddDirectory(const DirectoryPtr &parent,
 bool DirHandle::FindDirectory(const std::string &dirname,
                               std::pair<DirectoryPtr, DirectoryPtr> *dirs) {
   std::lock_guard lock(mutex_);
-  std::string parent_dir_name = GetParentDirName(dirname);
+  std::string parent_dir_name = GetDirName(dirname);
   auto itor = created_dirs_.find(parent_dir_name);
   if (itor == created_dirs_.end()) [[unlikely]] {
     SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);
@@ -417,7 +417,7 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   }
 
   // 删除内存文件夹
-  std::string parent_dir_name = GetParentDirName(dir->dir_name());
+  std::string parent_dir_name = GetDirName(dir->dir_name());
   auto itor = created_dirs_.find(parent_dir_name);
   if (unlikely(itor == created_dirs_.end())) {
     SPDLOG_ERROR("parent directory not exist: {}", parent_dir_name);

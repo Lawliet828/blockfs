@@ -263,7 +263,7 @@ int Directory::rename(const std::string &to) {
       FileSystem::Instance()->dir_handle()->RunInMetaGuard([this, to] {
         SPDLOG_INFO("rename dir {} -> {}", dir_name(), to);
 
-        std::string new_parent_dir_name = GetParentDirName(to);
+        std::string new_parent_dir_name = GetDirName(to);
         const DirectoryPtr &new_parent_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(new_parent_dir_name);
         if (!new_parent_dir) {
@@ -271,7 +271,7 @@ int Directory::rename(const std::string &to) {
           return false;
         }
 
-        std::string old_parent_dir_name = GetParentDirName(dir_name());
+        std::string old_parent_dir_name = GetDirName(dir_name());
         const DirectoryPtr &old_parent_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(old_parent_dir_name);
         if (!old_parent_dir) {

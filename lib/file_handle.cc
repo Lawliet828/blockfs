@@ -130,7 +130,7 @@ bool FileHandle::TransformPath(const std::string &filename,
     errno = ENOTDIR;
     return false;
   }
-  new_dirname = GetParentDirName(filename);
+  new_dirname = GetDirName(filename);
   new_filename = GetFileName(filename);
   SPDLOG_INFO("transformPath dirname: {}, filename: {}", new_dirname, new_filename);
   if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {
@@ -565,7 +565,7 @@ const OpenFilePtr &FileHandle::GetOpenFile(ino_t fd) {
 const OpenFilePtr &FileHandle::GetOpenFileNolock(ino_t fd) {
   auto itor = open_files_.find(fd);
   if (itor == open_files_.end()) [[unlikely]] {
-    LOG(WARNING) << "fd not been opened: " << fd;
+    SPDLOG_WARN("fd not been opened: {}", fd);
     errno = EBADF;
     return kEmptyOpenFilePtr;
   }
@@ -713,15 +713,14 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   }
 
   /* allocate a file fd for this new file */
-  int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();
+  ino_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
     errno = ENFILE;
     return -1;
   }
-  LOG(INFO) << "open file: " << filename << " fd: " << fd
-            << " fh: " << file->fh();
   OpenFilePtr open_file = std::make_shared<OpenFile>(file);
   AddOpenFile(fd, open_file);
+  SPDLOG_INFO("open file name: {}, fd: {}, fh: {}", filename, fd, file->fh());
 
   if (flags & O_APPEND) {
     // if O_APPEND is set, we need to place file pointer at end of file
@@ -735,10 +734,10 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   return fd;
 }
 
-int FileHandle::close(int32_t fd) noexcept {
+int FileHandle::close(ino_t fd) noexcept {
   META_HANDLE_LOCK();
   const OpenFilePtr &open_file = GetOpenFileNolock(fd);
-  if (unlikely(!open_file)) {
+  if (!open_file) [[unlikely]] {
     return -1;
   }
   const FilePtr &file = open_file->file();
@@ -773,15 +772,14 @@ int FileHandle::dup(int oldfd) {
   const FilePtr &file = old_open_file->file();
 
   /* allocate a file fd for this new file */
-  int32_t newfd = FileSystem::Instance()->fd_handle()->get_fd();
+  ino_t newfd = FileSystem::Instance()->fd_handle()->get_fd();
   if (newfd < 0) {
     block_fs_set_errno(ENFILE);
     return -1;
   }
-  LOG(INFO) << "dup oldfd: " << oldfd << " newfd: " << newfd
-            << " fh: " << file->fh();
   OpenFilePtr new_open_file = std::make_shared<OpenFile>(file);
   AddOpenFile(newfd, new_open_file);
+  SPDLOG_INFO("dup oldfd: {}, newfd: {}, fh: {}", oldfd, newfd, file->fh());
   file->IncLinkCount();
 
   errno = 0;
