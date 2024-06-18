@@ -229,18 +229,18 @@ FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
       base_addr() + sizeof(FileMeta) * fh);
-  if (unlikely(meta->used_ || meta->fh_ != fh || meta->size_ != 0)) {
+  if (meta->used_ || meta->fh_ != fh || meta->size_ != 0) [[unlikely]] {
     LOG(ERROR) << "new file meta invalid, used: " << meta->used_
                << " size: " << meta->size_ << " fh: " << meta->fh_
                << " wanted fh: " << fh;
-    block_fs_set_errno(EINVAL);
+    errno = EINVAL;
     return nullptr;
   }
 
   FilePtr file = std::make_shared<File>();
   if (!file) {
     LOG(ERROR) << "failed to new file pointer";
-    block_fs_set_errno(ENOMEM);
+    errno = ENOMEM;
     return nullptr;
   }
   file->set_meta(meta);
@@ -313,11 +313,11 @@ void FileHandle::AddFileToDirectory(const DirectoryPtr &parent,
 bool FileHandle::RemoveFileNoLock(const FilePtr &file) noexcept {
   FileNameKey key = std::make_pair(file->dh(), file->file_name());
   if (created_files_.erase(key) != 1) {
-    LOG(ERROR) << "failed to remove file name map: " << file->file_name();
+    SPDLOG_ERROR("failed to remove file name map: {}", file->file_name());
     return false;
   }
   if (created_fhs_.erase(file->fh()) != 1) {
-    LOG(ERROR) << "failed to remove file fh map: " << file->file_name();
+    SPDLOG_ERROR("failed to remove file fh map: {}", file->file_name());
     return false;
   }
   return true;

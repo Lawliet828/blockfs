@@ -31,11 +31,9 @@ class DirHandle : public MetaHandle {
   DirectoryPtr NewFreeDirectoryNolock(const std::string &dirname);
   bool NewDirectory(const std::string &dirname,
                     std::pair<DirectoryPtr, DirectoryPtr> *dirs);
-  bool AddDirectory2CreateNolock(const DirectoryPtr &child);
   bool AddDirectory(const DirectoryPtr &parent, const DirectoryPtr &child);
   bool FindDirectory(const std::string &dirname,
                      std::pair<DirectoryPtr, DirectoryPtr> *dirs);
-  bool RemoveDirectoryFromCreateNolock(const DirectoryPtr &child);
   bool RemoveDirectory(const DirectoryPtr &parent, const DirectoryPtr &child);
 
  public:
@@ -66,6 +64,8 @@ class DirHandle : public MetaHandle {
   int32_t CreateDirectory(const std::string &path);
   int32_t DeleteDirectory(const std::string &path, bool recursive);
   int32_t RenameDirectory(const std::string &from, const std::string &to);
+  bool AddDirectory2CreateNolock(const DirectoryPtr &child);
+  bool RemoveDirectoryFromCreateNolock(const DirectoryPtr &child);
 
   BLOCKFS_DIR *OpenDirectory(const std::string &path);
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);

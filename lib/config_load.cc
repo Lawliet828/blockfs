@@ -45,6 +45,8 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   spdlog::set_level(spdlog::level::debug);
   // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
   spdlog::set_pattern("%Y%m%d %H:%M:%S.%e %t %l %@ %! - %v");
+  spdlog::flush_on(spdlog::level::warn);
+  spdlog::flush_every(std::chrono::seconds(3));
   SPDLOG_INFO("Welcome to spdlog version {}.{}.{}!", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 
   Logger::set_min_level(Logger::LogLevelConvert(config->log_level_));

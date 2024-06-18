@@ -113,8 +113,7 @@ int32_t FileSystem::StatPath(const std::string& path, struct stat* buf) {
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断
-  if (super()->is_mount_point(path_name) ||
-      path_name[path_name.size() - 1] == '/') {
+  if (super()->is_mount_point(path_name) || path_name.back() == '/') {
     DirectoryPtr dir = dir_handle()->GetCreatedDirectory(path_name);
     if (!dir) {
       errno = ENOENT;

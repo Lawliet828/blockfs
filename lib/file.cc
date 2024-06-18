@@ -142,10 +142,9 @@ int File::rename(const std::string &to) {
         std::string file_name = GetFileName(to);
         set_file_name(file_name);
         set_dh(new_dir->dh());
-        auto now = std::chrono::system_clock::now();
-        auto duration = now.time_since_epoch();
-        int64_t secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-        time_t seconds = static_cast<time_t>(secondsSinceEpoch);
+        using namespace std::chrono;
+        system_clock::time_point now = system_clock::now();
+        time_t seconds = system_clock::to_time_t(now);
         UpdateTimeStamp(seconds);
 
         // 添加新的文件映射
@@ -157,7 +156,6 @@ int File::rename(const std::string &to) {
         if (!WriteMeta()) {
           return false;
         }
-
         return true;
       });
   return success ? 0 : -1;

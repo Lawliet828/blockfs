@@ -150,11 +150,7 @@ bool DirHandle::CheckFileExist(const std::string &dirname,
     // 检查同名的文件是否存在
     if (FileSystem::Instance()->file_handle()->GetCreatedFile(path)) {
       SPDLOG_ERROR("the same file path exist: {}", dirname);
-      if (check_parent) {
-        errno = EEXIST;
-      } else {
-        errno = ENOTDIR;
-      }
+      errno = check_parent ? EEXIST : ENOTDIR;
       return false;
     }
     std::string parent_path = GetParentDirName(dirname);
