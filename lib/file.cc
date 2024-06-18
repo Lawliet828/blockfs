@@ -124,7 +124,7 @@ int File::rename(const std::string &to) {
           return false;
         }
 
-        std::string dir_name = GetDirName(to);
+        std::string dir_name = GetParentDirName(to);
         const DirectoryPtr &new_dir =
             FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
         if (!new_dir) {

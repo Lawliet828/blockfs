@@ -51,8 +51,7 @@ int32_t FileSystem::MountFileSystem(const std::string& config_path) {
   if (!InitializeMeta()) {
     return -1;
   }
-  super()->set_uxdb_mount_point(mount_config_.uxdb_mount_point_);
-  if (MakeMountPoint(mount_config_.uxdb_mount_point_) < 0) {
+  if (MakeMountPoint("/") < 0) {
     return -1;
   }
   return 0;
@@ -87,7 +86,7 @@ int32_t FileSystem::StatPath(const std::string& path, struct stat* buf) {
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断
-  if (super()->is_mount_point(path_name) || path_name.back() == '/') {
+  if (path_name.back() == '/') {
     DirectoryPtr dir = dir_handle()->GetCreatedDirectory(path_name);
     if (!dir) {
       errno = ENOENT;
@@ -493,8 +492,7 @@ void FileSystem::DumpFileMeta(const std::string& path) {
   std::string path_name = path;
   // 如果是带尾部分隔符,只需要判断文件夹
   // 挂载目录检查可能不带/, 所以要优先判断
-  if (super()->is_mount_point(path_name) ||
-      path_name[path_name.size() - 1] == '/') {
+  if (path_name[path_name.size() - 1] == '/') {
     return;
   } else {
     FilePtr file = file_handle()->GetCreatedFile(path_name);

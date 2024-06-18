@@ -32,9 +32,6 @@ bfs配置项：
 
 device_uuid 必须配置，需要使用block_fs_tool查看uuid得到uuid，相关操作查看tool的使用
 
-uxdb_mount_point 必须配置，是uxdb的虚拟挂载点，使用专有api打开需要加这个绝对路径
-
-
 fuse配置项：
 
 fuse_debug 必须配置，是否开启fuse debug信息打印

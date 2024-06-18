@@ -21,9 +21,6 @@ class SuperBlock : public MetaHandle {
     return reinterpret_cast<SuperBlockMeta *>(base_addr());
   }
 
-  bool set_uxdb_mount_point(const std::string &path);
-  std::string uxdb_mount_point() noexcept { return meta()->uxdb_mount_point_; }
-  bool is_mount_point(const std::string &path) noexcept;
   std::string uuid() noexcept { return meta()->uuid_; }
   uint64_t meta_size() noexcept { return meta()->block_data_start_offset_; }
 

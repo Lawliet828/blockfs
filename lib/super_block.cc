@@ -116,64 +116,6 @@ bool SuperBlock::FormatAllMeta() {
 }
 
 /**
- * set uxdb mount point
- *
- * \param mount point
- *
- * \return success or failed
- */
-bool SuperBlock::set_uxdb_mount_point(const std::string &path) {
-  LOG(INFO) << "UXDB root path: " << path;
-
-  std::string root_path = path;
-  std::string mount_point = uxdb_mount_point();
-  if (root_path[root_path.size() - 1] != '/') {
-    root_path += "/";
-  }
-  if (root_path.size() >= kUXDBMountPrefixMaxLen) {
-    LOG(ERROR) << "mount point path too long, size: " << root_path.size();
-    return false;
-  }
-  // 检查已经配置过MountPoint检查设置的是否一致
-  // 当前系统要求挂载点不能更改
-  if (mount_point.size() > 0) {
-    // 读取的即将设置的挂载点一致
-    if (root_path == mount_point) {
-      LOG(INFO) << "mount point has been configured";
-      return true;
-    } else {
-      LOG(ERROR) << "mount point  not matched, rootpath: " << root_path
-                 << " uxdb_mount_point: " << mount_point;
-      return false;
-    }
-  }
-  ::memset(meta()->uxdb_mount_point_, 0, sizeof(meta()->uxdb_mount_point_));
-  ::memcpy(meta()->uxdb_mount_point_, root_path.c_str(), root_path.size());
-  LOG(INFO) << "UXDB mount point: " << meta()->uxdb_mount_point_;
-
-  if (!WriteMeta()) {
-    return false;
-  }
-  LOG(INFO) << "write mount point: " << meta()->uxdb_mount_point_ << " success";
-  return true;
-}
-
-/**
- * check path whether is uxdb mount point
- *
- * \param path
- *
- * \return yes or no
- */
-bool SuperBlock::is_mount_point(const std::string &path) noexcept {
-  std::string mount_point = uxdb_mount_point();
-  if (path == mount_point || path + '/' == mount_point) {
-    return true;
-  }
-  return false;
-}
-
-/**
  * dump super metadata info
  *
  * \param void
@@ -210,8 +152,7 @@ void SuperBlock::Dump() noexcept {
             << "\n"
             << "data_start_offset: " << meta()->block_data_start_offset_ << "\n"
             << "device_size: " << meta()->device_size << "\n"
-            << "curr_block_num: " << meta()->curr_block_num << "\n"
-            << "uxdb_mount_point: " << meta()->uxdb_mount_point_;
+            << "curr_block_num: " << meta()->curr_block_num;
 }
 
 bool SuperBlock::WriteMeta() {

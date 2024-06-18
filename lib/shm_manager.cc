@@ -56,7 +56,6 @@ bool ShmManager::PrefetchSuperMeta() {
     return false;
   }
   LOG(DEBUG) << "read super block success";
-  LOG(DEBUG) << "mount point: " << super_.uxdb_mount_point_;
   LOG(DEBUG) << "block_data_start_offset: " << super_.block_data_start_offset_;
 
   shm_size_ = super_.block_data_start_offset_;

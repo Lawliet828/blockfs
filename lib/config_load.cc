@@ -54,10 +54,6 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
   if (ini.GetStringValue("bfs", "device_uuid", &config->device_uuid_) != 0) {
     return false;
   }
-  if (ini.GetStringValue("bfs", "uxdb_mount_point",
-                         &config->uxdb_mount_point_) != 0) {
-    return false;
-  }
 
   if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {
     config->fuse_debug_ = false;

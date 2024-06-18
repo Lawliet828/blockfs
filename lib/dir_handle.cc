@@ -132,7 +132,7 @@ bool DirHandle::TransformPath(const std::string &path, std::string &dir_name) {
  * \param dirname UXDB-UDISK约定: DB创建的绝对目录
  */
 bool DirHandle::IsMountPoint(const std::string &dirname) const noexcept {
-  return FileSystem::Instance()->super()->is_mount_point(dirname);
+  return dirname == "/";
 }
 
 /**

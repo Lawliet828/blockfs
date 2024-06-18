@@ -13,7 +13,6 @@ namespace udisk::blockfs {
 #define ROUND_UP(size, align) ((((size) + (align - 1)) / (align)) * (align))
 
 std::string GetFileName(const std::string &path);
-std::string GetDirName(const std::string &path);
 std::string GetParentDirName(const std::string &path);
 
 }

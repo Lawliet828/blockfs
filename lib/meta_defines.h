@@ -42,7 +42,6 @@ constexpr uint64_t T = (1024 * G);
 constexpr uint32_t kBlockFsMagic = 0xA5201314;
 
 constexpr uint64_t kUUIDSize = 64;
-constexpr uint64_t kUXDBMountPrefixMaxLen = 256;
 
 constexpr uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
 
@@ -108,10 +107,6 @@ union SuperBlockMeta {
     // variable according to the udisk device size
     uint64_t device_size;  // current udisk size (device size)
     uint64_t curr_block_num;   // current udisk supported block number
-
-    // The mount point opened by each instance of UXDB,
-    // the directory is generally /mnt/mysql/data
-    char uxdb_mount_point_[kUXDBMountPrefixMaxLen];
   } __attribute__((packed));
   char reserved_[kSuperBlockSize];
 };

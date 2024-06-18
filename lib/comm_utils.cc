@@ -7,6 +7,8 @@
 
 #include <filesystem>
 
+namespace fs = std::filesystem;
+
 namespace udisk::blockfs {
 
 // https://blog.csdn.net/butterfly5211314/article/details/84575883
@@ -21,20 +23,21 @@ std::string GetFileName(const std::string &path) {
     return path.substr(pos + 1);
 }
 
-// 返回目录名, 末尾需要带'/'
-std::string GetDirName(const std::string &path) {
-  return std::filesystem::path(path).parent_path().string() + "/";
-}
-
+// 返回目录名, 末尾需要带'/'，如果是根目录则返回'/'
 std::string GetParentDirName(const std::string &path) {
-  std::string parent = path;
-  if (parent == "/") {
-    return parent;
+  std::string tmp = path;
+  if (tmp == "/") {
+    return tmp;
   }
-  if (parent[parent.size() - 1] == '/') {
-    parent.erase(parent.size() - 1);
+  if (tmp[tmp.size() - 1] == '/') {
+    tmp.erase(tmp.size() - 1);
   }
-  return GetDirName(parent);
+  std::string parent_path = fs::path(tmp).parent_path().string();
+  if (parent_path == "/") {
+    return parent_path;
+  } else {
+    return parent_path + "/";
+  }
 }
 
 }

@@ -130,7 +130,7 @@ bool FileHandle::TransformPath(const std::string &filename,
     errno = ENOTDIR;
     return false;
   }
-  new_dirname = GetDirName(filename);
+  new_dirname = GetParentDirName(filename);
   new_filename = GetFileName(filename);
   SPDLOG_INFO("transformPath dirname: {}, filename: {}", new_dirname, new_filename);
   if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {

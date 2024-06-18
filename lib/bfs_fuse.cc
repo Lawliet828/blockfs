@@ -41,15 +41,8 @@ class UDiskBFS {
 
   static void FuseLoop(bfs_config_info *info);
 
-  const std::string &uxdb_mount_point() { return uxdb_mount_point_; }
-
   void RunFuse(bfs_config_info *info) {
     info_ = info;
-    // 去掉后面的反斜杠,FUSE挂载默认会带
-    uxdb_mount_point_ = info_->uxdb_mount_point_;
-    if (uxdb_mount_point_[uxdb_mount_point_.size() - 1] == '/') {
-      uxdb_mount_point_.erase(uxdb_mount_point_.size() - 1);
-    }
     FuseLoop(info);
     // std::thread fuse_thread(FuseLoop, info);
     // fuse_thread.detach();
@@ -103,8 +96,6 @@ class UDiskBFS {
   struct fuse_config fuse_cfg_;
   bfs_config_info *info_;
 
-  std::string uxdb_mount_point_;
-
   std::mutex mutex_;
   std::map<uint64_t, BLOCKFS_DIR *> open_dirs_;
 };
@@ -140,9 +131,6 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
 
   int res;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ::memset(stbuf, 0, sizeof(struct stat));
 
   if (::strcmp(path, "/") == 0) {
@@ -170,7 +158,7 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
   if (fi)
     res = FileSystem::Instance()->StatPath(fi->fh, stbuf);
   else
-    res = FileSystem::Instance()->StatPath(in_path.c_str(), stbuf);
+    res = FileSystem::Instance()->StatPath(path, stbuf);
   if (res < 0) return -errno;
 
   return 0;
@@ -185,13 +173,10 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
 static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
   LOG(INFO) << "call bfs_mknod file: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   int res;
 
   // res = posix_mknod_wrapper(AT_FDCWD, path, nullptr, mode, rdev);
-  res = FileSystem::Instance()->CreateFile(in_path.c_str(), mode);
+  res = FileSystem::Instance()->CreateFile(path, mode);
   if (res < 0) return -errno;
 
   return 0;
@@ -206,10 +191,7 @@ static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 static int mfs_mkdir(const char *path, mode_t mode) {
   SPDLOG_INFO("call mfs_mkdir file: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
-  int res = FileSystem::Instance()->dir_handle()->CreateDirectory(in_path);
+  int res = FileSystem::Instance()->dir_handle()->CreateDirectory(path);
   if (res < 0) return -errno;
 
   return 0;
@@ -219,12 +201,9 @@ static int mfs_mkdir(const char *path, mode_t mode) {
 static int bfs_unlink(const char *path) {
   LOG(INFO) << "call bfs_unlink file: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   int res;
 
-  res = FileSystem::Instance()->file_handle()->unlink(in_path);
+  res = FileSystem::Instance()->file_handle()->unlink(path);
   if (res < 0) return -errno;
 
   return 0;
@@ -234,10 +213,7 @@ static int bfs_unlink(const char *path) {
 static int bfs_rmdir(const char *path) {
   LOG(INFO) << "call bfs_rmdir file: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
-  int res = FileSystem::Instance()->dir_handle()->DeleteDirectory(in_path, false);
+  int res = FileSystem::Instance()->dir_handle()->DeleteDirectory(path, false);
   if (res < 0) return -errno;
 
   return 0;
@@ -255,16 +231,11 @@ static int bfs_rmdir(const char *path) {
 static int mfs_rename(const char *from, const char *to, unsigned int flags) {
   SPDLOG_INFO("call mfs_rename: {} -> {}", from, to);
 
-  std::string from_path = UDiskBFS::Instance()->uxdb_mount_point();
-  std::string to_path = UDiskBFS::Instance()->uxdb_mount_point();
-  from_path += from;
-  to_path += to;
-
   int res;
   /* When we have renameat2() in libc, then we can implement flags */
   if (flags) return -EINVAL;
 
-  res = FileSystem::Instance()->RenamePath(from_path, to_path);
+  res = FileSystem::Instance()->RenamePath(from, to);
   if (res < 0) return -errno;
 
   return 0;
@@ -286,15 +257,12 @@ static int mfs_truncate(const char *path, off_t size,
   }
   SPDLOG_INFO("call mfs_truncate file: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   int res;
 
   if (fi)
     res = FileSystem::Instance()->TruncateFile(fi->fh, size);
   else
-    res = FileSystem::Instance()->TruncateFile(in_path.c_str(), size);
+    res = FileSystem::Instance()->TruncateFile(path, size);
 
   if (res < 0) return -errno;
 
@@ -354,10 +322,7 @@ static int mfs_open(const char *path, struct fuse_file_info *fi) {
   }
   SPDLOG_INFO("call mfs_open file: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
-  ino_t fd = FileSystem::Instance()->file_handle()->open(in_path, fi->flags);
+  ino_t fd = FileSystem::Instance()->file_handle()->open(path, fi->flags);
   fi->fh = fd;
   fi->direct_io = 1;
   // fi->nonseekable = 1;
@@ -381,14 +346,11 @@ static int mfs_read(const char *path, char *buf, size_t size, off_t offset,
                     struct fuse_file_info *fi) {
   SPDLOG_INFO("call mfs_read file: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -413,14 +375,11 @@ static int mfs_write(const char *path, const char *buf, size_t size,
                      off_t offset, struct fuse_file_info *fi) {
   SPDLOG_INFO("call mfs_write file: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (fi == nullptr)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -472,14 +431,11 @@ static int mfs_statfs(const char *path, struct statvfs *vfs) {
 static int flush(const char *path, struct fuse_file_info *fi) {
   LOG(INFO) << "call flush file: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -530,14 +486,11 @@ static int mfs_fsync(const char *path, int datasync,
                      struct fuse_file_info *fi) {
   LOG(INFO) << "call mfs_fsync file: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -563,9 +516,7 @@ static int mfs_fsync(const char *path, int datasync,
 static int bfs_opendir(const char *path, struct fuse_file_info *fi) {
   SPDLOG_INFO("call bfs_opendir: {}", path);
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-  BLOCKFS_DIR *dp = FileSystem::Instance()->dir_handle()->OpenDirectory(in_path);
+  BLOCKFS_DIR *dp = FileSystem::Instance()->dir_handle()->OpenDirectory(path);
   if (!dp) {
     return -errno;
   }
@@ -601,9 +552,6 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   (void)offset;
   (void)fi;
   (void)flags;
-
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
 
   if (::strcmp(path, "/") == 0) {
     if (DIR_FILLER(filler, buf, ".", nullptr, 0) != 0 ||
@@ -753,10 +701,7 @@ static int mfs_create(const char *path, mode_t mode,
   }
   LOG(INFO) << "call mfs_create: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
-  ino_t fd = FileSystem::Instance()->file_handle()->open(in_path, fi->flags, mode);
+  ino_t fd = FileSystem::Instance()->file_handle()->open(path, fi->flags, mode);
 
   fi->fh = fd;
   return 0;
@@ -796,14 +741,11 @@ int bfs_lock(const char *path, struct fuse_file_info *fi, int cmd,
              struct flock *lock) {
   LOG(INFO) << "call bfs_lock: " << path << " fd: " << fi->fh;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -828,14 +770,11 @@ static int bfs_write_buf(const char *path, struct fuse_bufvec *buf,
   LOG(INFO) << "call bfs_write_buf: " << path << " fd: " << fi->fh
             << " offset: " << offset << " count: " << buf->count;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   uint64_t res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_WRONLY);
   else
     fd = fi->fh;
 
@@ -880,14 +819,11 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
                  off_t offset, struct fuse_file_info *fi) {
   LOG(INFO) << "call bfs_read_buf: " << path << " bufp: " << (char *)bufp;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   ssize_t res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_RDONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_RDONLY);
   else
     fd = fi->fh;
 
@@ -943,14 +879,11 @@ int bfs_read_buf(const char *path, struct fuse_bufvec **bufp, size_t size,
 static int bfs_flock(const char *path, struct fuse_file_info *fi, int op) {
   LOG(INFO) << "call bfs_flock: " << path;
 
-  std::string in_path = UDiskBFS::Instance()->uxdb_mount_point();
-  in_path += path;
-
   ino_t fd;
   int res;
 
   if (!fi)
-    fd = FileSystem::Instance()->file_handle()->open(in_path, O_WRONLY);
+    fd = FileSystem::Instance()->file_handle()->open(path, O_WRONLY);
   else
     fd = fi->fh;
 

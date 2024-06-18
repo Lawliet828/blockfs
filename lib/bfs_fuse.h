@@ -13,7 +13,6 @@ struct bfs_config_info {
 
   std::string device;
   std::string device_uuid_;
-  std::string uxdb_mount_point_;
 
   std::string fuse_mount_point;
 
