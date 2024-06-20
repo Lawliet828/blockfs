@@ -33,7 +33,7 @@ class FileHandle : public MetaHandle {
 
   FileNameMap deleted_files_;                            // 待删除的目录
   FileNameMap created_files_;                            // 已创建的文件
-  std::unordered_map<int32_t, FilePtr> created_fhs_;     // 已创建的文件
+  std::unordered_map<ino_t, FilePtr> created_fhs_;     // 已创建的文件
   std::unordered_map<ino_t, OpenFilePtr> open_files_;  // 已打开的文件
   ParentFileHandleMap parent_files_;                     // 继承的父文件
 
@@ -92,21 +92,19 @@ class FileHandle : public MetaHandle {
   void AddFile2Free(int32_t index);
 
   bool AddParentFile(const ParentFilePtr &parent);
-  bool RemoveParentFile(int32_t fh);
-  bool RemoveParentFile(const ParentFilePtr &parent);
+  bool RemoveParentFile(ino_t fh);
 
   bool CheckFileExist(const std::string &path);
   const OpenFilePtr &GetOpenFile(ino_t fd);
   const OpenFilePtr &GetOpenFileNolock(ino_t fd);
   const FilePtr &GetCreatedFile(int32_t fh);
-  const FilePtr &GetCreatedFileNoLock(int32_t fh);
+  const FilePtr &GetCreatedFileNoLock(ino_t fh);
   const FilePtr &GetCreatedFile(const std::string &filename);
   const FilePtr &GetCreatedFileNoLock(const FileNameKey &key);
   const FilePtr &GetCreatedFileNolock(int32_t dh, const std::string &filename);
 
   FilePtr CreateFile(const std::string &filename, mode_t mode,
                      bool tmpfile = false);
-  int UnlinkFile(const int32_t fh);
   int UnlinkFileNolock(const ino_t fh);
 
  public:

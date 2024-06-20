@@ -160,10 +160,7 @@ static int mfs_getattr(const char *path, struct stat *stbuf,
 static int bfs_mknod(const char *path, mode_t mode, dev_t rdev) {
   SPDLOG_INFO("call bfs_mknod file: {}", path);
 
-  int res;
-
-  // res = posix_mknod_wrapper(AT_FDCWD, path, nullptr, mode, rdev);
-  res = FileSystem::Instance()->CreateFile(path, mode);
+  int res = FileSystem::Instance()->CreateFile(path, mode);
   if (res < 0) return -errno;
 
   return 0;
@@ -450,7 +447,7 @@ static int flush(const char *path, struct fuse_file_info *fi) {
  * file.  The return value of release is ignored.
  */
 static int bfs_release(const char *path, struct fuse_file_info *fi) {
-  LOG(INFO) << "call bfs_release file: " << path;
+  SPDLOG_INFO("call bfs_release file: {}", path);
 
   (void)path;
   int res = 0;
@@ -508,7 +505,7 @@ static int bfs_opendir(const char *path, struct fuse_file_info *fi) {
   if (fi) {
     fi->fh = UDiskBFS::Instance()->PushOpenDirectory(dp);
   } else {
-    LOG(FATAL) << "file info cannot empty";
+    SPDLOG_CRITICAL("file info cannot empty");
   }
   return 0;
 }
@@ -541,13 +538,13 @@ static int bfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   if (::strcmp(path, "/") == 0) {
     if (DIR_FILLER(filler, buf, ".", nullptr, 0) != 0 ||
         DIR_FILLER(filler, buf, "..", nullptr, 0) != 0) {
-      LOG(INFO) << "filler directory: . and ..";
+      SPDLOG_INFO("filler directory: . and ..");
       return 0;
     }
   }
   BLOCKFS_DIR *dp = UDiskBFS::Instance()->GetOpenDirectory(fi->fh);
   if (!dp) {
-    LOG(ERROR) << "failed to find open directory: " << path;
+    SPDLOG_ERROR("failed to find open directory: {}", path);
     return -EINVAL;
   }
   block_fs_dirent *de;

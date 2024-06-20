@@ -43,7 +43,7 @@ bool FileHandle::InitializeMeta() {
         SPDLOG_ERROR("file meta {} used but name empty", fh);
         return false;
       }
-      if (meta->fh_ != static_cast<int32_t>(fh)) [[unlikely]] {
+      if (meta->fh_ != fh) [[unlikely]] {
         SPDLOG_ERROR("file meta {} used but fh invalid", fh);
         return false;
       }
@@ -73,7 +73,7 @@ bool FileHandle::InitializeMeta() {
     }
   }
   // TODO: 全部加入到文件列表, 最后来过滤一遍, 去掉child_fh
-  LOG(DEBUG) << "read file meta success, free num:" << free_meta_size();
+  SPDLOG_DEBUG("read file meta success, free num: {}", free_meta_size());
   return true;
 }
 
@@ -176,7 +176,7 @@ FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
 
 FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
   if (free_fhs_.empty()) [[unlikely]] {
-    LOG(ERROR) << "file meta not enough";
+    SPDLOG_ERROR("file meta not enough");
     errno = ENFILE;
     return kEmptyFilePtr;
   }
@@ -219,8 +219,7 @@ FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
   }
   ino_t fh = free_fhs_.front();
   std::string tmp_file_name = "tmpfile_" + std::to_string(fh);
-  LOG(INFO) << "create new tmp file handle: " << fh
-            << " name: " << tmp_file_name;
+  SPDLOG_INFO("create new tmp file handle: {} name: {}", fh, tmp_file_name);
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
       base_addr() + sizeof(FileMeta) * fh);
@@ -234,7 +233,7 @@ FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
 
   FilePtr file = std::make_shared<File>();
   if (!file) {
-    LOG(ERROR) << "failed to new file pointer";
+    SPDLOG_ERROR("failed to new file pointer");
     errno = ENOMEM;
     return nullptr;
   }
@@ -256,7 +255,7 @@ bool FileHandle::NewFile(const std::string &dirname,
   const DirectoryPtr &dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dirname);
   if (!dir) [[unlikely]] {
-    LOG(ERROR) << "parent directory not exist: " << dirname;
+    SPDLOG_ERROR("parent directory not exist: {}", dirname);
     errno = ENOENT;
     return false;
   }
@@ -345,7 +344,7 @@ bool FileHandle::AddParentFile(const ParentFilePtr &parent) {
   return true;
 }
 
-bool FileHandle::RemoveParentFile(int32_t fh) {
+bool FileHandle::RemoveParentFile(ino_t fh) {
   META_HANDLE_LOCK();
   auto it = parent_files_.find(fh);
   if (it == parent_files_.end()) [[unlikely]] {
@@ -354,10 +353,6 @@ bool FileHandle::RemoveParentFile(int32_t fh) {
   ParentFilePtr parent = (ParentFilePtr)it->second;
   parent_files_.erase(fh);
   return parent->Recycle();
-}
-
-bool FileHandle::RemoveParentFile(const ParentFilePtr &parent) {
-  return RemoveParentFile(parent->fh());
 }
 
 void FileHandle::AddFile2FreeNolock(int32_t index) noexcept {
@@ -444,14 +439,9 @@ FilePtr FileHandle::CreateFile(const std::string &filename, mode_t mode,
   // 添加到内存文件列表和父文件夹中
   AddFileToDirectory(parent_dir, curr_file);
 
-  LOG(INFO) << "create file success: " << curr_file->file_name();
+  SPDLOG_INFO("create file success: {}", curr_file->file_name());
   errno = 0;
   return curr_file;
-}
-
-int FileHandle::UnlinkFile(const int32_t fh) {
-  META_HANDLE_LOCK();
-  return UnlinkFileNolock(fh);
 }
 
 int FileHandle::UnlinkFileNolock(const ino_t fh) {
@@ -522,7 +512,7 @@ int FileHandle::unlink(const std::string &filename) {
   FilePtr curr_file = dirs.second;
 
   if (curr_file->LinkCount() > 0) {
-    LOG(WARNING) << "file count not zero: " << curr_file->LinkCount();
+    SPDLOG_WARN("file count not zero: {}", curr_file->LinkCount());
     curr_file->set_deleted(true);
     return 0;
   }
@@ -542,7 +532,7 @@ int FileHandle::unlink(const std::string &filename) {
     return -1;
   }
 
-  LOG(INFO) << "remove file success: " << filename;
+  SPDLOG_INFO("remove file success: {}", filename);
   errno = 0;
   return 0;
 }
@@ -571,10 +561,10 @@ const FilePtr &FileHandle::GetCreatedFile(int32_t fh) {
   return GetCreatedFileNoLock(fh);
 }
 
-const FilePtr &FileHandle::GetCreatedFileNoLock(int32_t fh) {
+const FilePtr &FileHandle::GetCreatedFileNoLock(ino_t fh) {
   auto itor = created_fhs_.find(fh);
   if (itor == created_fhs_.end()) {
-    LOG(ERROR) << "file handle not exist: " << fh;
+    SPDLOG_ERROR("file handle not exist: {}", fh);
     return kEmptyFilePtr;
   }
   return itor->second;
@@ -592,7 +582,7 @@ const FilePtr &FileHandle::GetCreatedFile(const std::string &filename) {
   if (!dir) [[unlikely]] {
     return kEmptyFilePtr;
   }
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard lock(mutex_);
   FileNameKey key = std::make_pair(dir->dh(), new_filename);
   return GetCreatedFileNoLock(key);
 }
@@ -610,25 +600,12 @@ const FilePtr &FileHandle::GetCreatedFileNoLock(const FileNameKey &key) {
 
 const FilePtr &FileHandle::GetCreatedFileNolock(int32_t dh,
                                                 const std::string &filename) {
-  FileNameKey key = std::make_pair(dh, filename);
-  auto itor = created_files_.find(key);
+  auto itor = created_files_.find(std::make_pair(dh, filename));
   if (itor == created_files_.end()) [[unlikely]] {
-    LOG(WARNING) << "file not exist: " << filename;
+    SPDLOG_WARN("file not exist: {}", filename);
     return kEmptyFilePtr;
   }
   return itor->second;
-}
-
-static bool HasWriteFlag(const int32_t flags) {
-  if (!(flags & O_RDWR) && !(flags & O_WRONLY)) {
-    return false;
-  }
-  return true;
-}
-
-static bool HasTruncateFlag(const int32_t flags) {
-  /* if O_TRUNC is set with RDWR or WRONLY, need to truncate file */
-  return ((flags & O_TRUNC) && (flags & (O_RDWR | O_WRONLY)));
 }
 
 static bool VerifyOpenExistFileFlag(const int32_t flags) {
@@ -650,25 +627,15 @@ static bool IsNeedCreateTempFile(const int32_t flags) {
   if (!(flags & O_TMPFILE)) {
     return false;
   }
-  if (!HasWriteFlag(flags)) {
-    LOG(ERROR) << "invalid tmp open flag without O_RDWR or O_WRONLY";
+  if (!(flags & O_RDWR) && !(flags & O_WRONLY)) {
+    SPDLOG_ERROR("invalid tmp open flag without O_RDWR or O_WRONLY");
     errno = EINVAL;
     return false;
   }
   return true;
 }
 
-static bool IsNeedCreateNormalFile(const int32_t flags) {
-  /* file does not exist, create file if O_CREAT is set */
-  if (!(flags & O_CREAT)) {
-    LOG(DEBUG) << "open file without create flag";
-    return false;
-  }
-  return true;
-}
-
 int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
-  int32_t ret;
   FilePtr file;
   if (IsNeedCreateTempFile(flags)) {
     // when create temp file, the filename is dirname
@@ -683,7 +650,7 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
     }
     file = GetCreatedFile(filename);
     if (!file) {
-      if (IsNeedCreateNormalFile(flags)) {
+      if (flags & O_CREAT) {
         file = CreateFile(filename, flags);
         if (!file) {
           return -1;
@@ -697,9 +664,8 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
       if (!VerifyOpenExistFileFlag(flags)) {
         return -1;
       }
-      if (HasTruncateFlag(flags)) {
-        ret = file->ftruncate(0);
-        if (ret < 0) {
+      if ((flags & O_TRUNC) && (flags & (O_RDWR | O_WRONLY))) {
+        if (file->ftruncate(0) < 0) {
           return -1;
         }
       }
@@ -709,7 +675,6 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
   /* allocate a file fd for this new file */
   ino_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
-    errno = ENFILE;
     return -1;
   }
   OpenFilePtr open_file = std::make_shared<OpenFile>(file);
@@ -729,24 +694,24 @@ int FileHandle::open(const std::string &filename, int32_t flags, mode_t mode) {
 }
 
 int FileHandle::close(ino_t fd) noexcept {
-  META_HANDLE_LOCK();
+  std::lock_guard lock(mutex_);
   const OpenFilePtr &open_file = GetOpenFileNolock(fd);
   if (!open_file) [[unlikely]] {
     return -1;
   }
   const FilePtr &file = open_file->file();
   file->fsync();
-  LOG(INFO) << "close file name: " << file->file_name() << " fd: " << fd;
+  SPDLOG_INFO("close file name: {}, fd: {}", file->file_name(), fd);
   // 文件关闭的时候去掉文件锁
   file->set_locked(false);
   file->DecLinkCount();
   // TODO:临时文件或者文件已经被删除, 引用为0自动删除
   if (file->LinkCount() == 0) {
     if (file->is_temp()) {
-      LOG(WARNING) << "cleanup temp file fh: " << file->fh();
+      SPDLOG_WARN("clean temp file fh: {}", file->fh());
       UnlinkFileNolock(file->fh());
     } else if (file->deleted()) {
-      LOG(WARNING) << "clean deleted file fh: " << file->fh();
+      SPDLOG_WARN("clean deleted file fh: {}", file->fh());
       UnlinkFileNolock(file->fh());
     }
   }
@@ -768,7 +733,6 @@ int FileHandle::dup(int oldfd) {
   /* allocate a file fd for this new file */
   ino_t newfd = FileSystem::Instance()->fd_handle()->get_fd();
   if (newfd < 0) {
-    errno = ENFILE;
     return -1;
   }
   OpenFilePtr new_open_file = std::make_shared<OpenFile>(file);
@@ -795,8 +759,8 @@ void FileHandle::Dump() noexcept {
     LOG(INFO) << "find dh: " << key.first << " name: " << key.second
               << " name: " << kv.second->file_name();
   }
-  for (auto &kv : created_fhs_) {
-    LOG(INFO) << "find fh: " << kv.first << " name: " << kv.second->file_name();
+  for (auto &[fh, ptr] : created_fhs_) {
+    SPDLOG_INFO("find fh: {} name: {}", fh, ptr->file_name());
   }
 }
 

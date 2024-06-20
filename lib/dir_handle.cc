@@ -605,7 +605,6 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
   }
   int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();
   if (fd < 0) {
-    errno = ENFILE;
     return nullptr;
   }
   BLOCKFS_DIR *d = new BLOCKFS_DIR();
