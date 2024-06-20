@@ -25,8 +25,6 @@ $ sudo ./build/tool/block_fs_tool -v
 [90002 20210202 15:09:50.261049Z][INFO][tool/block_fs_tool.cc:232]  version : ./block_fs_tool -v
 [90002 20210202 15:09:50.261051Z][INFO][tool/block_fs_tool.cc:233]  format  : ./block_fs_tool -d /dev/vdb -f
 [90002 20210202 15:09:50.261053Z][INFO][tool/block_fs_tool.cc:234]  format  : ./block_fs_tool -d /dev/vdb --format
-[90002 20210202 15:09:50.261056Z][INFO][tool/block_fs_tool.cc:235]  dump    : ./block_fs_tool -d /dev/vdb -p check
-[90002 20210202 15:09:50.261059Z][INFO][tool/block_fs_tool.cc:236]  dump    : ./block_fs_tool -d /dev/vdb -p negot
 [90002 20210202 15:09:50.261063Z][INFO][tool/block_fs_tool.cc:237]  dump    : ./block_fs_tool -d /dev/vdb -p super
 [90002 20210202 15:09:50.261071Z][INFO][tool/block_fs_tool.cc:238]  dump    : ./block_fs_tool -d /dev/vdb -p uuid
 [90002 20210202 15:09:50.261075Z][INFO][tool/block_fs_tool.cc:239]  dump    : ./block_fs_tool -d /dev/vdb -p dirs

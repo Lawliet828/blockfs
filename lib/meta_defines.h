@@ -1,5 +1,4 @@
-#ifndef LIB_META_DEFINES_H
-#define LIB_META_DEFINES_H
+#pragma once
 
 #include <limits.h>
 #include <stdint.h>
@@ -8,21 +7,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <deque>
 #include <iostream>
-#include <list>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 namespace udisk::blockfs {
-
-inline void block_fs_set_errno(int e) { errno = e; }
 
 struct block_fs_dirent {
   long d_ino;                /* inode number */
@@ -40,8 +30,6 @@ constexpr uint64_t G = (1024 * M);
 constexpr uint64_t T = (1024 * G);
 
 constexpr uint32_t kBlockFsMagic = 0xA5201314;
-
-constexpr uint64_t kUUIDSize = 64;
 
 constexpr uint64_t kBlockFsMaxUxdbPrefixDirLen = (2 * K);
 
@@ -62,11 +50,6 @@ constexpr uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 constexpr uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
 typedef uint64_t ino_t;
-typedef int32_t dh_t;
-// Represents a sequence number in a WAL file.
-typedef uint64_t seq_t;
-
-static const seq_t kReservedUnusedSeq = 0;  // 0 is reserved sequence
 
 /* 文件系统的超级块
  * 大小: 4K
@@ -76,7 +59,7 @@ static const seq_t kReservedUnusedSeq = 0;  // 0 is reserved sequence
 union SuperBlockMeta {
   struct {
     uint32_t crc_;
-    char uuid_[kUUIDSize];  // mfs uuid -> /dev/vdc
+    char uuid_[64];  // mfs uuid -> /dev/vdc
     uint32_t magic_;                  // bfs magic
     // mfs consts
     uint64_t max_file_num;             // max supported dirs or files 10w
@@ -88,12 +71,12 @@ union SuperBlockMeta {
     uint64_t max_file_name_len_;       // 64B, max file name length
     uint64_t dir_meta_size_;           // 1K, per directory meta size
     uint64_t file_meta_size_;          // 256B, per file meta size
-    uint64_t file_block_meta_size_;    // 4k, per file block meta size
+    uint64_t file_block_meta_size;    // 4k, per file block meta size
 
     // The total size of each bfs metadata
     uint64_t super_block_size_;            // total size of super block
     uint64_t dir_meta_total_size_;         // total size of directory meta
-    uint64_t file_meta_total_size_;        // total size of file meta
+    uint64_t file_meta_total_size;        // total size of file meta
     uint64_t file_block_meta_total_size_;  // total size of file block meta
 
     // The offset start in udisk device offset
@@ -116,8 +99,7 @@ static_assert(sizeof(SuperBlockMeta) == kSuperBlockSize,
 union DirMeta {
   struct {
     uint32_t crc_;
-    dh_t dh_;
-    seq_t seq_no_;
+    ino_t dh_;
     uint64_t size_;
     mode_t mode_;
     uid_t uid_;     // user ID of owner
@@ -138,8 +120,7 @@ static_assert(sizeof(DirMeta) == kBlockFsDirMetaSize,
 union FileMeta {
   struct {
     uint32_t crc_;
-    int32_t fh_;
-    seq_t seq_no_;
+    ino_t fh_;
     uint64_t size_;
     int32_t nlink_;
     mode_t mode_;
@@ -148,7 +129,7 @@ union FileMeta {
     time_t atime_;  // last access times
     time_t mtime_;  // last modify times
     time_t ctime_;  // last change times
-    dh_t dh_;       // belong to one dir
+    ino_t dh_;       // belong to one dir
     int32_t child_fh_;
     int32_t parent_fh_;
     uint64_t parent_size_;
@@ -166,7 +147,6 @@ union FileBlockMeta {
   struct {
     uint32_t crc_;
     uint32_t index_;
-    seq_t seq_no_;
     uint32_t fh_;
     uint32_t file_cut_;
     uint32_t used_block_num_;
@@ -186,4 +166,3 @@ static_assert(sizeof(FileBlockMeta) == kBlockFsFileBlockMetaSize,
               "BlockFsBlockMeta size must be 4096 Bytes");
 
 }  // namespace udisk::blockfs
-#endif

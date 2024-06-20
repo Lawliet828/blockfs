@@ -11,7 +11,6 @@ void FileBlock::ClearMeta(FileBlockMeta *meta) {
   SPDLOG_INFO("clear file block index: {} fh: {}", index, fh);
   meta->used_ = false;
   meta->is_temp_ = false;
-  meta->seq_no_ = kReservedUnusedSeq;
   meta->fh_ = -1;
   meta->file_cut_ = 0;
   meta->used_block_num_ = 0;
@@ -21,7 +20,7 @@ void FileBlock::ClearMeta(FileBlockMeta *meta) {
 
 bool FileBlock::WriteMeta(int32_t index) {
   uint64_t file_block_meta_size =
-      FileSystem::Instance()->super_meta()->file_block_meta_size_;
+      FileSystem::Instance()->super_meta()->file_block_meta_size;
   uint64_t offset = file_block_meta_size * index;
   FileBlockMeta *meta = reinterpret_cast<FileBlockMeta *>(
       FileSystem::Instance()->file_block_handle()->base_addr() + offset);

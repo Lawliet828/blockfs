@@ -1,8 +1,7 @@
-// Copyright (c) 2020 UCloud All rights reserved.
-#ifndef LIB_FILE_HANDLE_H
-#define LIB_FILE_HANDLE_H
+#pragma once
 
 #include <functional>
+#include <list>
 
 #include "device.h"
 #include "file.h"
@@ -14,11 +13,8 @@ class Directory;
 class FileBlock;
 typedef std::shared_ptr<Directory> DirectoryPtr;
 
-// guard directory in file handle mutex
-typedef std::function<bool()> FileModifyCallback;
-
 // dh + file_name
-typedef std::pair<int32_t, std::string> FileNameKey;
+typedef std::pair<ino_t, std::string> FileNameKey;
 
 struct FileNameKeyHash {
   std::size_t operator()(const FileNameKey &item) const {
@@ -33,7 +29,7 @@ typedef std::unordered_map<FileNameKey, FilePtr, FileNameKeyHash> FileNameMap;
 
 class FileHandle : public MetaHandle {
  private:
-  std::list<int32_t> free_metas_;  // 文件Meta的空闲链表
+  std::list<ino_t> free_fhs_;  // 文件Meta的空闲链表
 
   FileNameMap deleted_files_;                            // 待删除的目录
   FileNameMap created_files_;                            // 已创建的文件
@@ -66,14 +62,19 @@ class FileHandle : public MetaHandle {
   FileHandle() = default;
   ~FileHandle() = default;
 
-  bool RunInMetaGuard(const FileModifyCallback &cb);
+  // guard directory in file handle mutex
+  typedef std::function<bool()> FileModifyCallback;
+  bool RunInMetaGuard(const FileModifyCallback &cb) {
+    META_HANDLE_LOCK();
+    return cb();
+  }
 
   virtual bool InitializeMeta() override;
   virtual bool FormatAllMeta() override;
   virtual void Dump() noexcept override;
   virtual void Dump(const std::string &file_name) noexcept override;
 
-  const uint32_t free_meta_size() const { return free_metas_.size(); }
+  uint32_t free_meta_size() const { return free_fhs_.size(); }
 
   uint32_t PageAlignIndex(uint32_t index);
 
@@ -118,4 +119,3 @@ class FileHandle : public MetaHandle {
   int fsync(ino_t fh);
 };
 }
-#endif

@@ -55,7 +55,6 @@ void File::ClearMeta(FileMeta *meta) {
   // 清标志位即可,申请时需要清理
   // dh在申请新文件时候 肯定会被覆盖
   // 后面回收内存文件需要
-  // meta->seq_no_ = kReservedUnusedSeq;
   // meta->dh_ = -1;
   meta->child_fh_ = -1;
   meta->parent_fh_ = -1;

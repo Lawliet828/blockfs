@@ -1,5 +1,4 @@
-#ifndef LIB_INODE_H_
-#define LIB_INODE_H_
+#pragma once
 
 #include <fcntl.h>
 #include <stdint.h>
@@ -52,4 +51,3 @@ class Inode {
   virtual void DumpMeta() {}
 };
 }
-#endif

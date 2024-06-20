@@ -50,7 +50,7 @@ bool SuperBlock::FormatAllMeta() {
   meta->max_file_name_len_ = kBlockFsMaxFileNameLen;
   meta->dir_meta_size_ = kBlockFsDirMetaSize;
   meta->file_meta_size_ = kBlockFsFileMetaSize;
-  meta->file_block_meta_size_ = kBlockFsFileBlockMetaSize;
+  meta->file_block_meta_size = kBlockFsFileBlockMetaSize;
 
   /* 2. 超级块区域: 起始位置 0 - 4096 */
   meta->super_block_offset_ = kSuperBlockOffset;
@@ -65,22 +65,22 @@ bool SuperBlock::FormatAllMeta() {
 
   /* 4. 文件区域: 起始位置 dir_meta结尾 - meta->file_block_meta_offset_ */
   meta->file_meta_offset_ = meta->dir_meta_offset_ + meta->dir_meta_total_size_;
-  meta->file_meta_total_size_ =
+  meta->file_meta_total_size =
       meta->file_meta_size_ * meta->max_file_num;
-  meta->file_meta_total_size_ =
-      ROUND_UP(meta->file_meta_total_size_, kBlockFsPageSize);
+  meta->file_meta_total_size =
+      ROUND_UP(meta->file_meta_total_size, kBlockFsPageSize);
 
   /* 5. 文件块区域: 起始位置 file_meta结尾 - xxx */
   meta->file_block_meta_offset_ =
-      meta->file_meta_offset_ + meta->file_meta_total_size_;
+      meta->file_meta_offset_ + meta->file_meta_total_size;
 
   // 一个超大文件(无限接近128T),其他都是小文件
   uint64_t tmpNum1 = meta->max_file_num - 1;
-  uint64_t tmpSize1 = tmpNum1 * meta->file_block_meta_size_;
+  uint64_t tmpSize1 = tmpNum1 * meta->file_block_meta_size;
   uint64_t tmpNum2 = ALIGN_UP(meta->max_support_udisk_size_ - tmpSize1,
                               (meta->block_size_ * kFileBlockCapacity));
 
-  uint64_t tmpSize2 = tmpNum2 * meta->file_block_meta_size_;
+  uint64_t tmpSize2 = tmpNum2 * meta->file_block_meta_size;
   meta->file_block_meta_total_size_ = tmpSize1 + tmpSize2;
   meta->file_block_meta_total_size_ =
       ROUND_UP((tmpSize1 + tmpSize2), kBlockFsPageSize);
@@ -137,10 +137,10 @@ void SuperBlock::Dump() noexcept {
             << "max_file_name_len: " << meta()->max_file_name_len_ << "\n"
             << "dir_meta_size: " << meta()->dir_meta_size_ << "\n"
             << "file_meta_size: " << meta()->file_meta_size_ << "\n"
-            << "file_block_meta_size: " << meta()->file_block_meta_size_ << "\n"
+            << "file_block_meta_size: " << meta()->file_block_meta_size << "\n"
             << "super_block_size: " << meta()->super_block_size_ << "\n"
             << "dir_meta_total_size: " << meta()->dir_meta_total_size_ << "\n"
-            << "file_meta_total_size: " << meta()->file_meta_total_size_ << "\n"
+            << "file_meta_total_size: " << meta()->file_meta_total_size << "\n"
             << "file_block_meta_num: " << meta()->max_file_block_num
             << "\n"
             << "file_block_meta_total_size: "
@@ -162,7 +162,7 @@ bool SuperBlock::WriteMeta() {
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       base_addr(), kSuperBlockSize, kSuperBlockOffset);
   if (ret != static_cast<int64_t>(kSuperBlockSize)) {
-    LOG(ERROR) << "write super block error size:" << ret;
+    SPDLOG_ERROR("write super block error size:{}", ret);
     return false;
   }
   SPDLOG_INFO("write super block success");

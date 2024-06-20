@@ -15,10 +15,10 @@ bool FileBlockHandle::InitializeMeta() {
        index < FileSystem::Instance()->super_meta()->max_file_block_num;
        ++index) {
     meta = reinterpret_cast<FileBlockMeta *>(base_addr() +
-        FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
+        FileSystem::Instance()->super_meta()->file_block_meta_size * index);
     uint32_t crc =
         Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-              FileSystem::Instance()->super_meta()->file_block_meta_size_ -
+              FileSystem::Instance()->super_meta()->file_block_meta_size -
                   sizeof(meta->crc_));
     if (meta->crc_ != crc) [[unlikely]] {
       LOG(ERROR) << "debug file block meta: \n"
@@ -89,13 +89,13 @@ bool FileBlockHandle::FormatAllMeta() {
        ++i) {
     meta = reinterpret_cast<FileBlockMeta *>(
         (buffer->data() +
-         FileSystem::Instance()->super_meta()->file_block_meta_size_ * i));
+         FileSystem::Instance()->super_meta()->file_block_meta_size * i));
     meta->used_ = false;
     meta->fh_ = -1;
     meta->index_ = i;
     meta->crc_ =
         Crc32(reinterpret_cast<uint8_t *>(meta) + sizeof(meta->crc_),
-              FileSystem::Instance()->super_meta()->file_block_meta_size_ -
+              FileSystem::Instance()->super_meta()->file_block_meta_size -
                   sizeof(meta->crc_));
   }
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
@@ -123,7 +123,7 @@ FileBlockPtr FileBlockHandle::GetFileBlockLock() {
   free_fbhs_.pop_front();
   FileBlockMeta *meta = reinterpret_cast<FileBlockMeta *>(
       base_addr() +
-      FileSystem::Instance()->super_meta()->file_block_meta_size_ * index);
+      FileSystem::Instance()->super_meta()->file_block_meta_size * index);
   assert(meta->used_ == false);
   assert(meta->used_block_num_ == 0);
   return std::make_shared<FileBlock>(index, meta);

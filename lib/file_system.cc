@@ -348,18 +348,6 @@ void FileSystem::Destroy() {
 }
 
 /**
- * format seperate fs metadata
- */
-bool FileSystem::FormatFSMeta() {
-  for (auto& handle : handle_vector_) {
-    if (!handle->FormatAllMeta()) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
  * zero fs data
  */
 bool FileSystem::FormatFSData() {
@@ -406,8 +394,10 @@ bool FileSystem::Format(const std::string& dev_name) {
   }
   ShmManager::CleanupDirtyShareMemory();
 
-  if (!FormatFSMeta()) {
-    return false;
+  for (auto& handle : handle_vector_) {
+    if (!handle->FormatAllMeta()) {
+      return false;
+    }
   }
   // return FormatFSData();
   return true;

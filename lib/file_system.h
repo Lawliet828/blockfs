@@ -1,5 +1,4 @@
-#ifndef LIB_FILE_STORE_H_
-#define LIB_FILE_STORE_H_
+#pragma once
 
 #define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
 
@@ -44,7 +43,6 @@ class FileSystem {
   static FileSystem *g_instance;
 
  private:
-  bool FormatFSMeta();
   bool FormatFSData();
   bool Initialize();
   void Destroy();
@@ -126,4 +124,3 @@ inline ssize_t block_fs_read(int fd, void *buf, size_t len) {
 }
 
 }
-#endif

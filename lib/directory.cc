@@ -53,7 +53,6 @@ void Directory::UpdateTimeStamp(bool a, bool m, bool c) {
 void Directory::ClearMeta() const noexcept {
   meta_->used_ = false;
   // 后面从内存删除还需要用文件夹名,这个地方只置位回收状态
-  // meta_->seq_no_ = kReservedUnusedSeq;
   // ::memset(meta_->dir_name_, 0, sizeof(meta_->dir_name_));
   meta_->size_ = 0;
   meta_->crc_ = Crc32(reinterpret_cast<uint8_t *>(meta_) + sizeof(meta_->crc_),
@@ -61,7 +60,7 @@ void Directory::ClearMeta() const noexcept {
                           sizeof(meta_->crc_));
 }
 
-void Directory::ClearMeta(dh_t dh) noexcept {
+void Directory::ClearMeta(ino_t dh) noexcept {
   DirMeta *meta = reinterpret_cast<DirMeta *>(
       FileSystem::Instance()->dir_handle()->base_addr() +
       FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);
@@ -153,7 +152,7 @@ bool Directory::WriteMeta() {
   return true;
 }
 
-bool Directory::WriteMeta(dh_t dh) {
+bool Directory::WriteMeta(ino_t dh) {
   DirMeta *meta = reinterpret_cast<DirMeta *>(
       FileSystem::Instance()->dir_handle()->base_addr() +
       FileSystem::Instance()->super_meta()->dir_meta_size_ * dh);

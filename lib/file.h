@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <shared_mutex>
+#include <vector>
 
 #include "device.h"
 #include "inode.h"

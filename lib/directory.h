@@ -10,7 +10,7 @@ class Directory : public Inode<DirMeta, File>,
                   public std::enable_shared_from_this<Directory> {
  private:
   int32_t nlink_ = 0;
-  std::unordered_map<dh_t, DirectoryPtr> child_dir_maps_;
+  std::unordered_map<ino_t, DirectoryPtr> child_dir_maps_;
 
  private:
   void ClearMeta() const noexcept;
@@ -25,8 +25,8 @@ class Directory : public Inode<DirMeta, File>,
     ::memcpy(meta_->dir_name_, to.c_str(), sizeof(meta_->dir_name_));
   }
   std::string dir_name() const { return std::string(meta_->dir_name_); }
-  void set_dh(dh_t dh) const noexcept { meta_->dh_ = dh; }
-  dh_t dh() const { return meta_->dh_; }
+  void set_dh(ino_t dh) const noexcept { meta_->dh_ = dh; }
+  ino_t dh() const { return meta_->dh_; }
   void set_used(bool used) const noexcept { meta_->used_ = used; }
   uint32_t ChildCount() noexcept;
   void IncLinkCount() noexcept {
@@ -68,9 +68,9 @@ class Directory : public Inode<DirMeta, File>,
   int rename(const std::string &to) override;
 
   void DumpMeta() override;
-  static void ClearMeta(dh_t dh) noexcept;
+  static void ClearMeta(ino_t dh) noexcept;
   bool WriteMeta() override;
-  static bool WriteMeta(dh_t dh);
+  static bool WriteMeta(ino_t dh);
   void UpdateTimeStamp(bool a = false, bool m = false, bool c = false);
 };
 typedef std::shared_ptr<Directory> DirectoryPtr;

@@ -152,8 +152,6 @@ void BlockFsTool::HelpInfo() {
   LOG(INFO) << "Examples:";
   LOG(INFO) << " help    : ./block_fs_tool -h";
   LOG(INFO) << " format  : ./block_fs_tool -d /dev/vdb -f";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p check";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p negot";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p super";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p uuid";
   LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p dirs";
@@ -257,7 +255,7 @@ bool BlockFsTool::DoBlockFsTool() {
   if (tool_type_ == BLOCKFS_FORMAT) {
     is_success = FileSystem::Instance()->Format(dev_name_);
     if (!is_success) {
-      LOG(INFO) << "format block fs failed";
+      LOG(ERROR) << "format block fs failed";
     } else {
       LOG(INFO) << "format block fs success";
     }
@@ -269,9 +267,7 @@ bool BlockFsTool::DoBlockFsTool() {
     }
     switch (tool_type_) {
       case BLOCKFS_DUMP:
-        if (dump_arg_.find("check") != std::string::npos) {
-          LOG(INFO) << "check load block fs success";
-        } else if (dump_arg_.find("super") != std::string::npos) {
+        if (dump_arg_.find("super") != std::string::npos) {
           FileSystem::Instance()->super()->Dump();
         } else if (dump_arg_.find("uuid") != std::string::npos) {
           LOG(INFO) << "dump uuid: " << FileSystem::Instance()->super()->uuid();

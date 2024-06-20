@@ -11,7 +11,7 @@ const static DirectoryPtr kEmptyDirectoryPtr;
 
 bool DirHandle::InitializeMeta() {
   DirMeta *meta;
-  for (dh_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
+  for (ino_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
        ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         base_addr() +
@@ -34,7 +34,7 @@ bool DirHandle::InitializeMeta() {
         SPDLOG_ERROR("directory meta {} used but name empty", dh);
         return false;
       }
-      if (meta->dh_ != static_cast<dh_t>(dh)) [[unlikely]] {
+      if (meta->dh_ != static_cast<ino_t>(dh)) [[unlikely]] {
         SPDLOG_ERROR("directory meta {} used but dh invalid", dh);
         return false;
       }
@@ -88,7 +88,7 @@ bool DirHandle::FormatAllMeta() {
       dir_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   DirMeta *meta;
-  for (uint64_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
+  for (ino_t dh = 0; dh < FileSystem::Instance()->super_meta()->max_file_num;
        ++dh) {
     meta = reinterpret_cast<DirMeta *>(
         buffer->data() +
@@ -183,14 +183,14 @@ DirectoryPtr DirHandle::NewFreeDirectoryNolock(const std::string &dirname) {
     errno = ENFILE;
     return nullptr;
   }
-  dh_t dh = free_dhs_.front();
+  ino_t dh = free_dhs_.front();
   SPDLOG_INFO("create new directory handle: {}", dh);
 
   DirMeta *meta =
       reinterpret_cast<DirMeta *>(base_addr() + sizeof(DirMeta) * dh);
   if (meta->used_ || meta->dh_ != dh) [[unlikely]] {
     bool meta_used = meta->used_;
-    dh_t meta_dh = meta->dh_;
+    ino_t meta_dh = meta->dh_;
     SPDLOG_CRITICAL("new directory meta invalid, used: {} dh: {} wanted dh: {}",
                     meta_used, meta_dh, dh);
     errno = EINVAL;
@@ -339,12 +339,12 @@ const DirectoryPtr &DirHandle::GetOpenDirectory(ino_t fd) {
   return itor->second;
 }
 
-const DirectoryPtr &DirHandle::GetCreatedDirectory(dh_t dh) {
+const DirectoryPtr &DirHandle::GetCreatedDirectory(ino_t dh) {
   std::lock_guard lock(mutex_);
   return GetCreatedDirectoryNolock(dh);
 }
 
-const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(dh_t dh) {
+const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(ino_t dh) {
   auto itor = created_dhs_.find(dh);
   if (itor == created_dhs_.end()) [[unlikely]] {
     SPDLOG_WARN("directory handle not exist: {}", dh);
@@ -380,11 +380,11 @@ const DirectoryPtr &DirHandle::GetCreatedDirectoryNolock(
  *
  * @return 0 success or -1 failed
  */
-int32_t DirHandle::DeleteDirectory(dh_t dh) {
+int32_t DirHandle::DeleteDirectory(ino_t dh) {
   std::lock_guard lock(mutex_);
   return DeleteDirectoryNolock(dh);
 }
-int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
+int32_t DirHandle::DeleteDirectoryNolock(ino_t dh) {
   SPDLOG_INFO("delete dir handle: {}", dh);
   const DirectoryPtr dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(dh);
@@ -433,7 +433,7 @@ int32_t DirHandle::DeleteDirectoryNolock(dh_t dh) {
   }
 
   SPDLOG_INFO("remove directory success, dh: {}", dh);
-  block_fs_set_errno(0);
+  errno = 0;
   return 0;
 }
 
@@ -599,8 +599,8 @@ BLOCKFS_DIR *DirHandle::OpenDirectory(const std::string &path) {
   DirectoryPtr dir =
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dir_name);
   if (!dir) [[unlikely]] {
-    block_fs_set_errno(ENOTDIR);
-    block_fs_set_errno(ENOENT);
+    errno = ENOTDIR;
+    errno = ENOENT;
     return nullptr;
   }
   int32_t fd = FileSystem::Instance()->fd_handle()->get_fd();

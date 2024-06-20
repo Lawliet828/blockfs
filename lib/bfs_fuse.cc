@@ -23,16 +23,6 @@ namespace udisk::blockfs {
 
 #define DIR_FILLER(F, B, N, S, O) F(B, N, S, O, FUSE_FILL_DIR_PLUS)
 
-#ifndef __NR_copy_file_range
-#define __NR_copy_file_range (-1)
-loff_t copy_file_range(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
-                       size_t len, unsigned int flags) {
-  return syscall(__NR_copy_file_range, fd_in, off_in, fd_out, off_out, len,
-                 flags);
-}
-
-#endif
-
 class UDiskBFS {
  public:
   UDiskBFS() = default;

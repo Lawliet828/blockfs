@@ -10,14 +10,9 @@ namespace udisk::blockfs {
 const static FilePtr kEmptyFilePtr;
 const static OpenFilePtr kEmptyOpenFilePtr;
 
-bool FileHandle::RunInMetaGuard(const FileModifyCallback &cb) {
-  META_HANDLE_LOCK();
-  return cb();
-}
-
 bool FileHandle::InitializeMeta() {
   FileMeta *meta;
-  for (uint64_t fh = 0;
+  for (ino_t fh = 0;
        fh < FileSystem::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(base_addr() +
         FileSystem::Instance()->super_meta()->file_meta_size_ * fh);
@@ -45,18 +40,18 @@ bool FileHandle::InitializeMeta() {
                  << " parent_fh: " << meta->parent_fh_;
       if (::strnlen(meta->file_name_, sizeof(meta->file_name_)) ==
                    0) [[unlikely]] {
-        LOG(ERROR) << "file meta " << fh << " used but name empty";
+        SPDLOG_ERROR("file meta {} used but name empty", fh);
         return false;
       }
       if (meta->fh_ != static_cast<int32_t>(fh)) [[unlikely]] {
-        LOG(ERROR) << "file meta " << fh << " used but fh invalid";
+        SPDLOG_ERROR("file meta {} used but fh invalid", fh);
         return false;
       }
 
       FilePtr file = std::make_shared<File>(meta);
       if (!file) return false;
       if (file->child_fh() > 0) {
-        LOG(DEBUG) << "this is parent file, only add to fh map";
+        SPDLOG_DEBUG("this is parent file, only add to fh map");
         created_fhs_[file->fh()] = file;
         // ParentFilePtr parent = ParentFile::NewParentFile();
       } else {
@@ -84,12 +79,12 @@ bool FileHandle::InitializeMeta() {
 
 bool FileHandle::FormatAllMeta() {
   uint64_t file_meta_total_size =
-      FileSystem::Instance()->super_meta()->file_meta_total_size_;
+      FileSystem::Instance()->super_meta()->file_meta_total_size;
   AlignBufferPtr buffer = std::make_shared<AlignBuffer>(
       file_meta_total_size, FileSystem::Instance()->dev()->block_size());
 
   FileMeta *meta;
-  for (uint64_t fh = 0;
+  for (ino_t fh = 0;
        fh < FileSystem::Instance()->super_meta()->max_file_num; ++fh) {
     meta = reinterpret_cast<FileMeta *>(
         buffer->data() +
@@ -104,11 +99,11 @@ bool FileHandle::FormatAllMeta() {
   }
   int64_t ret = FileSystem::Instance()->dev()->PwriteDirect(
       buffer->data(),
-      FileSystem::Instance()->super_meta()->file_meta_total_size_,
+      FileSystem::Instance()->super_meta()->file_meta_total_size,
       FileSystem::Instance()->super_meta()->file_meta_offset_);
   if (ret != static_cast<int64_t>(
-                 FileSystem::Instance()->super_meta()->file_meta_total_size_)) {
-    LOG(ERROR) << "write file meta error size:" << ret;
+                 FileSystem::Instance()->super_meta()->file_meta_total_size)) {
+    SPDLOG_ERROR("write file meta error size: {}", ret);
     return false;
   }
   SPDLOG_INFO("write all file meta success");
@@ -126,7 +121,7 @@ bool FileHandle::TransformPath(const std::string &filename,
                                std::string &new_dirname,
                                std::string &new_filename) {
   if (filename[filename.size() - 1] == '/') [[unlikely]] {
-    LOG(ERROR) << "file cannot endwith dir separator: " << filename;
+    SPDLOG_ERROR("file cannot endwith dir separator: {}", filename);
     errno = ENOTDIR;
     return false;
   }
@@ -134,7 +129,7 @@ bool FileHandle::TransformPath(const std::string &filename,
   new_filename = GetFileName(filename);
   SPDLOG_INFO("transformPath dirname: {}, filename: {}", new_dirname, new_filename);
   if (new_filename.size() >= kBlockFsMaxFileNameLen) [[unlikely]] {
-    LOG(ERROR) << "file name exceed size: " << new_filename;
+    SPDLOG_ERROR("file name exceed size: {}", new_filename);
     errno = ENAMETOOLONG;
     return false;
   }
@@ -151,12 +146,12 @@ bool FileHandle::TransformPath(const std::string &filename,
  */
 FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
   META_HANDLE_LOCK();
-  if (free_metas_.empty()) [[unlikely]] {
-    LOG(WARNING) << "file meta not enough";
+  if (free_fhs_.empty()) [[unlikely]] {
+    SPDLOG_WARN("file meta not enough");
     errno = ENFILE;
     return nullptr;
   }
-  int32_t fh = free_metas_.front();
+  ino_t fh = free_fhs_.front();
   SPDLOG_INFO("create new file handle: {}", fh);
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
@@ -174,18 +169,18 @@ FileMeta *FileHandle::NewFreeFileMeta(int32_t dh, const std::string &filename) {
   ::memset(meta->file_name_, 0, sizeof(meta->file_name_));
   ::memcpy(meta->file_name_, filename.c_str(), filename.size());
 
-  free_metas_.pop_front();
+  free_fhs_.pop_front();
 
   return meta;
 }
 
 FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
-  if (free_metas_.empty()) [[unlikely]] {
+  if (free_fhs_.empty()) [[unlikely]] {
     LOG(ERROR) << "file meta not enough";
     errno = ENFILE;
     return kEmptyFilePtr;
   }
-  int32_t fh = free_metas_.front();
+  ino_t fh = free_fhs_.front();
   SPDLOG_INFO("create new file handle: {} name: {}", fh, filename);
 
   FileMeta *meta = reinterpret_cast<FileMeta *>(
@@ -200,7 +195,7 @@ FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
 
   FilePtr file = std::make_shared<File>();
   if (!file) {
-    LOG(ERROR) << "failed to new file pointer";
+    SPDLOG_ERROR("failed to new file pointer");
     errno = ENOMEM;
     return kEmptyFilePtr;
   }
@@ -211,18 +206,18 @@ FilePtr FileHandle::NewFreeFileNolock(int32_t dh, const std::string &filename) {
   file->set_file_name(filename);
   file->set_is_temp(false);
 
-  free_metas_.pop_front();
+  free_fhs_.pop_front();
 
   return file;
 }
 
 FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
-  if (free_metas_.empty()) [[unlikely]] {
-    LOG(WARNING) << "file meta not enough";
-    block_fs_set_errno(ENFILE);
+  if (free_fhs_.empty()) [[unlikely]] {
+    SPDLOG_WARN("file meta not enough");
+    errno = ENFILE;
     return nullptr;
   }
-  int32_t fh = free_metas_.front();
+  ino_t fh = free_fhs_.front();
   std::string tmp_file_name = "tmpfile_" + std::to_string(fh);
   LOG(INFO) << "create new tmp file handle: " << fh
             << " name: " << tmp_file_name;
@@ -250,7 +245,7 @@ FilePtr FileHandle::NewFreeTmpFileNolock(int32_t dh) {
   file->set_file_name(tmp_file_name);
   file->set_is_temp(true);
 
-  free_metas_.pop_front();
+  free_fhs_.pop_front();
 
   return file;
 }
@@ -273,7 +268,7 @@ bool FileHandle::NewFile(const std::string &dirname,
     FileNameKey key = std::make_pair(dir->dh(), filename);
     auto itor = created_files_.find(key);
     if (itor != created_files_.end()) [[unlikely]] {
-      LOG(WARNING) << "file has already exist: " << dirname << filename;
+      SPDLOG_WARN("file has already exist: {} {}", dirname, filename);
       errno = EEXIST;
       return false;
     }
@@ -366,7 +361,7 @@ bool FileHandle::RemoveParentFile(const ParentFilePtr &parent) {
 }
 
 void FileHandle::AddFile2FreeNolock(int32_t index) noexcept {
-  free_metas_.push_back(index);
+  free_fhs_.push_back(index);
 }
 
 void FileHandle::AddFile2Free(int32_t index) {
@@ -388,7 +383,7 @@ bool FileHandle::FindFile(const std::string &dirname,
       FileSystem::Instance()->dir_handle()->GetCreatedDirectory(dirname);
   if (!dir) [[unlikely]] {
     LOG(ERROR) << "parent directory not exist: " << dirname;
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return false;
   }
   // 找到父文件夹
@@ -399,7 +394,7 @@ bool FileHandle::FindFile(const std::string &dirname,
   auto itor = created_files_.find(key);
   if (itor == created_files_.end()) [[unlikely]] {
     LOG(WARNING) << "file not exist: " << dirname << filename;
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return false;
   }
   dirs->second = itor->second;
@@ -463,7 +458,7 @@ int FileHandle::UnlinkFileNolock(const ino_t fh) {
   SPDLOG_INFO("unlink file handle: {}", fh);
   FilePtr file = GetCreatedFileNoLock(fh);
   if (!file) {
-    block_fs_set_errno(ENOENT);
+    errno = ENOENT;
     return -1;
   }
 
@@ -471,7 +466,7 @@ int FileHandle::UnlinkFileNolock(const ino_t fh) {
       FileSystem::Instance()->dir_handle()->GetCreatedDirectoryNolock(
           file->dh());
   if (!parent_dir) {
-    block_fs_set_errno(EISDIR);
+    errno = EISDIR;
     return -1;
   }
 
@@ -640,12 +635,12 @@ static bool VerifyOpenExistFileFlag(const int32_t flags) {
   /* trying to open a file that exists with O_CREATE and O_EXCL
    * if O_CREAT and O_EXCL are set, this is an error */
   if ((flags & O_CREAT) && (flags & O_EXCL)) {
-    block_fs_set_errno(EEXIST);
+    errno = EEXIST;
     return false;
   }
   /* if O_DIRECTORY is set and fid is not a directory, error */
   if ((flags & O_DIRECTORY)) {
-    block_fs_set_errno(ENOTDIR);
+    errno = ENOTDIR;
     return false;
   }
   return true;
@@ -765,7 +760,7 @@ int FileHandle::close(ino_t fd) noexcept {
 int FileHandle::dup(int oldfd) {
   const OpenFilePtr &old_open_file = GetOpenFile(oldfd);
   if (!old_open_file) {
-    // block_fs_set_errno(ENOENT);
+    // errno = ENOENT;
     return -1;
   }
   const FilePtr &file = old_open_file->file();
@@ -773,7 +768,7 @@ int FileHandle::dup(int oldfd) {
   /* allocate a file fd for this new file */
   ino_t newfd = FileSystem::Instance()->fd_handle()->get_fd();
   if (newfd < 0) {
-    block_fs_set_errno(ENFILE);
+    errno = ENFILE;
     return -1;
   }
   OpenFilePtr new_open_file = std::make_shared<OpenFile>(file);

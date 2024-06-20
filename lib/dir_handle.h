@@ -15,12 +15,12 @@ typedef std::function<bool()> DirectoryCallback;
 
 class DirHandle : public MetaHandle {
  private:
-  std::list<dh_t> free_dhs_;  // 目录Meta的空闲链表
+  std::list<ino_t> free_dhs_;  // 目录Meta的空闲链表
 
   typedef std::unordered_map<std::string, DirectoryPtr> DirectoryNameMap;
   DirectoryNameMap created_dirs_;   // 已创建的目录
-  std::unordered_map<dh_t, DirectoryPtr> created_dhs_;  // 文件句柄名字映射
-  std::unordered_map<dh_t, DirectoryPtr> open_dirs_;    // 已打开的目录
+  std::unordered_map<ino_t, DirectoryPtr> created_dhs_;  // 文件句柄名字映射
+  std::unordered_map<ino_t, DirectoryPtr> open_dirs_;    // 已打开的目录
 
  private:
   bool TransformPath(const std::string &path, std::string &dir_name);
@@ -43,12 +43,12 @@ class DirHandle : public MetaHandle {
   const uint32_t GetFreeMetaSize() const noexcept { return free_dhs_.size(); }
 
   const DirectoryPtr &GetOpenDirectory(ino_t fd);
-  const DirectoryPtr &GetCreatedDirectory(dh_t dh);
-  const DirectoryPtr &GetCreatedDirectoryNolock(dh_t dh);
+  const DirectoryPtr &GetCreatedDirectory(ino_t dh);
+  const DirectoryPtr &GetCreatedDirectoryNolock(ino_t dh);
   const DirectoryPtr &GetCreatedDirectory(const std::string &dirname);
   const DirectoryPtr &GetCreatedDirectoryNolock(const std::string &dirname);
-  int32_t DeleteDirectory(const dh_t dh);
-  int32_t DeleteDirectoryNolock(const dh_t dh);
+  int32_t DeleteDirectory(const ino_t dh);
+  int32_t DeleteDirectoryNolock(const ino_t dh);
 
   uint32_t PageAlignIndex(uint32_t index) const;
 
