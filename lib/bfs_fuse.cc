@@ -1,7 +1,6 @@
 #include "bfs_fuse.h"
 
 #include <fuse3/fuse.h>
-#include <fuse3/fuse_lowlevel.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h> /* flock(2) */
@@ -100,17 +99,15 @@ class UDiskBFS {
   std::map<uint64_t, BLOCKFS_DIR *> open_dirs_;
 };
 
-void mfs_lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  SPDLOG_INFO("call mfs_lookup parent: {} name: {}", parent, name);
+void lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
+  if (nullptr == name) [[unlikely]] {
+    fuse_reply_err(req, EINVAL);
+    return;
+  }
+  SPDLOG_INFO("call lookup parent: {} name: {}", parent, name);
 
-  struct fuse_entry_param e;
-  ::memset(&e, 0, sizeof(e));
-
-  e.ino = 0;
-  e.attr_timeout = 1.0;
-  e.entry_timeout = 1.0;
-
-  fuse_reply_entry(req, &e);
+  FileSystem::Instance()->Lookup(req, parent, name);
+  return;
 }
 
 /** Get file attributes.
@@ -965,7 +962,6 @@ off_t bfs_lseek(const char *path, off_t off, int whence,
 }
 
 static const struct fuse_operations kBFSOps = {
-    // .lookup = mfs_lookup,
     .getattr = mfs_getattr,
     .mknod = bfs_mknod,
     .mkdir = mfs_mkdir,
@@ -1001,6 +997,10 @@ static const struct fuse_operations kBFSOps = {
     .flock = bfs_flock,
     .copy_file_range = bfs_copy_file_range,
     .lseek = bfs_lseek,
+};
+
+static const struct fuse_lowlevel_ops ll_ops = {
+  .lookup = lookup,
 };
 
 void UDiskBFS::FuseLoop(bfs_config_info *info) {

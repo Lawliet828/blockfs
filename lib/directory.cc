@@ -75,10 +75,6 @@ void Directory::ClearMeta(dh_t dh) noexcept {
 /**
  * 删除文件夹, 回收文件夹元数据
  * 需要在文件元数据修改的保护锁内
- *
- * \param none
- *
- * \return success or failed
  */
 bool Directory::Suicide() {
   return FileSystem::Instance()->dir_handle()->RunInMetaGuard([this] {
@@ -92,8 +88,6 @@ bool Directory::SuicideNolock() {
 
 /**
  * 返回文件夹目录下的文件和文件夹的个数总和
- *
- * \param none
  *
  * \return strip success or failed
  */

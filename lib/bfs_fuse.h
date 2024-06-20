@@ -1,7 +1,9 @@
 #ifndef LIB_BLOCK_FS_MOUNT_H_
 #define LIB_BLOCK_FS_MOUNT_H_
 
+#ifndef FUSE_USE_VERSION
 #define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
+#endif
 
 #include <string>
 

@@ -1,6 +1,9 @@
 #ifndef LIB_FILE_STORE_H_
 #define LIB_FILE_STORE_H_
 
+#define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
+
+#include <fuse3/fuse_lowlevel.h>
 #include <stdint.h>
 #include <sys/statvfs.h>
 
@@ -51,7 +54,7 @@ class FileSystem {
   int MakeMountPoint(const std::string &mount_point);
 
  public:
-  FileSystem();
+  FileSystem() = default;
   ~FileSystem();
 
   static FileSystem *Instance();
@@ -60,6 +63,8 @@ class FileSystem {
 
   // Mount FileSystem
   int32_t MountFileSystem(const std::string &config_path);
+
+  void Lookup(fuse_req_t req, fuse_ino_t parent, const std::string &name);
 
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
 
