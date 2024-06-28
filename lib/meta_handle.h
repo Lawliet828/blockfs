@@ -15,7 +15,7 @@ class MetaHandle {
   virtual ~MetaHandle() = default;
 
   // 设置和获取元数据起始地址
-  char *base_addr() noexcept { return base_addr_; }
+  char *base_addr() const noexcept { return base_addr_; }
   void set_base_addr(char *addr) noexcept { base_addr_ = addr; }
 
   virtual bool InitializeMeta() = 0;
