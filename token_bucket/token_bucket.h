@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef HELA_TOKEN_BUCKET_H_
-#define HELA_TOKEN_BUCKET_H_
+// clang-format off
+// https://github.com/facebook/folly/blob/main/folly/TokenBucket.h
+
+#pragma once
 
 #include <algorithm>
 #include <atomic>
@@ -24,29 +26,11 @@
 #include <optional>
 #include <thread>
 
-#include <ustevent/likely.h>
+#include "constexpr_math.h"
 
-#include "hela/constexpr_math.h"
+#define UNLIKELY(x) __builtin_expect((x), 0)
 
-namespace udisk {
-namespace hela {
-
-#if defined(__arm__)
-#define FOLLY_ARM 1
-#else
-#define FOLLY_ARM 0
-#endif
-
-#if defined(__s390x__)
-#define FOLLY_S390X 1
-#else
-#define FOLLY_S390X 0
-#endif
-
-constexpr bool kIsArchArm = FOLLY_ARM == 1;
-constexpr bool kIsArchS390X = FOLLY_S390X == 1;
-constexpr std::size_t hardware_destructive_interference_size =
-    (kIsArchArm || kIsArchS390X) ? 64 : 128;
+constexpr std::size_t hardware_destructive_interference_size = 64;
 
 struct TokenBucketPolicyDefault {
   using align =
@@ -654,7 +638,6 @@ class BasicTokenBucket {
 using TokenBucket = BasicTokenBucket<>;
 using DynamicTokenBucket = BasicDynamicTokenBucket<>;
 
-}  // namespace hela
-}  // namespace udisk
 
-#endif  // HELA_TOKEN_BUCKET_H_
+
+// clang-format on

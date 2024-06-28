@@ -6,12 +6,8 @@ add_executable(block_fs_ionomerges block_fs_ionomerges.cc)
 target_link_libraries(block_fs_ionomerges ${COMMLIBS})
 
 # 4. Posix 空洞验证
-add_library(block_fs_hole_objs OBJECT
-            block_fs_hole.cc)
-
-add_executable(block_fs_hole $<TARGET_OBJECTS:block_fs_hole_objs>)
+add_executable(block_fs_hole block_fs_hole.cc)
 target_link_libraries(block_fs_hole ${COMMLIBS})
-
 
 add_executable(io_test io_test.cc)
 target_link_libraries(io_test aio event)

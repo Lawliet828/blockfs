@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+// clang-format off
+// https://github.com/facebook/folly/blob/main/folly/ConstexprMath.h
+
 #pragma once
 
 #include <cstdint>
@@ -21,8 +24,7 @@
 #include <limits>
 #include <type_traits>
 
-namespace udisk {
-namespace hela {
+
 // TLDR: Prefer using operator< for ordering. And when
 // a and b are equivalent objects, we return b to make
 // sorting stable.
@@ -180,7 +182,6 @@ constexpr T constexpr_add_overflow_clamped(T a, T b) {
   static_assert(
       !std::is_integral<T>::value || sizeof(T) <= sizeof(M),
       "Integral type too large!");
-  // clang-format off
   return
     // don't do anything special for non-integral types.
     !std::is_integral<T>::value ? a + b :
@@ -196,7 +197,6 @@ constexpr T constexpr_add_overflow_clamped(T a, T b) {
     !(b < 0) ? a + b :
     // a < 0 && b < 0, keep the result >= MIN.
                a + constexpr_max(b, T(L::min() - a));
-  // clang-format on
 }
 
 template <typename T>
@@ -206,7 +206,6 @@ constexpr T constexpr_sub_overflow_clamped(T a, T b) {
   static_assert(
       !std::is_integral<T>::value || sizeof(T) <= sizeof(M),
       "Integral type too large!");
-  // clang-format off
   return
     // don't do anything special for non-integral types.
     !std::is_integral<T>::value ? a - b :
@@ -227,7 +226,6 @@ constexpr T constexpr_sub_overflow_clamped(T a, T b) {
     a < 0 ? a - b :
     // -b = -MIN = (MAX + 1) and a >= 0, result > MAX.
             L::max();
-  // clang-format on
 }
 
 // clamp_cast<> provides sane numeric conversions from float point numbers to
@@ -272,7 +270,6 @@ constexpr_clamp_cast(Src src) {
       "constexpr_clamp_cast can only cast into integral type (up to 64bit)");
 
   using L = std::numeric_limits<Dst>;
-  // clang-format off
   return
     // Check if Src and Dst have same signedness.
     std::is_signed<Src>::value == std::is_signed<Dst>::value
@@ -302,7 +299,6 @@ constexpr_clamp_cast(Src src) {
       // If Src does not fit into Dst, we need to ensure the result is at most
       // Dst MAX.
       Dst(constexpr_min(src, Src(L::max()))));
-  // clang-format on
 }
 
 namespace detail {
@@ -332,7 +328,6 @@ constexpr_clamp_cast(Src src) {
       "constexpr_clamp_cast can only cast into integral type (up to 64bit)");
 
   using L = std::numeric_limits<Dst>;
-  // clang-format off
   return
     // Special case: cast NaN into 0.
     // Using a trick here to portably check for NaN: f != f only if f is NaN.
@@ -381,8 +376,8 @@ constexpr_clamp_cast(Src src) {
           detail::kClampCastUpperBoundFloatToUInt32F,
           L::min(),
           L::max());
-  // clang-format on
 }
 
-}  // namespace hela
-}  // namespace udisk
+
+
+// clang-format on
