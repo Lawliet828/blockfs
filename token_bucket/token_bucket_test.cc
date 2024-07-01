@@ -5,39 +5,38 @@
 
 #include "token_bucket.h"
 
-const int NS_PER_SECOND = 1e9;
-const int NS_PER_MS = 1e6;
-const int NS_PER_US = 1e3;
-
-// 获取当前时间戳, 单位纳秒
-int64_t Now() {
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return ts.tv_sec * NS_PER_SECOND + ts.tv_nsec;
-}
-
 int main() {
+  DynamicTokenBucket bw_token_bucket;
   // 限流300MB/s
-  TokenBucket limiter(300 * 1024 * 1024, 300 * 1024 * 1024);
+  double kbps = 300 * 1024;
   // 每次请求256KB
-  int64_t request_size = 256 * 1024;
-  // 每隔约1ms发起2次请求
+  int64_t request_size = 256;
+  double wait_time = 0.0;
+
+  // 每隔约1ms发起10次请求
   // 每隔1s打印一次请求数据量
-  int64_t start_time = Now();
-  int64_t last_time = start_time;
+  auto duration = std::chrono::steady_clock::now().time_since_epoch();
+  double last_time = std::chrono::duration<double>(duration).count();
   int64_t last_size = 0;
   while (true) {
-    int64_t now = Now();
-    if (now - last_time >= NS_PER_SECOND) {
-      printf("time: %lf s, request size: %lf MB\n", (now - last_time) / 1e9,
-             (last_size / 1024.0 / 1024.0));
+    auto duration = std::chrono::steady_clock::now().time_since_epoch();
+    double now = std::chrono::duration<double>(duration).count();
+
+    if (now - last_time >= 1.0) {
+      printf("time: %lf s, request size: %lf MB\n", (now - last_time),
+             (last_size / 1024.0));
       last_time = now;
       last_size = 0;
     }
-    for (int i = 0; i < 2; ++i) {
-      if (limiter.consume(request_size)) {
-        last_size += request_size;
-      }
+
+    if (wait_time > now) {
+      // printf("wait time: %lf\n", wait_time - now);
+    } else {
+      int64_t to_comsume_kb = request_size * 10;
+      std::optional<double> bw_ret = bw_token_bucket.consumeWithBorrowNonBlocking(to_comsume_kb, kbps, kbps);
+      last_size += to_comsume_kb;
+      double nap_time = bw_ret.value_or(0.0);
+      wait_time = nap_time + now;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
