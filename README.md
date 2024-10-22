@@ -21,13 +21,7 @@
 
 #### 3.1. 安装依赖的库
 
-yum -y install gcc gcc-c++ make git automake libaio-devel openssl openssl-devel
-
-```sh
-cd blockfs/deps
-
-sudo ./make_deps.sh
-```
+cs-learning/Linux/getdeps.sh
 
 #### 3.2. 编译libblock_fs.a
 
