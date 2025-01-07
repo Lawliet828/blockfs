@@ -62,8 +62,6 @@ class FileSystem {
   // Mount FileSystem
   int32_t MountFileSystem(const std::string &config_path);
 
-  void Lookup(fuse_req_t req, fuse_ino_t parent, const std::string &name);
-
   block_fs_dirent *ReadDirectory(BLOCKFS_DIR *dir);
 
   // Stat

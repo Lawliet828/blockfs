@@ -55,24 +55,6 @@ int32_t FileSystem::MountFileSystem(const std::string& config_path) {
   return 0;
 }
 
-void FileSystem::Lookup(fuse_req_t req, fuse_ino_t parent, const std::string &name) {
-  if (name.size() > kBlockFsMaxFileNameLen) [[unlikely]] {
-    SPDLOG_ERROR("file name too long: {}", name);
-    fuse_reply_err(req, ENAMETOOLONG);
-    return;
-  }
-
-  struct fuse_entry_param e;
-  ::memset(&e, 0, sizeof(e));
-
-  e.ino = 0;
-  e.generation = 0;
-  e.attr_timeout = 1.0;
-  e.entry_timeout = 1.0;
-
-  fuse_reply_entry(req, &e);
-}
-
 /**
  * read a directory
  *

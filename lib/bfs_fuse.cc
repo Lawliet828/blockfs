@@ -89,17 +89,6 @@ class UDiskBFS {
   std::map<uint64_t, BLOCKFS_DIR *> open_dirs_;
 };
 
-void lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {
-  if (nullptr == name) [[unlikely]] {
-    fuse_reply_err(req, EINVAL);
-    return;
-  }
-  SPDLOG_INFO("call lookup parent: {} name: {}", parent, name);
-
-  FileSystem::Instance()->Lookup(req, parent, name);
-  return;
-}
-
 /** Get file attributes.
  *
  * Similar to stat().  The 'st_dev' and 'st_blksize' fields are
@@ -984,10 +973,6 @@ static const struct fuse_operations kBFSOps = {
     .flock = bfs_flock,
     .copy_file_range = bfs_copy_file_range,
     .lseek = bfs_lseek,
-};
-
-static const struct fuse_lowlevel_ops ll_ops = {
-  .lookup = lookup,
 };
 
 void UDiskBFS::FuseLoop(bfs_config_info *info) {
