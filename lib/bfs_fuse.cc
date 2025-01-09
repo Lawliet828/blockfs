@@ -69,10 +69,8 @@ class UDiskBFS {
 
   static UDiskBFS *Instance() {
     static UDiskBFS *g_instance = nullptr;
-    if (!g_instance) {
-      static std::once_flag once_flag;
-      std::call_once(once_flag, [&]() { g_instance = new UDiskBFS(); });
-    }
+    static std::once_flag once_flag;
+    std::call_once(once_flag, [&]() { g_instance = new UDiskBFS(); });
     return g_instance;
   }
 
@@ -376,18 +374,6 @@ static int flush(const char *path, struct fuse_file_info *fi) {
   return 0;
 }
 
-/** Release an open file
- *
- * Release is called when there are no more references to an open
- * file: all file descriptors are closed and all memory mappings
- * are unmapped.
- *
- * For every open() call there will be exactly one release() call
- * with the same flags and file handle.  It is possible to
- * have a file opened more than once, in which case only the last
- * release will mean, that no more reads/writes will happen on the
- * file.  The return value of release is ignored.
- */
 static int bfs_release(const char *path, struct fuse_file_info *fi) {
   SPDLOG_INFO("call bfs_release file: {}", path);
 

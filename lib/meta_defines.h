@@ -49,8 +49,6 @@ constexpr uint64_t kFileBlockCapacity = 1000;
 constexpr uint64_t kBlockFsFileBlockMetaSize = kBlockFsPageSize;
 constexpr uint64_t kBlockFsFileMetaIndexSize = kBlockFsPageSize;
 
-typedef uint64_t ino_t;
-
 /* 文件系统的超级块
  * 大小: 4K
  * 作用: 记录文件系统的一些规格参数
