@@ -36,14 +36,6 @@ class Logger {
   static void set_min_level(LogLevel level);
   static LogLevel get_min_level();
 
-  std::string GetLogName() const;
-
-  std::string GetSavePath() const;
-
-  void SetLogName(const std::string& logName);
-
-  void SetSavePath(const std::string& savePath);
-
   std::string GetCurrentTime(int flag) const;
 
   void Append(const char* buf, unsigned int len);

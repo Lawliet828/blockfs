@@ -13,7 +13,6 @@
 #include <sstream>
 
 #include "comm_utils.h"
-#include "current_thread.h"
 
 namespace udisk {
 namespace blockfs {
@@ -88,9 +87,8 @@ Logger::Logger(LogLevel logLevel, const char* FILE, int LINE)
     logName_ += GetCurrentTime(0);
     std::string level = LogLevelConvert(logLevel);
     std::string now = GetCurrentTime(1);
-    CurrentThread::tid();
-    snprintf(buffer_, sizeof(buffer_) - 1, "%s%s %s %s:%d - ",
-             CurrentThread::tidString(), now.c_str(), level.c_str(), FILE,
+    snprintf(buffer_, sizeof(buffer_) - 1, "%s %s %s:%d - ",
+             now.c_str(), level.c_str(), FILE,
              LINE);
   }
 }
@@ -101,14 +99,6 @@ Logger::~Logger() {
     WriteLog();
   }
 }
-
-std::string Logger::GetLogName() const { return logName_; }
-
-std::string Logger::GetSavePath() const { return savePath_; }
-
-void Logger::SetLogName(const std::string& logName) { logName_ = logName; }
-
-void Logger::SetSavePath(const std::string& savePath) { savePath_ = savePath; }
 
 std::string Logger::GetCurrentTime(int flag) const {
   using namespace std::chrono;
