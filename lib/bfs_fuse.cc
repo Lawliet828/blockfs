@@ -541,44 +541,6 @@ static int bfs_releasedir(const char *path, struct fuse_file_info *fi) {
 static void *bfs_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
   SPDLOG_INFO("call bfs_init");
 
-  LOG(INFO) << "Protocol version: " << conn->proto_major << "."
-            << conn->proto_minor;
-  LOG(INFO) << "Capabilities: ";
-  if (conn->capable & FUSE_CAP_WRITEBACK_CACHE)
-    LOG(INFO) << "FUSE_CAP_WRITEBACK_CACHE";
-  if (conn->capable & FUSE_CAP_ASYNC_READ) LOG(INFO) << "FUSE_CAP_ASYNC_READ";
-  if (conn->capable & FUSE_CAP_POSIX_LOCKS) LOG(INFO) << "FUSE_CAP_POSIX_LOCKS";
-  if (conn->capable & FUSE_CAP_ATOMIC_O_TRUNC)
-    LOG(INFO) << "FUSE_CAP_ATOMIC_O_TRUNC";
-  if (conn->capable & FUSE_CAP_EXPORT_SUPPORT)
-    LOG(INFO) << "FUSE_CAP_EXPORT_SUPPORT";
-  if (conn->capable & FUSE_CAP_DONT_MASK) LOG(INFO) << "FUSE_CAP_DONT_MASK";
-  if (conn->capable & FUSE_CAP_SPLICE_MOVE) LOG(INFO) << "FUSE_CAP_SPLICE_MOVE";
-  if (conn->capable & FUSE_CAP_SPLICE_READ) LOG(INFO) << "FUSE_CAP_SPLICE_READ";
-  if (conn->capable & FUSE_CAP_SPLICE_WRITE)
-    LOG(INFO) << "FUSE_CAP_SPLICE_WRITE";
-  if (conn->capable & FUSE_CAP_FLOCK_LOCKS) LOG(INFO) << "FUSE_CAP_FLOCK_LOCKS";
-  if (conn->capable & FUSE_CAP_IOCTL_DIR) LOG(INFO) << "FUSE_CAP_IOCTL_DIR";
-  if (conn->capable & FUSE_CAP_AUTO_INVAL_DATA)
-    LOG(INFO) << "FUSE_CAP_AUTO_INVAL_DATA";
-  if (conn->capable & FUSE_CAP_READDIRPLUS) LOG(INFO) << "FUSE_CAP_READDIRPLUS";
-  if (conn->capable & FUSE_CAP_READDIRPLUS_AUTO)
-    LOG(INFO) << "FUSE_CAP_READDIRPLUS_AUTO";
-  if (conn->capable & FUSE_CAP_ASYNC_DIO) LOG(INFO) << "FUSE_CAP_ASYNC_DIO";
-  if (conn->capable & FUSE_CAP_WRITEBACK_CACHE)
-    LOG(INFO) << "FUSE_CAP_WRITEBACK_CACHE";
-  if (conn->capable & FUSE_CAP_NO_OPEN_SUPPORT)
-    LOG(INFO) << "FUSE_CAP_NO_OPEN_SUPPORT";
-  if (conn->capable & FUSE_CAP_PARALLEL_DIROPS)
-    LOG(INFO) << "FUSE_CAP_PARALLEL_DIROPS";
-  if (conn->capable & FUSE_CAP_POSIX_ACL) LOG(INFO) << "FUSE_CAP_POSIX_ACL";
-  if (conn->capable & FUSE_CAP_CACHE_SYMLINKS)
-    LOG(INFO) << "FUSE_CAP_CACHE_SYMLINKS";
-  if (conn->capable & FUSE_CAP_NO_OPENDIR_SUPPORT)
-    LOG(INFO) << "FUSE_CAP_NO_OPENDIR_SUPPORT";
-  if (conn->capable & FUSE_CAP_EXPLICIT_INVAL_DATA)
-    LOG(INFO) << "FUSE_CAP_EXPLICIT_INVAL_DATA";
-
   struct fuse_context *cxt = fuse_get_context();
   (void)cxt;
   return nullptr;
@@ -995,7 +957,7 @@ void UDiskBFS::FuseLoop(bfs_config_info *info) {
   argv.push_back(mountpoint);
   argv.push_back((char *)"-oallow_other");
   argv.push_back((char *)"-odefault_permissions");
-  argv.push_back((char *)"-orw"); // 读写权限
+  argv.push_back((char *)"-orw");
   argv.push_back((char *)"-oauto_unmount");
   for (size_t i = 0; i < argv.size(); ++i) {
     LOG(INFO) << "fuse args: " << argv[i];

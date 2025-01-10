@@ -169,14 +169,6 @@ luotang@10-23-227-66:~/blockfs/build$
 ```sh
 luotang@10-23-227-66:~/blockfs/build$ sudo ./app/bfs_mount /home/luotang/bfs/
 [877654 20210120 11:11:18.315592Z][INFO][app/bfs_mount.cc:329] FUSE version: 3.10.1
-Protocol version: 7.27
-Capabilities:
-        FUSE_CAP_WRITEBACK_CACHE
-        FUSE_CAP_ASYNC_READ
-        FUSE_CAP_POSIX_LOCKS
-        FUSE_CAP_ATOMIC_O_TRUNC
-        FUSE_CAP_EXPORT_SUPPORT
-
 ........
 
 [877656 20210120 11:11:20.468840Z][INFO][lib/file_handle.cc:80] read file meta success, free num:99979

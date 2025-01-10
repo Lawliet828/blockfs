@@ -31,7 +31,6 @@ class Logger {
   Logger& operator=(const Logger&) = delete;
 
   virtual ~Logger();
-  void Dump() const;
 
  public:
   static void set_min_level(LogLevel level);

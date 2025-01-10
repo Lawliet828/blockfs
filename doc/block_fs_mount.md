@@ -81,27 +81,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58499 20210202 14:51:31.966040Z][INFO][lib/block_fs_fuse.cc:1554] fuse mount_arg: allow_other,umask=0755,auto_unmount,entry_timeout=0.500000,attr_timeout=0.500000
 [58499 20210202 14:51:31.966053Z][INFO][lib/block_fs_fuse.cc:1559] argv_cnt: 6
 [58514 20210202 14:51:31.991787Z][INFO][lib/block_fs_fuse.cc:945] call bfs_init
-[58514 20210202 14:51:31.991835Z][INFO][lib/block_fs_fuse.cc:887] Protocol version: 7.27
-[58514 20210202 14:51:31.991839Z][INFO][lib/block_fs_fuse.cc:889] Capabilities:
-[58514 20210202 14:51:31.991841Z][INFO][lib/block_fs_fuse.cc:891] FUSE_CAP_WRITEBACK_CACHE
-[58514 20210202 14:51:31.991847Z][INFO][lib/block_fs_fuse.cc:892] FUSE_CAP_ASYNC_READ
-[58514 20210202 14:51:31.991850Z][INFO][lib/block_fs_fuse.cc:893] FUSE_CAP_POSIX_LOCKS
-[58514 20210202 14:51:31.991860Z][INFO][lib/block_fs_fuse.cc:895] FUSE_CAP_ATOMIC_O_TRUNC
-[58514 20210202 14:51:31.991862Z][INFO][lib/block_fs_fuse.cc:897] FUSE_CAP_EXPORT_SUPPORT
-[58514 20210202 14:51:31.991866Z][INFO][lib/block_fs_fuse.cc:898] FUSE_CAP_DONT_MASK
-[58514 20210202 14:51:31.991868Z][INFO][lib/block_fs_fuse.cc:899] FUSE_CAP_SPLICE_MOVE
-[58514 20210202 14:51:31.991874Z][INFO][lib/block_fs_fuse.cc:900] FUSE_CAP_SPLICE_READ
-[58514 20210202 14:51:31.991876Z][INFO][lib/block_fs_fuse.cc:902] FUSE_CAP_SPLICE_WRITE
-[58514 20210202 14:51:31.991879Z][INFO][lib/block_fs_fuse.cc:903] FUSE_CAP_FLOCK_LOCKS
-[58514 20210202 14:51:31.991882Z][INFO][lib/block_fs_fuse.cc:904] FUSE_CAP_IOCTL_DIR
-[58514 20210202 14:51:31.991884Z][INFO][lib/block_fs_fuse.cc:906] FUSE_CAP_AUTO_INVAL_DATA
-[58514 20210202 14:51:31.991887Z][INFO][lib/block_fs_fuse.cc:907] FUSE_CAP_READDIRPLUS
-[58514 20210202 14:51:31.991889Z][INFO][lib/block_fs_fuse.cc:909] FUSE_CAP_READDIRPLUS_AUTO
-[58514 20210202 14:51:31.991895Z][INFO][lib/block_fs_fuse.cc:910] FUSE_CAP_ASYNC_DIO
-[58514 20210202 14:51:31.991897Z][INFO][lib/block_fs_fuse.cc:912] FUSE_CAP_WRITEBACK_CACHE
-[58514 20210202 14:51:31.991901Z][INFO][lib/block_fs_fuse.cc:914] FUSE_CAP_NO_OPEN_SUPPORT
-[58514 20210202 14:51:31.991903Z][INFO][lib/block_fs_fuse.cc:916] FUSE_CAP_PARALLEL_DIROPS
-[58514 20210202 14:51:31.991909Z][INFO][lib/block_fs_fuse.cc:917] FUSE_CAP_POSIX_ACL
 
 [58515 20210202 14:51:37.200378Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
 [58514 20210202 14:51:38.902754Z][INFO][lib/block_fs_fuse.cc:126] call mfs_getattr file: /
@@ -199,31 +178,6 @@ luotang@10-23-227-66:~/blockfs$ ./build/tool/block_fs_mount
 ```
 
 #### issue
-
-https://github.com/containers/fuse-overlayfs/issues/35#issuecomment-451952680
-
-### luotang@10-23-227-66:~/blockfs$ vim /usr/local/etc/fuse.conf
-```ini
-# The file /etc/fuse.conf allows for the following parameters:
-#
-# user_allow_other - Using the allow_other mount option works fine as root, in
-# order to have it work as user you need user_allow_other in /etc/fuse.conf as
-# well. (This option allows users to use the allow_other option.) You need
-# allow_other if you want users other than the owner to access a mounted fuse.
-# This option must appear on a line by itself. There is no value, just the
-# presence of the option.
-
-user_allow_other
-
-
-# mount_max = n - this option sets the maximum number of mounts.
-# Currently (2014) it must be typed exactly as shown
-# (with a single space before and after the equals sign).
-
-#mount_max = 1000
-
-```
-
 
 ```sh
 [31813 20210205 18:19:26.861753Z][INFO][lib/file_handle.cc:85] read file meta success, free num:99979

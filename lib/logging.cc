@@ -102,14 +102,6 @@ Logger::~Logger() {
   }
 }
 
-void Logger::Dump() const {
-  printf("\n=====Logger Dump START ========== \n");
-  printf("logName_=%s ", logName_.c_str());
-  printf("savePath_=%s ", savePath_.c_str());
-  printf("buffer_=%s ", buffer_);
-  printf("\n===Logger DUMP END ============\n");
-}
-
 std::string Logger::GetLogName() const { return logName_; }
 
 std::string Logger::GetSavePath() const { return savePath_; }

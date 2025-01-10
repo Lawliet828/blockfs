@@ -1,5 +1,4 @@
-#ifndef LIB_BLOCK_FS_MOUNT_H_
-#define LIB_BLOCK_FS_MOUNT_H_
+#pragma once
 
 #ifndef FUSE_USE_VERSION
 #define FUSE_USE_VERSION FUSE_MAKE_VERSION(3, 17)
@@ -22,4 +21,3 @@ struct bfs_config_info {
 void block_fs_fuse_mount(bfs_config_info *info);
 
 }
-#endif

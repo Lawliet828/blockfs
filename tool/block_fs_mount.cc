@@ -3,19 +3,19 @@
 #include <unistd.h>
 
 #include <chrono> // std::chrono::seconds
+#include <iostream>
 #include <thread> // std::this_thread::sleep_for
 
 #include "file_system.h"
-#include "logging.h"
 
 static void HelpInfo() {
-  LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
-  LOG(INFO) << "Run options:";
-  LOG(INFO) << " -c, --config   /data/blockfs/conf/bfs.cnf";
-  LOG(INFO) << " -d, --device   /dev/vdc";
-  LOG(INFO) << " -m, --mountpoint  /data/mysql/bfs";
-  LOG(INFO) << " -v, --version  Print the version.";
-  LOG(INFO) << " -h, --help     Print help info.";
+  std::cout << "Build time    : " << __DATE__ << " " << __TIME__ << "\n"
+            << "Run options:\n"
+            << " -c, --config   /data/blockfs/conf/bfs.cnf\n"
+            << " -d, --device   /dev/vdc\n"
+            << " -m, --mountpoint  /data/mysql/bfs\n"
+            << " -v, --version  Print the version.\n"
+            << " -h, --help     Print help info.\n";
 }
 
 // 参考lightttpd和nginx

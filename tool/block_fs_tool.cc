@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 
 #include "crc.h"
 #include "file_system.h"
@@ -140,28 +141,27 @@ void BlockFsTool::ParseOption(int argc, char **argv) {
 }
 
 void BlockFsTool::HelpInfo() {
-  LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
-  LOG(INFO) << "Run options:";
-  LOG(INFO) << " -d, --device   Device such as: /dev/vdb";
-  LOG(INFO) << " -f, --format   Format device.";
-  LOG(INFO) << " -p, --dump     Dump device, xxx args.";
-  LOG(INFO) << " -m, --meta     Dump file meta content.";
-  LOG(INFO) << " -b, --blk      Export blk device content.";
-  LOG(INFO) << " -h, --help     Print help info.";
+  std::cout << "Build time    : " << __DATE__ << " " << __TIME__ << "\n"
+            << "Run options:\n"
+            << " -d, --device   Device such as: /dev/vdb\n"
+            << " -f, --format   Format device.\n"
+            << " -p, --dump     Dump device, xxx args.\n"
+            << " -m, --meta     Dump file meta content.\n"
+            << " -b, --blk      Export blk device content.\n"
+            << " -h, --help     Print help info.\n";
 
-  LOG(INFO) << "Examples:";
-  LOG(INFO) << " help    : ./block_fs_tool -h";
-  LOG(INFO) << " format  : ./block_fs_tool -d /dev/vdb -f";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p super";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p uuid";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p dirs";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p files";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb -p all";
-  LOG(INFO) << " meta    : ./block_fs_tool -d /dev/vdb -m file_name";
-  LOG(INFO) << " dump    : ./block_fs_tool -d /dev/vdb --dump xxx";
-  LOG(INFO) << " blk     : ./block_fs_tool -d /dev/vdb -b offset:size";
+  std::cout << "Examples:\n"
+            << "\t help    : ./block_fs_tool -h\n"
+            << "\t format  : ./block_fs_tool -d /dev/vdb -f\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb -p super\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb -p uuid\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb -p dirs\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb -p files\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb -p all\n"
+            << "\t meta    : ./block_fs_tool -d /dev/vdb -m file_name\n"
+            << "\t dump    : ./block_fs_tool -d /dev/vdb --dump xxx\n"
+            << "\t blk     : ./block_fs_tool -d /dev/vdb -b offset:size\n";
 }
-
 
 std::vector<std::string> StringSplit(const std::string &s,
                                      const std::string &delim = " ") {

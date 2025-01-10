@@ -4,20 +4,22 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <iostream>
+
 #include "file_system.h"
 #include "logging.h"
 
 static void HelpInfo() {
-  LOG(INFO) << "Build time    : " << __DATE__ << " " << __TIME__;
-  LOG(INFO) << "Run options:";
-  LOG(INFO) << " -c, --config   /usr/local/mysql/blockfs/bfs.cnf";
-  LOG(INFO) << " -m, --master   Run as master node";
-  LOG(INFO) << " -d, --dev      Input dev name";
-  LOG(INFO) << " -n, --name     Input out file name";
-  LOG(INFO) << " -o, --offset   Input copy offset";
-  LOG(INFO) << " -l, --length   Input copy length";
-  LOG(INFO) << " -v, --version  Print the version.";
-  LOG(INFO) << " -h, --help     Print help info.";
+  std::cout << "Build time    : " << __DATE__ << " " << __TIME__ << "\n"
+            << "Run options:\n"
+            << " -c, --config   /usr/local/mysql/blockfs/bfs.cnf\n"
+            << " -m, --master   Run as master node\n"
+            << " -d, --dev      Input dev name\n"
+            << " -n, --name     Input out file name\n"
+            << " -o, --offset   Input copy offset\n"
+            << " -l, --length   Input copy length\n"
+            << " -v, --version  Print the version.\n"
+            << " -h, --help     Print help info.\n";
 }
 
 bool ExportBlkDevice(const char *dev, const char *file_name, int64_t offset,
