@@ -32,12 +32,6 @@ bfs配置项：
 
 device_uuid 必须配置，需要使用block_fs_tool查看uuid得到uuid，相关操作查看tool的使用
 
-fuse配置项：
-
-fuse_attribute_timeout 选配，默认是5.0s
-
-fuse_entry_timeout 选配，默认是5.0s
-
 
 ###  3.  bfs运行
 

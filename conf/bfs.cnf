@@ -18,17 +18,3 @@ fuse_foreground           = true
 ## caller: current user and group from the calling process (default)
 ## fixed: fixed user and group
 fuse_owner_type           = caller
-
-fuse_kernel_cache         = false
-
-# auto unmount on process termination
-# default value is true
-fuse_auto_unmount         = true
-
-# cache time for file attribute in seconds
-# default value is 1.0s
-fuse_attribute_timeout    = 5.0
-
-# cache time for file entry in seconds
-# default value is 1.0s
-fuse_entry_timeout        = 5.0
