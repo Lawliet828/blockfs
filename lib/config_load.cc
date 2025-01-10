@@ -55,11 +55,6 @@ bool ConfigLoader::ParseConfig(bfs_config_info *config) {
     return false;
   }
 
-  if (ini.GetBoolValue("fuse", "fuse_debug", &config->fuse_debug_) != 0) {
-    config->fuse_debug_ = false;
-  }
-  SPDLOG_DEBUG("fuse_debug: {}", config->fuse_debug_);
-
   return true;
 }
 

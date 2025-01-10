@@ -1,10 +1,7 @@
-#ifndef LIB_CRC_H
-#define LIB_CRC_H
+#pragma once
 
 #include <stdint.h>
 #include <zlib.h>
-
-namespace udisk::blockfs {
 
 inline uint32_t Crc32(uint8_t *chunk, size_t len) {
   uint32_t crc = crc32(0L, Z_NULL, 0);
@@ -20,6 +17,3 @@ inline uint32_t Crc32(uint8_t *chunk, size_t len) {
 
 如果你有多个数据块需要计算 CRC，你可以继续调用 crc32 函数，每次都传入前一次调用返回的 CRC 值和新的数据块。
 */
-
-}
-#endif

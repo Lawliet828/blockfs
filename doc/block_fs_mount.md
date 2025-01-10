@@ -34,8 +34,6 @@ device_uuid 必须配置，需要使用block_fs_tool查看uuid得到uuid，相�
 
 fuse配置项：
 
-fuse_debug 必须配置，是否开启fuse debug信息打印
-
 fuse_attribute_timeout 选配，默认是5.0s
 
 fuse_entry_timeout 选配，默认是5.0s
@@ -49,7 +47,6 @@ luotang@10-23-227-66:~/blockfs$ sudo ./build/tool/block_fs_mount
 [58499 20210202 14:51:29.774357Z][INFO][lib/file_store_udisk.cc:70] run as master node: true
 [58499 20210202 14:51:29.774453Z][INFO][lib/config_load.cc:30] log level: INFO
 [58499 20210202 14:51:29.774462Z][INFO][lib/config_load.cc:49] fuse enable: true
-[58499 20210202 14:51:29.774464Z][INFO][lib/config_load.cc:54] fuse_debug: false
 [58499 20210202 14:51:29.774471Z][INFO][lib/config_load.cc:63] fuse mount point: /home/luotang/bfs/
 [58499 20210202 14:51:29.774484Z][INFO][lib/config_load.cc:90] fuse new_fuse_thread: false
 [58499 20210202 14:51:29.774525Z][INFO][lib/block_device.cc:413] device: /dev/. not allowed, skip it

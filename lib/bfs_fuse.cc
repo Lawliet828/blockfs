@@ -990,10 +990,7 @@ void UDiskBFS::FuseLoop(bfs_config_info *info) {
   fsname_str[fsname.size()] = 0;
   std::vector<char *> argv;
   argv.push_back(fsname_str);
-  if (info->fuse_debug_) {
-    SPDLOG_INFO("fuse enable debug");
-    argv.push_back((char *)"-d");
-  }
+  argv.push_back((char *)"-d"); // libfuse debug
   argv.push_back((char *)"-f");
   argv.push_back(mountpoint);
   argv.push_back((char *)"-oallow_other");

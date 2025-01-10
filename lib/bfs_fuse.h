@@ -17,9 +17,6 @@ struct bfs_config_info {
   std::string device_uuid_;
 
   std::string fuse_mount_point;
-
-  /* -d: enable debug output (implies -f) */
-  bool fuse_debug_ = false;
 };
 
 void block_fs_fuse_mount(bfs_config_info *info);

@@ -1,5 +1,4 @@
 [common]
-core_dump                 = true
 log_level                 = DEBUG
 log_path                  = /var/log/mfs/
 
@@ -10,9 +9,6 @@ device_uuid               = 1234567890123456789012345678901234567890123456789012
 # the mount point (local path) for FUSE
 # the local path must exist
 fuse_mount_point          = /data/mysql/bfs/
-
-# enbale libfuse debug
-fuse_debug                = false
 
 # run forefroud in new thread (don't touch)
 fuse_foreground           = true
