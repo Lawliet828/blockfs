@@ -293,7 +293,7 @@ int32_t FileSystem::FcntlFile(int32_t fd, int16_t lock_type) {
 bool FileSystem::Initialize() {
   device_ = new Device();
   shm_manager_ = new ShmManager();
-  fd_handle_ = new FdHandle(kMaxFileNum << 1);
+  fd_handle_ = new FdHandle();
 
   handle_vector_[kSuperBlockHandle] = new SuperBlock();
   handle_vector_[kBlockHandle] = new BlockHandle();
